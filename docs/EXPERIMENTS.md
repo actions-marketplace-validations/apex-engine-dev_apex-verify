@@ -1,0 +1,11 @@
+# Experiments, including the ones that did not work
+
+**A "done without proof" hook (Gemini CLI, 12 tasks, 120 runs, 2026-11-19).** The question: does a Stop-style hook that warns or blocks when code was edited and no test ran afterwards reduce wrong "done" claims? Result: no measurable effect. Gemini ran the project's tests in 119 of 120 runs with or without the hook, so the hook fired twice. Pass 41/60 (68%) without it, 39/60 (65%) with it; claimed done but hidden tests failed 19/60 and 21/59. All 40 failed runs had run a test after the last edit and claimed done: plausible fixes that miss edge cases the visible tests do not cover. The hook checks that *some* test ran, so it cannot see that. Consequence for this project: the proof must come from checks written against the request and from the model's change being shown to fail them before and pass them after (the proof gate), not from "a test ran". The hook and the log report were removed from the public project.
+
+**Token savings are not the headline.** Against Claude Code, cached reads dominate the bill, so a context tool's savings did not carry over; the measured savings (77-88% fewer tokens than the plain engine on Flash) are for this engine's own edit loop. Never quote them for other agents without a with/without run.
+
+
+## Gate round 1 (2026-11-22): does `reallydone verify` catch wrong AI changes?
+199 labelled AI-written changes, three conditions (tests + cheating scan only; plus an independent checker; plus a prompt for unstated standard-practice cases). The independent checker moved the share of wrong changes blocked from 8% to 65% at a 3% false-alarm rate; the unstated-cases prompt did not help (60%, 5%). Method, numbers and limits: [`benchmark/results/verify-gate-round1`](../benchmark/results/verify-gate-round1/README.md).
+
+**What went wrong on the way (kept for honesty).** The first prototype run said the checker caught 70% and the weak model's own checks 89% with 56% false alarms; it drew one set of checks per task, so results clustered, and the check-writing call was cut off at about 400 characters because the model's reasoning used the output limit, which made checks fail to write for 41% of tasks. After fixing the limit and re-measuring with independent checks per change, the real product caught 65%.

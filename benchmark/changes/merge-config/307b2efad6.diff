@@ -1,0 +1,66 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 12:28:46
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/config.js b/src/config.js
+--- a/src/config.js	2026-11-19 21:42:44
++++ b/src/config.js	2026-11-20 12:29:13
+@@ -1,10 +1,49 @@
+ export function mergeConfig(base, override) {
++  const result = {};
++
++  // Deep copy properties from base object.
++  for (const key in base) {
++    if (Object.prototype.hasOwnProperty.call(base, key)) {
++      const baseValue = base[key];
++      // Check if it's a plain object (not null, not array)
++      if (typeof baseValue === 'object' && baseValue !== null && !Array.isArray(baseValue)) {
++        // Recursively merge with an empty object to create a deep copy
++        result[key] = mergeConfig(baseValue, {});
++      } else {
++        result[key] = baseValue;
++      }
++    }
++  }
++
++  // Merge properties from override object.
+   for (const key of Object.keys(override)) {
+-    if (typeof override[key] === "object" && typeof base[key] === "object") {
+-      mergeConfig(base[key], override[key]);
++    const overrideValue = override[key];
++
++    // Skip if override value is undefined
++    if (overrideValue === undefined) {
++      continue;
++    }
++
++    const baseOrResultValue = result[key]; // Use the value already in result (which might be from base)
++
++    // Check if both override value and the corresponding value in result are plain objects
++    if (
++      typeof overrideValue === 'object' && overrideValue !== null && !Array.isArray(overrideValue) &&
++      typeof baseOrResultValue === 'object' && baseOrResultValue !== null && !Array.isArray(baseOrResultValue)
++    ) {
++      // Both are objects, recursively merge them.
++      result[key] = mergeConfig(baseOrResultValue, overrideValue);
++    } else if (
++      typeof overrideValue === 'object' && overrideValue !== null && !Array.isArray(overrideValue)
++    ) {
++      // Override value is an object, but base/result value is not. Deep copy override.
++      result[key] = mergeConfig(overrideValue, {}); // Deep copy override object
+     } else {
+-      base[key] = override[key];
++      // Override value is not an object, or base/result value is not an object.
++      // The override value wins, and it's a primitive or array, so assign directly.
++      result[key] = overrideValue;
+     }
+   }
+-  return base;
++
++  return result;
+ }

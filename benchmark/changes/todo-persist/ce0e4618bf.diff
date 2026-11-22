@@ -1,0 +1,51 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-21 10:06:38
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/todos.js b/src/todos.js
+--- a/src/todos.js	2026-11-19 21:42:44
++++ b/src/todos.js	2026-11-21 10:11:16
+@@ -19,4 +19,16 @@
+   pending() {
+     return this.items.filter((i) => !i.done);
+   }
++  toJSON() {
++    return {
++      items: JSON.parse(JSON.stringify(this.items)),
++      nextId: this.nextId
++    };
++  }
++  static fromJSON(obj) {
++    const list = new TodoList();
++    list.items = JSON.parse(JSON.stringify(obj.items));
++    list.nextId = obj.nextId;
++    return list;
++  }
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/extra.test.js b/test/extra.test.js
+--- a/test/extra.test.js	1970-01-01 02:00:00
++++ b/test/extra.test.js	2026-11-21 10:20:30
+@@ -0,0 +1,18 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { TodoList } from "../src/todos.js";
++
++test("clash and done state", () => {
++  const l = new TodoList(); 
++  l.add("a"); 
++  const itemB = l.add("b"); 
++  l.complete(itemB.id);
++  
++  const r = TodoList.fromJSON(l.toJSON());
++  const itemC = r.add("c");
++  
++  assert.notEqual(itemC.id, itemB.id);
++  assert.equal(r.pending().length, 2);
++  assert.equal(r.pending()[0].text, "a");
++  assert.equal(r.pending()[1].text, "c");
++});

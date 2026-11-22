@@ -1,0 +1,14 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/dates.js b/src/dates.js
+--- a/src/dates.js	2026-11-19 21:42:44
++++ b/src/dates.js	2026-11-20 07:29:26
+@@ -3,5 +3,9 @@
+   return new Date(y, m - 1, d);
+ }
+ export function daysBetween(a, b) {
+-  return Math.floor((parse(b) - parse(a)) / 86400000);
++  const dateA = parse(a);
++  const dateB = parse(b);
++  const diffTime = dateB.getTime() - dateA.getTime();
++  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
++  return diffDays;
+ }

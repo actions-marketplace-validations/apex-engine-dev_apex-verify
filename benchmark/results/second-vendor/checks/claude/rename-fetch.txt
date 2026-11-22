@@ -1,0 +1,92 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import * as index from "../src/index.js";
+import * as store from "../src/store.js";
+import { COMMANDS, run } from "../src/commands.js";
+import { describe as d, total } from "../src/index.js";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+
+function walk(dir, out = []) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (["node_modules", ".git", "dist"].includes(e.name)) continue;
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walk(p, out);
+    else if (!e.name.includes("apex-task-check")) out.push(p);
+  }
+  return out;
+}
+
+test("store exports loadItem", () => {
+  assert.equal(typeof store.loadItem, "function", "store.loadItem should be a function");
+});
+
+test("index re-exports loadItem", () => {
+  assert.equal(typeof index.loadItem, "function", "index should re-export loadItem");
+});
+
+test("fetchItem is no longer exported", () => {
+  assert.equal(store.fetchItem, undefined, "store should not export fetchItem");
+  assert.equal(index.fetchItem, undefined, "index should not export fetchItem");
+});
+
+test("loadItem returns the stored item", () => {
+  assert.deepEqual(index.loadItem("a"), { id: "a", n: 1 }, "loadItem('a') should return item a");
+  assert.deepEqual(index.loadItem("b"), { id: "b", n: 2 }, "loadItem('b') should return item b");
+});
+
+test("loadItem returns null for a missing id", () => {
+  assert.equal(index.loadItem("zz"), null, "missing id should give null");
+});
+
+test("loadItem returns a copy", () => {
+  const x = index.loadItem("a");
+  x.n = 99;
+  assert.equal(index.loadItem("a").n, 1, "mutating the result should not change the store");
+});
+
+test("command registry maps get to loadItem", () => {
+  assert.equal(COMMANDS.get, "loadItem", "COMMANDS.get should name loadItem");
+});
+
+test("run('get', id) works through the command table", () => {
+  assert.deepEqual(run("get", "a"), { id: "a", n: 1 }, "run('get','a') should return item a");
+  assert.equal(run("get", "zz"), null, "run('get','zz') should return null");
+});
+
+test("run('count') still works", () => {
+  assert.equal(run("count"), 2, "count should still be 2");
+  assert.equal(index.itemCount(), 2, "itemCount should still be 2");
+});
+
+test("unknown command still throws", () => {
+  assert.throws(() => run("nope"), /unknown command nope/, "unknown command should throw");
+});
+
+test("service behaviour is unchanged", () => {
+  assert.equal(d("a"), "item a (1)", "describe('a') should be unchanged");
+  assert.equal(d("zz"), "missing", "describe of a missing id should be 'missing'");
+  assert.equal(total(["a", "b", "zz"]), 3, "total should still be 3");
+});
+
+test("the old name fetchItem is not used anywhere", () => {
+  const offenders = [];
+  for (const f of walk(ROOT)) {
+    let text;
+    try { text = fs.readFileSync(f, "utf8"); } catch { continue; }
+    if (text.includes("fetchItem")) offenders.push(path.relative(ROOT, f));
+  }
+  assert.deepEqual(offenders, [], "no file should mention fetchItem any more");
+});
+
+test("the new name loadItem appears in code and docs", () => {
+  for (const rel of ["src/store.js", "src/service.js", "src/commands.js", "src/index.js", "README.md"]) {
+    const text = fs.readFileSync(path.join(ROOT, rel), "utf8");
+    assert.ok(text.includes("loadItem"), rel + " should mention loadItem");
+  }
+});
+```

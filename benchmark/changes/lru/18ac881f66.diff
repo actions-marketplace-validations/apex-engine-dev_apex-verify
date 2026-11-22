@@ -1,0 +1,111 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-19 21:56:23
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/lru.js b/src/lru.js
+--- a/src/lru.js	2026-11-19 21:42:44
++++ b/src/lru.js	2026-11-19 21:56:59
+@@ -1,19 +1,82 @@
++class Node {
++    constructor(key, value) {
++        this.key = key;
++        this.value = value;
++        this.prev = null;
++        this.next = null;
++    }
++}
++
+ export class LRUCache {
+-  constructor(capacity) {
+-    this.capacity = capacity;
+-    this.map = new Map();
+-  }
+-  get(key) {
+-    return this.map.get(key);
+-  }
+-  set(key, value) {
+-    if (this.map.size >= this.capacity) {
+-      const oldest = this.map.keys().next().value;
+-      this.map.delete(oldest);
++    constructor(capacity) {
++        this.capacity = capacity;
++        this.map = new Map(); // Stores key -> Node
++
++        // Dummy head and tail nodes
++        this.head = new Node(null, null); // Most recently used
++        this.tail = new Node(null, null); // Least recently used
++
++        this.head.next = this.tail;
++        this.tail.prev = this.head;
+     }
+-    this.map.set(key, value);
+-  }
+-  get size() {
+-    return this.map.size;
+-  }
++
++    _addNode(node) {
++        // Add node right after the head
++        node.prev = this.head;
++        node.next = this.head.next;
++        this.head.next.prev = node;
++        this.head.next = node;
++    }
++
++    _removeNode(node) {
++        // Remove node from the list
++        const prev = node.prev;
++        const next = node.next;
++        prev.next = next;
++        next.prev = prev;
++    }
++
++    _moveToHead(node) {
++        // Remove node from its current position and add it to the head
++        this._removeNode(node);
++        this._addNode(node);
++    }
++
++    get(key) {
++        const node = this.map.get(key);
++        if (!node) {
++            return undefined;
++        }
++        // Move accessed node to the front (most recently used)
++        this._moveToHead(node);
++        return node.value;
++    }
++
++    set(key, value) {
++        const existingNode = this.map.get(key);
++
++        if (existingNode) {
++            // Update the value
++            existingNode.value = value;
++            // Move to head as it's now recently used
++            this._moveToHead(existingNode);
++        } else {
++            // Create a new node
++            const newNode = new Node(key, value);
++            this.map.set(key, newNode);
++            this._addNode(newNode);
++
++            // Check if capacity is exceeded and evict if necessary
++            if (this.map.size > this.capacity) {
++                // Remove the least recently used node (the one before tail)
++                const lruNode = this.tail.prev;
++                this._removeNode(lruNode);
++                this.map.delete(lruNode.key);
++            }
++        }
++    }
++
++    get size() {
++        return this.map.size;
++    }
+ }

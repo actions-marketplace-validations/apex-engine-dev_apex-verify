@@ -1,0 +1,17 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/todos.js b/src/todos.js
+--- a/src/todos.js	2026-11-19 21:42:44
++++ b/src/todos.js	2026-11-20 07:57:58
+@@ -19,4 +19,13 @@
+   pending() {
+     return this.items.filter((i) => !i.done);
+   }
++  toJSON() {
++    return { items: this.items, nextId: this.nextId };
++  }
++  static fromJSON(obj) {
++    const list = new TodoList();
++    list.items = obj.items;
++    list.nextId = obj.nextId;
++    return list;
++  }
+ }

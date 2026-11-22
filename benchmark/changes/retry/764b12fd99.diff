@@ -1,0 +1,9 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 18:51:17
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}

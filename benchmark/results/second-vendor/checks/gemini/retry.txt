@@ -1,0 +1,134 @@
+```javascript
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { retry, sleep } from "../src/retry.js";
+
+test("sleep resolves after specified time (existing behavior)", async () => {
+  const start = Date.now();
+  await sleep(10);
+  const elapsed = Date.now() - start;
+  assert.ok(elapsed >= 9, "sleep should wait approximately the requested time");
+});
+
+test("returns result immediately if fn succeeds on first attempt", async () => {
+  let calledWithAttempt;
+  const result = await retry(async (attempt) => {
+    calledWithAttempt = attempt;
+    return "success";
+  }, { retries: 2, delayMs: 1 });
+  
+  assert.equal(result, "success", "returns the successful result");
+  assert.equal(calledWithAttempt, 1, "attempt counter starts at 1");
+});
+
+test("retries on failure and passes correct attempt number", async () => {
+  const attempts = [];
+  const result = await retry(async (attempt) => {
+    attempts.push(attempt);
+    if (attempt < 3) throw new Error("fail");
+    return "ok";
+  }, { retries: 2, delayMs: 1 });
+  
+  assert.equal(result, "ok", "returns result after successful retry");
+  assert.deepEqual(attempts, [1, 2, 3], "calls fn with attempt 1, 2, and 3");
+});
+
+test("rejects with the last error if all attempts fail", async () => {
+  let calls = 0;
+  const err1 = new Error("err1");
+  const err2 = new Error("err2");
+  
+  try {
+    await retry(async () => {
+      calls++;
+      throw calls === 1 ? err1 : err2;
+    }, { retries: 1, delayMs: 1 });
+    assert.fail("should have rejected");
+  } catch (err) {
+    assert.equal(err, err2, "rejects with the very last error thrown");
+    assert.equal(calls, 2, "makes exactly retries + 1 calls in total");
+  }
+});
+
+test("waits delayMs and multiplies by default factor 2 after each failure", async () => {
+  let calls = 0;
+  const start = Date.now();
+  
+  await retry(async () => {
+    calls++;
+    if (calls < 3) throw new Error("fail");
+    return "ok";
+  }, { retries: 2, delayMs: 15 });
+  
+  const elapsed = Date.now() - start;
+  // First retry wait: 15ms. Second retry wait: 30ms. Total wait ~45ms.
+  assert.ok(elapsed >= 40, "should wait at least delayMs + delayMs * 2");
+});
+
+test("multiplies delay by custom factor", async () => {
+  let calls = 0;
+  const start = Date.now();
+  
+  await retry(async () => {
+    calls++;
+    if (calls < 3) throw new Error("fail");
+    return "ok";
+  }, { retries: 2, delayMs: 10, factor: 4 });
+  
+  const elapsed = Date.now() - start;
+  // First retry wait: 10ms. Second retry wait: 40ms. Total wait ~50ms.
+  assert.ok(elapsed >= 45, "should wait at least delayMs + delayMs * factor");
+});
+
+test("rejects immediately if shouldRetry returns false", async () => {
+  let calls = 0;
+  const fatalErr = new Error("fatal");
+  
+  try {
+    await retry(async () => {
+      calls++;
+      throw fatalErr;
+    }, {
+      retries: 5,
+      delayMs: 1,
+      shouldRetry: (err) => err.message !== "fatal"
+    });
+    assert.fail("should have rejected");
+  } catch (err) {
+    assert.equal(err, fatalErr, "rejects with the fatal error");
+    assert.equal(calls, 1, "stops calling immediately after shouldRetry returns false");
+  }
+});
+
+test("continues retrying if shouldRetry returns true", async () => {
+  let calls = 0;
+  const result = await retry(async () => {
+    calls++;
+    if (calls < 2) throw new Error("transient");
+    return "done";
+  }, {
+    retries: 2,
+    delayMs: 1,
+    shouldRetry: (err) => err.message === "transient"
+  });
+  
+  assert.equal(result, "done", "returns result after retrying");
+  assert.equal(calls, 2, "retries when shouldRetry evaluates to true");
+});
+
+test("works correctly with 0 retries", async () => {
+  let calls = 0;
+  const err1 = new Error("err1");
+  
+  try {
+    await retry(async () => {
+      calls++;
+      throw err1;
+    }, { retries: 0, delayMs: 10 });
+    assert.fail("should have rejected");
+  } catch (err) {
+    assert.equal(err, err1, "rejects with the first error");
+    assert.equal(calls, 1, "makes exactly 1 call when retries is 0");
+  }
+});
+```

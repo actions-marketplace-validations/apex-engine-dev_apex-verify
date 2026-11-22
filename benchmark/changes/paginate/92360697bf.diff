@@ -1,0 +1,25 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/paginate.js b/src/paginate.js
+--- a/src/paginate.js	2026-11-19 21:42:44
++++ b/src/paginate.js	2026-11-20 07:30:43
+@@ -1,8 +1,18 @@
+ export function paginate(items, page, size) {
+-  const start = page * size;
++  if (size < 1) {
++    throw new RangeError("size must be greater than 0");
++  }
++  if (page < 1) {
++    throw new RangeError("page must be greater than 0");
++  }
++
++  const start = (page - 1) * size;
++  const end = start + size;
++  const totalPages = Math.ceil(items.length / size);
++
+   return {
+-    items: items.slice(start, start + size),
++    items: items.slice(start, end),
+     page,
+-    totalPages: Math.floor(items.length / size),
++    totalPages,
+   };
+ }

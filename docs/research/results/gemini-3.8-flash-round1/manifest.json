@@ -1,0 +1,91 @@
+{
+  "harness": "apex-bench-1",
+  "startedAt": "2026-11-19T16:39:31.344Z",
+  "setHash": "558b7080ffec",
+  "machine": {
+    "os": "darwin 27.2.0 arm64",
+    "node": "v22.22.1",
+    "cpu": "Apple M4 Pro",
+    "cores": 12,
+    "memGB": 48
+  },
+  "runs": 1,
+  "seed": null,
+  "temperature": null,
+  "concurrency": 1,
+  "tasks": [
+    {
+      "id": "csv",
+      "hash": "3520c42fe60b"
+    },
+    {
+      "id": "days-between",
+      "hash": "c6c900bd85ed"
+    },
+    {
+      "id": "duration",
+      "hash": "36f3cbf745fc"
+    },
+    {
+      "id": "emitter",
+      "hash": "4afece215427"
+    },
+    {
+      "id": "lru",
+      "hash": "9ce3864cbabe"
+    },
+    {
+      "id": "rename-fetch",
+      "hash": "7ca8eb0440b2"
+    },
+    {
+      "id": "retry",
+      "hash": "356d761c0418"
+    },
+    {
+      "id": "slugify",
+      "hash": "866c743c5d5c"
+    },
+    {
+      "id": "todo-persist",
+      "hash": "943a0a659996"
+    }
+  ],
+  "arms": {
+    "alone": {
+      "name": "alone",
+      "hash": "d943bb5d4ed7",
+      "command": "sh \"$LB_DIR/run-gemini-cli.sh\"",
+      "envKeys": [],
+      "readUsage": {
+        "type": "json",
+        "file": "{outDir}/usage.json",
+        "in": "tokensIn",
+        "out": "tokensOut"
+      },
+      "claimedDone": {
+        "type": "json",
+        "file": "{outDir}/usage.json",
+        "field": "claimedDone"
+      }
+    },
+    "engine": {
+      "name": "engine",
+      "hash": "4bd95b1a8ad3",
+      "command": "sh \"$LB_DIR/run-apex-agent.sh\"",
+      "envKeys": [],
+      "readUsage": {
+        "type": "json",
+        "file": "{outDir}/usage.json",
+        "in": "tokensIn",
+        "out": "tokensOut"
+      },
+      "claimedDone": {
+        "type": "json",
+        "file": "{outDir}/usage.json",
+        "field": "claimedDone"
+      }
+    }
+  },
+  "note": "Round 1, nine tasks. currency, merge-config and paginate were excluded: their hidden tests checked behaviour the prompts never stated (corrected since)."
+}

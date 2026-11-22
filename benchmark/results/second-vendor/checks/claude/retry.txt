@@ -1,0 +1,135 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { retry, sleep } from "../src/retry.js";
+
+test("returns the result of fn on first success", async () => {
+  const r = await retry(async () => "done", { retries: 2, delayMs: 1 });
+  assert.equal(r, "done", "should resolve with fn's result");
+});
+
+test("fn is called with attempt starting at 1", async () => {
+  const seen = [];
+  await retry(async (attempt) => {
+    seen.push(attempt);
+    if (attempt < 3) throw new Error("x");
+    return "ok";
+  }, { retries: 3, delayMs: 1 });
+  assert.deepEqual(seen, [1, 2, 3], "attempts should be 1, 2, 3");
+});
+
+test("retries: 2 means at most 3 calls in total", async () => {
+  let calls = 0;
+  await assert.rejects(
+    retry(async () => { calls++; throw new Error("always"); }, { retries: 2, delayMs: 1 }),
+    "should reject when all attempts fail"
+  );
+  assert.equal(calls, 3, "should call fn exactly 3 times");
+});
+
+test("retries: 0 means a single call", async () => {
+  let calls = 0;
+  await assert.rejects(
+    retry(async () => { calls++; throw new Error("once"); }, { retries: 0, delayMs: 1 }),
+    "should reject after one call"
+  );
+  assert.equal(calls, 1, "should call fn exactly once");
+});
+
+test("rejects with the last error", async () => {
+  let n = 0;
+  await assert.rejects(
+    retry(async () => { n++; throw new Error("fail " + n); }, { retries: 2, delayMs: 1 }),
+    (e) => e.message === "fail 3",
+    "should reject with the error from the last attempt"
+  );
+});
+
+test("stops calling once fn succeeds", async () => {
+  let calls = 0;
+  const r = await retry(async () => {
+    calls++;
+    if (calls < 2) throw new Error("x");
+    return "fine";
+  }, { retries: 5, delayMs: 1 });
+  assert.equal(r, "fine", "should return the success value");
+  assert.equal(calls, 2, "should not call fn after success");
+});
+
+test("shouldRetry returning false rejects immediately with that error", async () => {
+  let calls = 0;
+  const err = new Error("fatal");
+  await assert.rejects(
+    retry(async () => { calls++; throw err; }, { retries: 5, delayMs: 1, shouldRetry: () => false }),
+    (e) => e === err,
+    "should reject with the same error"
+  );
+  assert.equal(calls, 1, "should not retry when shouldRetry returns false");
+});
+
+test("shouldRetry receives the error and true allows retrying", async () => {
+  const errors = [];
+  let calls = 0;
+  const r = await retry(async () => {
+    calls++;
+    if (calls < 3) throw new Error("e" + calls);
+    return "ok";
+  }, {
+    retries: 3,
+    delayMs: 1,
+    shouldRetry: (e) => { errors.push(e.message); return true; },
+  });
+  assert.equal(r, "ok", "should succeed when shouldRetry keeps returning true");
+  assert.deepEqual(errors.slice(0, 2), ["e1", "e2"], "shouldRetry should be given each error");
+});
+
+test("shouldRetry can stop on a particular error mid-way", async () => {
+  let calls = 0;
+  await assert.rejects(
+    retry(async () => {
+      calls++;
+      throw new Error(calls < 2 ? "temp" : "perm");
+    }, { retries: 5, delayMs: 1, shouldRetry: (e) => e.message === "temp" }),
+    (e) => e.message === "perm",
+    "should reject with the non-retryable error"
+  );
+  assert.equal(calls, 2, "should stop right after the non-retryable error");
+});
+
+test("waits roughly delayMs before the second attempt", async () => {
+  const times = [];
+  await assert.rejects(
+    retry(async () => { times.push(Date.now()); throw new Error("x"); }, { retries: 1, delayMs: 60 })
+  );
+  const gap = times[1] - times[0];
+  assert.ok(gap >= 50, "wait before retry should be about delayMs (60), got " + gap);
+});
+
+test("wait grows by factor 2 by default", async () => {
+  const times = [];
+  await assert.rejects(
+    retry(async () => { times.push(Date.now()); throw new Error("x"); }, { retries: 2, delayMs: 40 })
+  );
+  const g1 = times[1] - times[0];
+  const g2 = times[2] - times[1];
+  assert.ok(g1 >= 33, "first wait should be about 40, got " + g1);
+  assert.ok(g2 >= 70, "second wait should be about 80 (doubled), got " + g2);
+});
+
+test("a custom factor multiplies the wait", async () => {
+  const times = [];
+  await assert.rejects(
+    retry(async () => { times.push(Date.now()); throw new Error("x"); }, { retries: 2, delayMs: 30, factor: 4 })
+  );
+  const g1 = times[1] - times[0];
+  const g2 = times[2] - times[1];
+  assert.ok(g1 >= 25, "first wait should be about 30, got " + g1);
+  assert.ok(g2 >= 105, "second wait should be about 120 (x4), got " + g2);
+});
+
+test("existing sleep helper still works", async () => {
+  const start = Date.now();
+  await sleep(20);
+  assert.ok(Date.now() - start >= 15, "sleep(20) should wait about 20ms");
+});
+```

@@ -1,0 +1,129 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/emitter.js b/src/emitter.js
+--- a/src/emitter.js	2026-11-19 21:42:44
++++ b/src/emitter.js	2026-11-20 07:47:07
+@@ -11,18 +11,33 @@
+       this.off(event, wrapper);
+       fn(...args);
+     };
++    // Store the original function to allow `off` to remove it later
++    wrapper.originalFn = fn;
+     return this.on(event, wrapper);
+   }
+   off(event, fn) {
+     const list = this.handlers[event];
+     if (!list) return this;
+-    const i = list.indexOf(fn);
+-    if (i >= 0) list.splice(i, 1);
++
++    // Filter out the function to be removed.
++    // If the function was registered with `once`, we need to check its `originalFn`.
++    this.handlers[event] = list.filter(handler => {
++      return handler !== fn && handler.originalFn !== fn;
++    });
++
++    // If the list is now empty, clean up the event key
++    if (this.handlers[event].length === 0) {
++      delete this.handlers[event];
++    }
+     return this;
+   }
+   emit(event, ...args) {
+     const list = this.handlers[event] || [];
+-    for (const fn of list) fn(...args);
++    // Create a copy of the list to iterate over, in case `off` is called within a handler
++    const handlersToCall = [...list];
++    for (const fn of handlersToCall) {
++      fn(...args);
++    }
+     return list.length > 0;
+   }
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/bug-src-emitter.test.js b/test/bug-src-emitter.test.js
+--- a/test/bug-src-emitter.test.js	1970-01-01 02:00:00
++++ b/test/bug-src-emitter.test.js	2026-11-20 07:47:07
+@@ -0,0 +1,85 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { Emitter } from "../src/emitter.js";
++
++test("once listener firing does not skip the next listener", () => {
++  const e = new Emitter();
++  const got = [];
++  e.once("x", () => got.push(1));
++  e.on("x", () => got.push(2));
++  e.emit("x");
++  assert.deepEqual(got, [1, 2]);
++});
++
++test("off removes a listener registered with once", () => {
++  const e = new Emitter();
++  const got = [];
++  const fn = () => got.push(1);
++  e.once("x", fn);
++  e.off("x", fn);
++  e.emit("x");
++  assert.deepEqual(got, []);
++});
++
++test("off removes a listener registered with on", () => {
++  const e = new Emitter();
++  const got = [];
++  const fn = () => got.push(1);
++  e.on("x", fn);
++  e.off("x", fn);
++  e.emit("x");
++  assert.deepEqual(got, []);
++});
++
++test("once listener fires only once", () => {
++  const e = new Emitter();
++  const got = [];
++  e.once("x", () => got.push(1));
++  e.emit("x");
++  e.emit("x");
++  assert.deepEqual(got, [1]);
++});
++
++test("repeating once registration and emit 50 times", () => {
++  const e = new Emitter();
++  let count = 0;
++  for (let i = 0; i < 50; i++) {
++    e.once("x", () => count++);
++  }
++  e.emit("x");
++  assert.equal(count, 50);
++});
++
++test("works on empty input: no throw, and the same result shape", () => {
++  const e = new Emitter();
++  assert.doesNotThrow(() => {
++    const emitRes = e.emit("empty");
++    assert.equal(emitRes, false);
++    
++    const offRes = e.off("empty", () => {});
++    assert.equal(offRes, e);
++  });
++});
++
++test("methods return correct types and formats", () => {
++  const e = new Emitter();
++  const fn = () => {};
++  
++  const onRes = e.on("x", fn);
++  assert.equal(onRes, e);
++  
++  const onceRes = e.once("y", fn);
++  assert.equal(onceRes, e);
++  
++  const offRes = e.off("x", fn);
++  assert.equal(offRes, e);
++  
++  const emitRes = e.emit("x");
++  assert.equal(typeof emitRes, "boolean");
++  assert.equal(emitRes, false);
++  
++  e.on("z", fn);
++  const emitRes2 = e.emit("z");
++  assert.equal(typeof emitRes2, "boolean");
++  assert.equal(emitRes2, true);
++});

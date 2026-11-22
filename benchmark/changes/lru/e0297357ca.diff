@@ -1,0 +1,130 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/lru.js b/src/lru.js
+--- a/src/lru.js	2026-11-19 21:42:44
++++ b/src/lru.js	2026-11-20 07:47:54
+@@ -1,16 +1,33 @@
+ export class LRUCache {
+   constructor(capacity) {
+     this.capacity = capacity;
++    // Use a Map to store key-value pairs.
++    // The order of insertion in a Map is preserved,
++    // so the first element is the oldest, and the last is the newest.
+     this.map = new Map();
+   }
+   get(key) {
+-    return this.map.get(key);
++    // If the key exists, retrieve its value.
++    if (this.map.has(key)) {
++      const value = this.map.get(key);
++      // Move the accessed key to the end of the map to mark it as recently used.
++      this.map.delete(key);
++      this.map.set(key, value);
++      return value;
++    }
++    // Return undefined if the key is not found.
++    return undefined;
+   }
+   set(key, value) {
+-    if (this.map.size >= this.capacity) {
+-      const oldest = this.map.keys().next().value;
+-      this.map.delete(oldest);
++    // If the key already exists, update its value and move it to the end.
++    if (this.map.has(key)) {
++      this.map.delete(key);
++    } else if (this.map.size >= this.capacity) {
++      // If the cache is full, remove the least recently used item (the first one in the map).
++      const oldestKey = this.map.keys().next().value;
++      this.map.delete(oldestKey);
+     }
++    // Add the new key-value pair to the end of the map.
+     this.map.set(key, value);
+   }
+   get size() {
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/our-lrucache-src.test.js b/test/our-lrucache-src.test.js
+--- a/test/our-lrucache-src.test.js	1970-01-01 02:00:00
++++ b/test/our-lrucache-src.test.js	2026-11-20 07:47:54
+@@ -0,0 +1,85 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { LRUCache } from "../src/lru.js";
++
++test("reading a key updates its recency", () => {
++  const c = new LRUCache(2);
++  c.set("a", 1);
++  c.set("b", 2);
++  
++  // Reading 'a' should make it the most recently used
++  c.get("a"); 
++  
++  // Adding 'c' should evict 'b' (the least recently used), not 'a'
++  c.set("c", 3); 
++  
++  assert.equal(c.get("b"), undefined);
++  assert.equal(c.get("a"), 1);
++  assert.equal(c.get("c"), 3);
++});
++
++test("updating an existing key does not evict unrelated entries", () => {
++  const c = new LRUCache(2);
++  c.set("a", 1);
++  c.set("b", 2);
++  
++  // Updating 'b' should just update its value and recency, without increasing size
++  c.set("b", 20); 
++  
++  // 'a' should still be in the cache
++  assert.equal(c.get("a"), 1);
++  assert.equal(c.get("b"), 20);
++  assert.equal(c.size, 2);
++});
++
++test("evicts oldest when capacity is reached (pinning)", () => {
++  const c = new LRUCache(2);
++  c.set("a", 1);
++  c.set("b", 2);
++  c.set("c", 3);
++  
++  assert.equal(c.get("a"), undefined);
++  assert.equal(c.get("b"), 2);
++  assert.equal(c.get("c"), 3);
++  assert.equal(c.size, 2);
++});
++
++test("repeating the operation many times keeps working", () => {
++  const c = new LRUCache(3);
++  
++  for (let i = 0; i < 50; i++) {
++    c.set(`k${i}`, i);
++    // Keep 'k0' alive by reading it every iteration
++    c.get("k0");
++  }
++  
++  assert.equal(c.size, 3);
++  assert.equal(c.get("k0"), 0);
++  assert.equal(c.get("k49"), 49);
++  assert.equal(c.get("k48"), 48);
++  assert.equal(c.get("k47"), undefined);
++});
++
++test("works on empty input", () => {
++  const c = new LRUCache(2);
++  
++  assert.doesNotThrow(() => {
++    c.get("nonexistent");
++  });
++  
++  assert.equal(c.get("nonexistent"), undefined);
++  assert.equal(c.size, 0);
++});
++
++test("result keeps its type and format", () => {
++  const c = new LRUCache(2);
++  c.set("a", 1);
++  
++  const val = c.get("a");
++  assert.equal(typeof val, "number");
++  
++  const missing = c.get("b");
++  assert.equal(typeof missing, "undefined");
++  
++  assert.equal(typeof c.size, "number");
++});

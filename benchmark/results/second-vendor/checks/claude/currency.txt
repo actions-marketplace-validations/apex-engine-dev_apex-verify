@@ -1,0 +1,58 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { formatMoney, toCents } from "../src/money.js";
+
+test("USD example", () => {
+  assert.equal(formatMoney(123456, "USD"), "$1,234.56", "expected $1,234.56");
+});
+
+test("EUR example", () => {
+  assert.equal(formatMoney(500, "EUR"), "€5.00", "expected €5.00");
+});
+
+test("GBP uses the pound sign", () => {
+  assert.equal(formatMoney(250099, "GBP"), "£2,500.99", "expected £2,500.99");
+});
+
+test("zero cents", () => {
+  assert.equal(formatMoney(0, "USD"), "$0.00", "expected $0.00");
+});
+
+test("under one unit keeps two decimals", () => {
+  assert.equal(formatMoney(5, "USD"), "$0.05", "expected $0.05");
+});
+
+test("thousands separators for a large amount", () => {
+  assert.equal(formatMoney(100000000, "EUR"), "€1,000,000.00", "expected €1,000,000.00");
+});
+
+test("unsupported currency code throws", () => {
+  assert.throws(() => formatMoney(100, "JPY"), "expected JPY to throw");
+  assert.throws(() => formatMoney(100, "XYZ"), "expected an unknown code to throw");
+});
+
+test("missing or empty currency code throws", () => {
+  assert.throws(() => formatMoney(100, ""), "expected empty code to throw");
+  assert.throws(() => formatMoney(100), "expected missing code to throw");
+});
+
+test("non-integer amount throws an Error", () => {
+  assert.throws(() => formatMoney(12.5, "USD"), Error, "expected a fractional amount to throw an Error");
+});
+
+test("NaN throws an Error", () => {
+  assert.throws(() => formatMoney(NaN, "USD"), Error, "expected NaN to throw an Error");
+});
+
+test("non-number values throw", () => {
+  assert.throws(() => formatMoney("500", "USD"), Error, "expected a string amount to throw");
+  assert.throws(() => formatMoney(undefined, "USD"), Error, "expected undefined to throw");
+  assert.throws(() => formatMoney(Infinity, "USD"), Error, "expected Infinity to throw");
+});
+
+test("existing toCents is unchanged", () => {
+  assert.equal(toCents(12.34), 1234, "expected toCents(12.34) to be 1234");
+  assert.equal(toCents(1), 100, "expected toCents(1) to be 100");
+});
+```

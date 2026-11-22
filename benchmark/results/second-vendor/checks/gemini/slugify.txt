@@ -1,0 +1,45 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { slugify } from "../src/slug.js";
+
+test("removes punctuation", () => {
+  assert.equal(slugify("Hello, World!"), "hello-world", "Should remove commas and exclamation marks");
+  assert.equal(slugify("What's up?"), "whats-up", "Should remove apostrophes and question marks");
+});
+
+test("removes accents and diacritics", () => {
+  assert.equal(slugify("Crème Brûlée"), "creme-brulee", "Should replace accented characters with their base letter");
+  assert.equal(slugify("café"), "cafe", "Should handle acute accents");
+  assert.equal(slugify("piñata"), "pinata", "Should handle tildes");
+});
+
+test("keeps lowercase letters and digits separated by single dashes", () => {
+  assert.equal(slugify("Version 2.0!"), "version-2-0", "Should keep digits and letters, replacing dots and bangs with dashes");
+  assert.equal(slugify("A1 B2"), "a1-b2", "Should keep letters and digits and lowercase them");
+});
+
+test("collapses multiple invalid characters into a single dash", () => {
+  assert.equal(slugify("foo , , bar"), "foo-bar", "Should collapse spaces and commas into one dash");
+  assert.equal(slugify("a---b"), "a-b", "Should collapse multiple dashes into one");
+  assert.equal(slugify("hello@#$world"), "hello-world", "Should collapse multiple symbols into one dash");
+});
+
+test("edge cases: empty or only invalid characters", () => {
+  assert.equal(slugify(""), "", "Empty string should return empty string");
+  assert.equal(slugify("!!!"), "", "String with only punctuation should return empty string");
+  assert.equal(slugify("  -  "), "", "String with only spaces and dashes should return empty string");
+});
+
+test("edge cases: leading and trailing invalid characters", () => {
+  assert.equal(slugify("!Hello World!"), "hello-world", "Should not have leading or trailing dashes");
+  assert.equal(slugify("---test---"), "test", "Should strip leading and trailing dashes");
+  assert.equal(slugify(" , start and end . "), "start-and-end", "Should strip leading and trailing punctuation and spaces");
+});
+
+test("pins existing behavior: basic space replacement and trimming", () => {
+  assert.equal(slugify("Hello World"), "hello-world", "Should replace spaces with dashes");
+  assert.equal(slugify("  Trim Me  "), "trim-me", "Should trim leading and trailing spaces");
+  assert.equal(slugify("ALREADY-LOWERCASE"), "already-lowercase", "Should lowercase the input");
+});
+```

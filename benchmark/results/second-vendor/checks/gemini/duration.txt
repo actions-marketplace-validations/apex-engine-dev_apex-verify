@@ -1,0 +1,40 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { parseDuration } from "../src/duration.js";
+
+test("existing behavior: plain seconds and minutes", () => {
+  assert.equal(parseDuration("90s"), 90, "90s should be 90 seconds");
+  assert.equal(parseDuration("5m"), 300, "5m should be 300 seconds");
+  assert.equal(parseDuration("0s"), 0, "0s should be 0 seconds");
+});
+
+test("new units: hours and days", () => {
+  assert.equal(parseDuration("1h"), 3600, "1h should be 3600 seconds");
+  assert.equal(parseDuration("2h"), 7200, "2h should be 7200 seconds");
+  assert.equal(parseDuration("1d"), 86400, "1d should be 86400 seconds");
+  assert.equal(parseDuration("2d"), 172800, "2d should be 172800 seconds");
+});
+
+test("combinations without spaces", () => {
+  assert.equal(parseDuration("1h30m"), 5400, "1h30m should be 5400 seconds");
+  assert.equal(parseDuration("1m30s"), 90, "1m30s should be 90 seconds");
+  assert.equal(parseDuration("1d2h3m4s"), 86400 + 7200 + 180 + 4, "1d2h3m4s should be 93784 seconds");
+});
+
+test("combinations with spaces between parts", () => {
+  assert.equal(parseDuration("2d 4h"), 187200, "2d 4h should be 187200 seconds");
+  assert.equal(parseDuration("1h 30m 45s"), 3600 + 1800 + 45, "1h 30m 45s should be 5445 seconds");
+  assert.equal(parseDuration("1d   12h"), 86400 + 43200, "multiple spaces between parts should be allowed");
+});
+
+test("garbage input throws an Error", () => {
+  assert.throws(() => parseDuration("garbage"), Error, "Plain text should throw");
+  assert.throws(() => parseDuration(""), Error, "Empty string should throw");
+  assert.throws(() => parseDuration("10"), Error, "Number without unit should throw");
+  assert.throws(() => parseDuration("1x"), Error, "Invalid unit should throw");
+  assert.throws(() => parseDuration("1h 30x"), Error, "Partially invalid string should throw");
+  assert.throws(() => parseDuration("h"), Error, "Unit without number should throw");
+  assert.throws(() => parseDuration("1 h"), Error, "Space between number and unit should throw if not supported as a part");
+});
+```

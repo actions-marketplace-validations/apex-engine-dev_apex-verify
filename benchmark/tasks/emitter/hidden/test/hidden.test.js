@@ -1,0 +1,10 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { Emitter } from "../src/emitter.js";
+test("once does not skip the next listener", () => { const e = new Emitter(); const got = []; e.once("x", () => got.push("once")); e.on("x", () => got.push("on")); e.emit("x"); assert.deepEqual(got, ["once", "on"]); e.emit("x"); assert.deepEqual(got, ["once", "on", "on"]); });
+test("off with the original fn removes a once listener", () => { const e = new Emitter(); let n = 0; const f = () => n++; e.once("x", f); e.off("x", f); e.emit("x"); assert.equal(n, 0); });
+test("off during emit does not skip", () => { const e = new Emitter(); const got = []; const a = () => { got.push("a"); e.off("x", a); }; e.on("x", a); e.on("x", () => got.push("b")); e.emit("x"); assert.deepEqual(got, ["a", "b"]); });
+test("listener added during emit waits for the next emit", () => { const e = new Emitter(); const got = []; e.on("x", () => { got.push(1); e.on("x", () => got.push(2)); }); e.emit("x"); assert.deepEqual(got, [1]); });
+test("same fn registered twice via on, off removes one", () => { const e = new Emitter(); let n = 0; const f = () => n++; e.on("x", f); e.on("x", f); e.off("x", f); e.emit("x"); assert.equal(n, 1); });
+test("emit returns whether anything ran", () => { const e = new Emitter(); e.once("x", () => {}); assert.equal(e.emit("x"), true); assert.equal(e.emit("x"), false); });
+test("once passes args", () => { const e = new Emitter(); let got; e.once("x", (a, b) => (got = [a, b])); e.emit("x", 1, 2); assert.deepEqual(got, [1, 2]); });

@@ -1,0 +1,36 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 18:46:08
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/retry.js b/src/retry.js
+--- a/src/retry.js	2026-11-19 21:42:44
++++ b/src/retry.js	2026-11-20 18:49:44
+@@ -1 +1,23 @@
+ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
++
++export const retry = async (fn, options) => {
++  const retries = options.retries;
++  let delayMs = options.delayMs;
++  const factor = options.factor !== undefined ? options.factor : 2;
++  const shouldRetry = options.shouldRetry;
++
++  let attempt = 1;
++
++  while (true) {
++    try {
++      return await fn(attempt);
++    } catch (err) {
++      if (attempt > retries || (shouldRetry && !shouldRetry(err))) {
++        throw err;
++      }
++      await sleep(delayMs);
++      delayMs *= factor;
++      attempt++;
++    }
++  }
++};

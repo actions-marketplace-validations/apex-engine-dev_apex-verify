@@ -1,0 +1,11 @@
+{
+  "id": "emitter",
+  "kind": "fix",
+  "title": "Listeners skipped after a once() fires",
+  "prompt": "Bug in src/emitter.js: when a listener registered with once() fires, the next listener for the same event sometimes does not run. Also off(event, fn) does nothing if fn was registered with once(). Please fix both. Keep the rest of the API as is.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

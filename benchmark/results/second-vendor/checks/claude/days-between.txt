@@ -1,0 +1,79 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { daysBetween } from "../src/dates.js";
+
+const ZONES = [
+  "America/New_York",
+  "America/Los_Angeles",
+  "Europe/London",
+  "Australia/Sydney",
+  "Pacific/Auckland",
+  "UTC",
+];
+
+function inZone(zone, fn) {
+  const old = process.env.TZ;
+  process.env.TZ = zone;
+  try {
+    return fn();
+  } finally {
+    if (old === undefined) delete process.env.TZ;
+    else process.env.TZ = old;
+  }
+}
+
+test("range across the March clock change is 2 days", () => {
+  assert.equal(daysBetween("2024-03-09", "2024-03-11"), 2, "expected 2 days across the spring change");
+});
+
+test("March clock change in New York", () => {
+  inZone("America/New_York", () => {
+    assert.equal(daysBetween("2024-03-09", "2024-03-11"), 2, "expected 2 in New York");
+    assert.equal(daysBetween("2024-03-10", "2024-03-11"), 1, "expected 1 on the change day");
+    assert.equal(daysBetween("2024-03-01", "2024-03-31"), 30, "expected 30 over the whole month");
+  });
+});
+
+test("November clock change in New York", () => {
+  inZone("America/New_York", () => {
+    assert.equal(daysBetween("2024-11-02", "2024-11-04"), 2, "expected 2 across the autumn change");
+    assert.equal(daysBetween("2024-11-03", "2024-11-04"), 1, "expected 1 on the change day");
+  });
+});
+
+test("same answer in every timezone", () => {
+  for (const zone of ZONES) {
+    inZone(zone, () => {
+      assert.equal(daysBetween("2024-03-09", "2024-03-11"), 2, "expected 2 in " + zone);
+      assert.equal(daysBetween("2024-03-30", "2024-04-02"), 3, "expected 3 across Europe change in " + zone);
+      assert.equal(daysBetween("2024-10-05", "2024-10-08"), 3, "expected 3 across southern change in " + zone);
+      assert.equal(daysBetween("2024-11-02", "2024-11-04"), 2, "expected 2 across autumn change in " + zone);
+      assert.equal(daysBetween("2024-01-01", "2024-12-31"), 365, "expected 365 over the leap year in " + zone);
+    });
+  }
+});
+
+test("same date is 0 days", () => {
+  for (const zone of ZONES) {
+    inZone(zone, () => {
+      assert.equal(daysBetween("2024-03-10", "2024-03-10"), 0, "expected 0 in " + zone);
+    });
+  }
+});
+
+test("result is a whole number", () => {
+  inZone("America/New_York", () => {
+    assert.ok(Number.isInteger(daysBetween("2024-03-09", "2024-03-11")), "expected an integer");
+  });
+});
+
+test("leap day and year boundary", () => {
+  assert.equal(daysBetween("2024-02-28", "2024-03-01"), 2, "expected 2 across a leap day");
+  assert.equal(daysBetween("2023-12-31", "2024-01-01"), 1, "expected 1 across new year");
+});
+
+test("plain range away from clock changes still works", () => {
+  assert.equal(daysBetween("2024-01-01", "2024-01-31"), 30, "expected 30");
+});
+```

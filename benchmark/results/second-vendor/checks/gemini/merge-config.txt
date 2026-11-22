@@ -1,0 +1,69 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mergeConfig } from "../src/config.js";
+
+test("does not modify base argument", () => {
+  const base = { a: 1, n: { x: 1 } };
+  const override = { b: 2, n: { y: 2 } };
+  mergeConfig(base, override);
+  assert.deepEqual(base, { a: 1, n: { x: 1 } }, "base argument should not be mutated");
+});
+
+test("does not modify override argument", () => {
+  const base = { a: 1, n: { x: 1 } };
+  const override = { b: 2, n: { y: 2 } };
+  mergeConfig(base, override);
+  assert.deepEqual(override, { b: 2, n: { y: 2 } }, "override argument should not be mutated");
+});
+
+test("result does not share nested objects with base or override", () => {
+  const base = { n: { x: 1 } };
+  const override = { m: { y: 2 }, n: { z: 3 } };
+  const result = mergeConfig(base, override);
+  
+  assert.notEqual(result.n, base.n, "result should not share nested object reference with base");
+  assert.notEqual(result.m, override.m, "result should not share nested object reference with override");
+});
+
+test("nested objects are merged key by key", () => {
+  const result = mergeConfig({ n: { x: 1, shared: 1 } }, { n: { y: 2, shared: 2 } });
+  assert.deepEqual(result, { n: { x: 1, y: 2, shared: 2 } }, "nested objects should be merged key by key");
+});
+
+test("anything else in override wins", () => {
+  const result = mergeConfig(
+    { a: 1, b: { x: 1 }, c: "string" },
+    { a: 2, b: 3, c: { y: 2 } }
+  );
+  assert.deepEqual(result, { a: 2, b: 3, c: { y: 2 } }, "non-object overrides should replace base values and vice versa");
+});
+
+test("override value of undefined counts as not set", () => {
+  const result = mergeConfig(
+    { a: 1, n: { x: 1 } },
+    { a: undefined, b: undefined, n: { x: undefined, y: undefined } }
+  );
+  
+  assert.equal(result.a, 1, "existing base property should not be overwritten by undefined");
+  assert.equal("b" in result, false, "new property with undefined value should not be added");
+  assert.equal(result.n.x, 1, "existing nested base property should not be overwritten by undefined");
+  assert.equal("y" in result.n, false, "new nested property with undefined value should not be added");
+});
+
+test("pins existing behavior: merges flat properties", () => {
+  const result = mergeConfig({ a: 1 }, { b: 2 });
+  assert.deepEqual(result, { a: 1, b: 2 }, "should merge flat properties correctly");
+});
+
+test("handles empty inputs", () => {
+  const result1 = mergeConfig({}, { a: 1 });
+  assert.deepEqual(result1, { a: 1 }, "should handle empty base");
+  
+  const result2 = mergeConfig({ a: 1 }, {});
+  assert.deepEqual(result2, { a: 1 }, "should handle empty override");
+  
+  const result3 = mergeConfig({}, {});
+  assert.deepEqual(result3, {}, "should handle both empty");
+});
+```

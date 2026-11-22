@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "reallydone": {
+      "command": "npx",
+      "args": ["--yes", "https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz", "verify", "--mcp"]
+    }
+  }
+}

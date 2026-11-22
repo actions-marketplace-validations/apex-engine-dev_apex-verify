@@ -1,0 +1,147 @@
+{
+  "arms": {
+    "alone": {
+      "runs": 9,
+      "tasks": 9,
+      "passes": 9,
+      "passRate": 1,
+      "passCI": [
+        0.700854948272956,
+        1
+      ],
+      "tokensTotal": {
+        "n": 9,
+        "median": 252143,
+        "mean": 236081.11111111112,
+        "medianCI": [
+          152634,
+          323194
+        ],
+        "meanCI": [
+          188380.11111111112,
+          286209.22222222225
+        ]
+      },
+      "tokensIn": {
+        "n": 9,
+        "median": 250038,
+        "mean": 234062.22222222222
+      },
+      "tokensOut": {
+        "n": 9,
+        "median": 2093,
+        "mean": 2018.888888888889
+      },
+      "seconds": {
+        "n": 9,
+        "median": 117.043,
+        "mean": 152.82044444444446,
+        "medianCI": [
+          80.729,
+          277.043
+        ],
+        "meanCI": [
+          102.17766666666665,
+          209.22866666666667
+        ]
+      },
+      "falseReady": {
+        "knownRuns": 9,
+        "claimedDone": 9,
+        "falseReady": 0,
+        "rate": 0,
+        "ci": [
+          0,
+          0.299145051727044
+        ]
+      },
+      "timeouts": 0,
+      "suspended": 0,
+      "agentNonZeroExit": 0
+    },
+    "engine": {
+      "runs": 9,
+      "tasks": 9,
+      "passes": 8,
+      "passRate": 0.8888888888888888,
+      "passCI": [
+        0.565000291629209,
+        0.9801091125830901
+      ],
+      "tokensTotal": {
+        "n": 9,
+        "median": 14871,
+        "mean": 31204.555555555555,
+        "medianCI": [
+          10294,
+          62099
+        ],
+        "meanCI": [
+          14168.888888888889,
+          53839.666666666664
+        ]
+      },
+      "tokensIn": {
+        "n": 9,
+        "median": 11372,
+        "mean": 23980.666666666668
+      },
+      "tokensOut": {
+        "n": 9,
+        "median": 3499,
+        "mean": 7223.888888888889
+      },
+      "seconds": {
+        "n": 9,
+        "median": 38.957,
+        "mean": 48.70377777777778,
+        "medianCI": [
+          12.88,
+          81.703
+        ],
+        "meanCI": [
+          26.540111111111116,
+          76.63344444444445
+        ]
+      },
+      "falseReady": {
+        "knownRuns": 9,
+        "claimedDone": 8,
+        "falseReady": 0,
+        "rate": 0,
+        "ci": [
+          0,
+          0.3244075683414076
+        ]
+      },
+      "timeouts": 0,
+      "suspended": 0,
+      "agentNonZeroExit": 1
+    }
+  },
+  "baseline": "alone",
+  "pairs": [
+    {
+      "arm": "engine",
+      "baseline": "alone",
+      "tasks": 9,
+      "onlyAPasses": 0,
+      "onlyBPasses": 1,
+      "pMcNemar": 1,
+      "ratesUp": 0,
+      "ratesDown": 1,
+      "pSign": 1,
+      "meanPassRateDiff": -0.1111111111111111,
+      "diffCI": [
+        -0.3333333333333333,
+        0
+      ],
+      "verdict": "no significant difference",
+      "underpowered": true
+    }
+  ],
+  "warnings": [
+    "engine vs alone: only 1 discordant task(s); the exact test cannot reach p < 0.05. Add tasks, not just runs."
+  ],
+  "runs": 18
+}

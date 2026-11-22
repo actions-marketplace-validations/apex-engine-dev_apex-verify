@@ -1,0 +1,22 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/duration.js b/src/duration.js
+--- a/src/duration.js	2026-11-19 21:42:44
++++ b/src/duration.js	2026-11-20 07:29:38
+@@ -1,5 +1,15 @@
+ export function parseDuration(str) {
+-  const m = /^(\d+)([sm])$/.exec(str);
+-  if (!m) throw new Error("bad duration: " + str);
+-  return Number(m[1]) * (m[2] === "m" ? 60 : 1);
++  let seconds = 0;
++  const parts = str.split(/\s+/);
++  for (const part of parts) {
++    const m = /^(\d+)([smhd])$/.exec(part);
++    if (!m) throw new Error("bad duration part: " + part);
++    const value = Number(m[1]);
++    const unit = m[2];
++    if (unit === "s") seconds += value;
++    else if (unit === "m") seconds += value * 60;
++    else if (unit === "h") seconds += value * 3600;
++    else if (unit === "d") seconds += value * 86400;
++  }
++  return seconds;
+ }

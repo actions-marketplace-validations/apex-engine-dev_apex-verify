@@ -1,0 +1,58 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-19 21:57:35
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/config.js b/src/config.js
+--- a/src/config.js	2026-11-19 21:42:44
++++ b/src/config.js	2026-11-19 21:59:07
+@@ -1,10 +1,41 @@
++function isPlainObject(item) {
++  return item !== null && typeof item === 'object' && !Array.isArray(item);
++}
++
++function clone(item) {
++  if (item === null || typeof item !== 'object') {
++    return item;
++  }
++  if (Array.isArray(item)) {
++    return item.map(clone);
++  }
++  const result = {};
++  for (const key of Object.keys(item)) {
++    result[key] = clone(item[key]);
++  }
++  return result;
++}
++
+ export function mergeConfig(base, override) {
++  if (override === undefined) {
++    return clone(base);
++  }
++  if (!isPlainObject(override)) {
++    return clone(override);
++  }
++  
++  const result = isPlainObject(base) ? clone(base) : {};
++  
+   for (const key of Object.keys(override)) {
+-    if (typeof override[key] === "object" && typeof base[key] === "object") {
+-      mergeConfig(base[key], override[key]);
++    if (override[key] === undefined) {
++      continue;
++    }
++    if (isPlainObject(result[key]) && isPlainObject(override[key])) {
++      result[key] = mergeConfig(result[key], override[key]);
+     } else {
+-      base[key] = override[key];
++      result[key] = clone(override[key]);
+     }
+   }
+-  return base;
++  
++  return result;
+ }

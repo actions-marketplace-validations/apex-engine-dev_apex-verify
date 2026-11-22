@@ -1,0 +1,92 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 12:21:17
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-20 12:21:41
+@@ -1 +1,33 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++export function formatMoney(cents, currency) {
++  if (!Number.isInteger(cents)) {
++    throw new Error('Invalid input: cents must be an integer.');
++  }
++
++  let locale;
++  switch (currency) {
++    case 'USD':
++      locale = 'en-US';
++      break;
++    case 'EUR':
++      // The example "€5.00" suggests a locale that uses '.' as a decimal separator for EUR.
++      // 'en-US' locale with 'EUR' currency formatting yields "€5.00".
++      locale = 'en-US';
++      break;
++    case 'GBP':
++      locale = 'en-GB';
++      break;
++    default:
++      throw new Error(`Unsupported currency code: ${currency}. Supported codes are USD, EUR, GBP.`);
++  }
++
++  // Format the number
++  // cents / 100 converts minor units to major units
++  const formatter = new Intl.NumberFormat(locale, {
++    style: 'currency',
++    currency: currency, // Use the provided currency code directly
++  });
++
++  return formatter.format(cents / 100);
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/money.test.js b/test/money.test.js
+--- a/test/money.test.js	1970-01-01 02:00:00
++++ b/test/money.test.js	2026-11-20 12:21:43
+@@ -0,0 +1,42 @@
++import { formatMoney } from '../src/money';
++
++describe('formatMoney', () => {
++  // Test cases for USD
++  it('should format USD correctly', () => {
++    expect(formatMoney(123456, 'USD')).toBe('$1,234.56');
++    expect(formatMoney(0, 'USD')).toBe('$0.00');
++    expect(formatMoney(50, 'USD')).toBe('$0.50');
++    expect(formatMoney(-100, 'USD')).toBe('-$1.00');
++  });
++
++  // Test cases for EUR
++  it('should format EUR correctly', () => {
++    expect(formatMoney(500, 'EUR')).toBe('€5.00');
++    expect(formatMoney(123456, 'EUR')).toBe('€1,234.56');
++    expect(formatMoney(0, 'EUR')).toBe('€0.00');
++    expect(formatMoney(-250, 'EUR')).toBe('-€2.50');
++  });
++
++  // Test cases for GBP
++  it('should format GBP correctly', () => {
++    expect(formatMoney(123456, 'GBP')).toBe('£1,234.56');
++    expect(formatMoney(0, 'GBP')).toBe('£0.00');
++    expect(formatMoney(75, 'GBP')).toBe('£0.75');
++    expect(formatMoney(-5000, 'GBP')).toBe('-£50.00');
++  });
++
++  // Test cases for unsupported currency
++  it('should throw an error for unsupported currency codes', () => {
++    expect(() => formatMoney(1000, 'CAD')).toThrow('Unsupported currency code: CAD. Supported codes are USD, EUR, GBP.');
++    expect(() => formatMoney(1000, 'JPY')).toThrow('Unsupported currency code: JPY. Supported codes are USD, EUR, GBP.');
++  });
++
++  // Test cases for invalid input (cents)
++  it('should throw an error for non-integer cents', () => {
++    expect(() => formatMoney(123.45, 'USD')).toThrow('Invalid input: cents must be an integer.');
++    expect(() => formatMoney(NaN, 'USD')).toThrow('Invalid input: cents must be an integer.');
++    expect(() => formatMoney(null, 'USD')).toThrow('Invalid input: cents must be an integer.');
++    expect(() => formatMoney(undefined, 'USD')).toThrow('Invalid input: cents must be an integer.');
++    expect(() => formatMoney('1000', 'USD')).toThrow('Invalid input: cents must be an integer.');
++  });
++});

@@ -1,0 +1,69 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 18:33:59
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/README.md b/README.md
+--- a/README.md	2026-11-19 21:42:44
++++ b/README.md	2026-11-20 18:40:05
+@@ -1,3 +1,3 @@
+ # items
+ 
+-Use `fetchItem(id)` to read an item. `run("get", id)` does the same through the command table.
++Use `loadItem(id)` to read an item. `run("get", id)` does the same through the command table.
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/commands.js b/src/commands.js
+--- a/src/commands.js	2026-11-19 21:42:44
++++ b/src/commands.js	2026-11-20 18:40:05
+@@ -2,7 +2,7 @@
+ 
+ // command name -> store function name
+ export const COMMANDS = {
+-  get: "fetchItem",
++  get: "loadItem",
+   count: "itemCount",
+ };
+ 
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/index.js b/src/index.js
+--- a/src/index.js	2026-11-19 21:42:44
++++ b/src/index.js	2026-11-20 18:40:05
+@@ -1,3 +1,3 @@
+-export { fetchItem, itemCount } from "./store.js";
++export { loadItem, itemCount } from "./store.js";
+ export { describe, total } from "./service.js";
+ export { run } from "./commands.js";
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/service.js b/src/service.js
+--- a/src/service.js	2026-11-19 21:42:44
++++ b/src/service.js	2026-11-20 18:40:05
+@@ -1,10 +1,10 @@
+-import { fetchItem } from "./store.js";
++import { loadItem } from "./store.js";
+ 
+ export function describe(id) {
+-  const it = fetchItem(id);
++  const it = loadItem(id);
+   return it ? `item ${it.id} (${it.n})` : "missing";
+ }
+ 
+ export function total(ids) {
+-  return ids.map((i) => fetchItem(i)).filter(Boolean).reduce((s, it) => s + it.n, 0);
++  return ids.map((i) => loadItem(i)).filter(Boolean).reduce((s, it) => s + it.n, 0);
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/store.js b/src/store.js
+--- a/src/store.js	2026-11-19 21:42:44
++++ b/src/store.js	2026-11-20 18:40:05
+@@ -1,8 +1,8 @@
+-// Item store. fetchItem(id) returns a copy of the stored item or null.
++// Item store. loadItem(id) returns a copy of the stored item or null.
+ const items = new Map([["a", { id: "a", n: 1 }], ["b", { id: "b", n: 2 }]]);
+ 
+-/** fetchItem: look up an item by id. */
+-export function fetchItem(id) {
++/** loadItem: look up an item by id. */
++export function loadItem(id) {
+   const it = items.get(id);
+   return it ? { ...it } : null;
+ }

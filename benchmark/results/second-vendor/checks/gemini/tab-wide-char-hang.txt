@@ -1,0 +1,89 @@
+```python
+import sys
+import os
+import pytest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import tabulate
+from tabulate import _CustomTextWrap
+
+def test_wide_character_width_1():
+    """
+    Test that _CustomTextWrap does not hang and puts each wide character
+    on its own line when the requested width is smaller than the character's width.
+    """
+    if tabulate.wcwidth is None:
+        pytest.skip("wcwidth library is not available")
+
+    original_mode = tabulate.WIDE_CHARS_MODE
+    tabulate.WIDE_CHARS_MODE = True
+    
+    try:
+        wrapper = _CustomTextWrap(width=1)
+        # "안녕" are two Korean characters, each typically 2 columns wide.
+        result = wrapper.wrap("안녕")
+        assert result == ["안", "녕"], "Expected each wide character on its own line when width is 1"
+    finally:
+        tabulate.WIDE_CHARS_MODE = original_mode
+
+def test_wide_character_mixed_width_1():
+    """
+    Test mixed wide and narrow characters with width 1.
+    """
+    if tabulate.wcwidth is None:
+        pytest.skip("wcwidth library is not available")
+
+    original_mode = tabulate.WIDE_CHARS_MODE
+    tabulate.WIDE_CHARS_MODE = True
+    
+    try:
+        wrapper = _CustomTextWrap(width=1)
+        result = wrapper.wrap("a안b녕c")
+        assert result == ["a", "안", "b", "녕", "c"], "Expected each character on its own line"
+    finally:
+        tabulate.WIDE_CHARS_MODE = original_mode
+
+def test_narrow_character_width_1():
+    """
+    Test normal characters with width 1.
+    """
+    wrapper = _CustomTextWrap(width=1)
+    result = wrapper.wrap("abc")
+    assert result == ["a", "b", "c"], "Expected each normal character on its own line"
+
+def test_empty_string_wrap():
+    """
+    Test wrapping an empty string.
+    """
+    wrapper = _CustomTextWrap(width=1)
+    result = wrapper.wrap("")
+    assert result == [], "Expected empty list for empty string"
+
+def test_normal_wrapping_behavior():
+    """
+    Pin nearby behavior: normal wrapping with a larger width.
+    """
+    wrapper = _CustomTextWrap(width=5)
+    result = wrapper.wrap("hello world")
+    assert result == ["hello", "world"], "Expected normal wrapping at spaces"
+
+def test_tabulate_maxcolwidths_wide_chars():
+    """
+    Test that tabulate itself does not hang when maxcolwidths is 1 and data contains wide characters.
+    """
+    if tabulate.wcwidth is None:
+        pytest.skip("wcwidth library is not available")
+
+    original_mode = tabulate.WIDE_CHARS_MODE
+    tabulate.WIDE_CHARS_MODE = True
+    
+    try:
+        table = [["안녕"]]
+        # Should not hang and should wrap the text
+        result = tabulate.tabulate(table, maxcolwidths=[1], tablefmt="grid")
+        assert "안" in result, "Expected '안' in the output"
+        assert "녕" in result, "Expected '녕' in the output"
+    finally:
+        tabulate.WIDE_CHARS_MODE = original_mode
+```

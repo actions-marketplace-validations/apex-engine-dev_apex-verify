@@ -1,0 +1,11 @@
+{
+  "id": "csv",
+  "kind": "fix",
+  "title": "CSV parser breaks on quoted fields",
+  "prompt": "parseCSV(text) in src/csv.js returns an array of rows (arrays of strings). It falls over on real exports: a field like \"Smith, John\" gets split at the comma, and fields containing doubled quotes or line breaks inside quotes come out garbled. Please make it handle normal CSV quoting.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

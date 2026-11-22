@@ -1,0 +1,135 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-21 00:05:22
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/todos.js b/src/todos.js
+--- a/src/todos.js	2026-11-19 21:42:44
++++ b/src/todos.js	2026-11-21 00:08:36
+@@ -19,4 +19,35 @@
+   pending() {
+     return this.items.filter((i) => !i.done);
+   }
++  toJSON() {
++    return {
++      items: this.items.map((item) => ({ ...item })),
++    };
++  }
++  static fromJSON(obj) {
++    const list = new TodoList();
++    if (!obj) return list;
++    if (typeof obj === "string") {
++      try {
++        obj = JSON.parse(obj);
++      } catch {
++        return list;
++      }
++    }
++    const rawItems = Array.isArray(obj) ? obj : (obj.items || []);
++    list.items = rawItems.map((item) => ({
++      ...item,
++      done: Boolean(item.done),
++    }));
++    const maxId = list.items.reduce(
++      (max, item) => Math.max(max, typeof item.id === "number" ? item.id : 0),
++      0
++    );
++    if (typeof obj?.nextId === "number") {
++      list.nextId = Math.max(obj.nextId, maxId + 1);
++    } else {
++      list.nextId = maxId + 1;
++    }
++    return list;
++  }
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-21 00:10:14
+@@ -6,3 +6,83 @@
+   const r = TodoList.fromJSON(l.toJSON());
+   assert.equal(r.pending().length, 1);
+ });
++
++test("plain object snapshot and isolation", () => {
++  const l = new TodoList();
++  l.add("item 1");
++  l.add("item 2");
++  l.complete(1);
++
++  const snapshot = l.toJSON();
++  assert.equal(typeof snapshot, "object");
++  assert.ok(!Array.isArray(snapshot));
++  assert.deepEqual(snapshot, {
++    items: [
++      { id: 1, text: "item 1", done: true },
++      { id: 2, text: "item 2", done: false },
++    ],
++  });
++
++  // Mutating snapshot does not affect original list
++  snapshot.items[0].text = "mutated";
++  assert.equal(l.items[0].text, "item 1");
++});
++
++test("adding new todo after restoring does not clash with existing ids", () => {
++  const l = new TodoList();
++  l.add("a"); // id 1
++  l.add("b"); // id 2
++  l.remove(1); // items has only id 2
++
++  const r = TodoList.fromJSON(l.toJSON());
++  const newTodo = r.add("c");
++  assert.ok(newTodo.id > 2, `expected new id to not clash with existing ids, got ${newTodo.id}`);
++  assert.equal(r.items.find((i) => i.id === newTodo.id), newTodo);
++
++  // Existing item remains untouched
++  assert.equal(r.items.find((i) => i.id === 2)?.text, "b");
++});
++
++test("done status is preserved across roundtrip and operations", () => {
++  const l = new TodoList();
++  l.add("task 1");
++  l.add("task 2");
++  l.complete(2);
++
++  const r = TodoList.fromJSON(l.toJSON());
++  assert.equal(r.items[0].done, false);
++  assert.equal(r.items[1].done, true);
++  assert.deepEqual(r.pending(), [{ id: 1, text: "task 1", done: false }]);
++
++  // Can complete remaining tasks on restored list
++  r.complete(1);
++  assert.equal(r.pending().length, 0);
++});
++
++test("restoring from snapshot with arbitrary existing ids", () => {
++  const snapshot = {
++    items: [
++      { id: 10, text: "task 10", done: true },
++      { id: 5, text: "task 5", done: false },
++    ],
++  };
++
++  const r = TodoList.fromJSON(snapshot);
++  assert.equal(r.pending().length, 1);
++  assert.equal(r.items.find((i) => i.id === 10)?.done, true);
++
++  const newTodo = r.add("task 11");
++  assert.ok(newTodo.id > 10, `expected id > 10, got ${newTodo.id}`);
++  assert.ok(![5, 10].includes(newTodo.id));
++});
++
++test("restoring empty list", () => {
++  const l = new TodoList();
++  const r = TodoList.fromJSON(l.toJSON());
++  assert.equal(r.items.length, 0);
++  assert.equal(r.pending().length, 0);
++
++  const first = r.add("first");
++  assert.equal(first.id, 1);
++});
++

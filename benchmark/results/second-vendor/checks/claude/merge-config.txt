@@ -1,0 +1,71 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mergeConfig } from "../src/config.js";
+
+test("base is not modified", () => {
+  const base = { a: 1, n: { x: 1, y: 2 } };
+  mergeConfig(base, { b: 2, n: { y: 3 } });
+  assert.deepEqual(base, { a: 1, n: { x: 1, y: 2 } }, "base should be unchanged after merge");
+});
+
+test("override is not modified", () => {
+  const override = { b: 2, n: { y: 3 } };
+  mergeConfig({ a: 1, n: { x: 1 } }, override);
+  assert.deepEqual(override, { b: 2, n: { y: 3 } }, "override should be unchanged after merge");
+});
+
+test("result is a new object", () => {
+  const base = { a: 1 };
+  const r = mergeConfig(base, { b: 2 });
+  assert.notEqual(r, base, "result should not be the base object");
+  assert.deepEqual(r, { a: 1, b: 2 }, "result should hold both keys");
+});
+
+test("nested objects merge key by key", () => {
+  const r = mergeConfig({ n: { x: 1, y: 2, deep: { p: 1, q: 2 } } }, { n: { y: 3, deep: { q: 9 } } });
+  assert.deepEqual(r, { n: { x: 1, y: 3, deep: { p: 1, q: 9 } } }, "nested keys should merge");
+});
+
+test("non-object override values win", () => {
+  const r = mergeConfig({ a: 1, s: "x", n: { x: 1 } }, { a: 2, s: "y", n: 5 });
+  assert.equal(r.a, 2, "number override should win");
+  assert.equal(r.s, "y", "string override should win");
+  assert.equal(r.n, 5, "primitive override should replace a nested object");
+});
+
+test("result does not share nested objects with base or override", () => {
+  const base = { n: { x: 1 }, onlyBase: { k: 1 } };
+  const override = { m: { z: 1 }, n: { y: 2 } };
+  const r = mergeConfig(base, override);
+  assert.notEqual(r.n, base.n, "merged nested object should not be base's");
+  assert.notEqual(r.n, override.n, "merged nested object should not be override's");
+  assert.notEqual(r.onlyBase, base.onlyBase, "base-only nested object should be copied");
+  assert.notEqual(r.m, override.m, "override-only nested object should be copied");
+  r.n.x = 99; r.onlyBase.k = 99; r.m.z = 99;
+  assert.equal(base.n.x, 1, "changing result should not change base.n");
+  assert.equal(base.onlyBase.k, 1, "changing result should not change base.onlyBase");
+  assert.equal(override.m.z, 1, "changing result should not change override.m");
+});
+
+test("repeated calls do not see leftovers from earlier ones", () => {
+  const defaults = { a: 1, n: { x: 1 } };
+  mergeConfig(defaults, { a: 2, n: { x: 5, y: 6 }, extra: true });
+  const r = mergeConfig(defaults, { b: 3 });
+  assert.deepEqual(r, { a: 1, n: { x: 1 }, b: 3 }, "second call should only reflect defaults and its own override");
+});
+
+test("undefined override value counts as not set", () => {
+  const r = mergeConfig({ a: 1, n: { x: 1 } }, { a: undefined, n: { x: undefined }, b: undefined });
+  assert.equal(r.a, 1, "undefined should not overwrite a");
+  assert.equal(r.n.x, 1, "undefined should not overwrite nested x");
+  assert.equal(r.b, undefined, "undefined key should stay unset");
+});
+
+test("empty override gives an equal copy of base", () => {
+  const base = { a: 1, n: { x: 1 } };
+  const r = mergeConfig(base, {});
+  assert.deepEqual(r, base, "result should equal base");
+  assert.notEqual(r.n, base.n, "nested object should still be a copy");
+});
+```

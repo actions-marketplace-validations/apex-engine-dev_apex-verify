@@ -1,0 +1,6 @@
+ReallyDone
+Copyright (c) 2026 the ReallyDone contributors
+
+Licensed under the Apache License, Version 2.0; see LICENSE. "ReallyDone" and the ReallyDone logo are trademarks of the project's maintainers; see TRADEMARKS.md.
+
+Optional runtime dependency, not distributed here: Graphify (graphifyy), Apache-2.0, https://pypi.org/project/graphifyy/ .

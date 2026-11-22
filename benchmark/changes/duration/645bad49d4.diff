@@ -1,0 +1,53 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 14:15:09
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/duration.js b/src/duration.js
+--- a/src/duration.js	2026-11-19 21:42:44
++++ b/src/duration.js	2026-11-20 14:16:46
+@@ -1,5 +1,17 @@
+ export function parseDuration(str) {
+-  const m = /^(\d+)([sm])$/.exec(str);
+-  if (!m) throw new Error("bad duration: " + str);
+-  return Number(m[1]) * (m[2] === "m" ? 60 : 1);
++  if (typeof str !== 'string' || !/^\s*(?:\d+\s*[smhd]\s*)+$/.test(str)) {
++    throw new Error("bad duration: " + str);
++  }
++  const partRegex = /(\d+)\s*([smhd])/g;
++  let match;
++  let total = 0;
++  while ((match = partRegex.exec(str)) !== null) {
++    const val = Number(match[1]);
++    const unit = match[2];
++    if (unit === 's') total += val;
++    else if (unit === 'm') total += val * 60;
++    else if (unit === 'h') total += val * 3600;
++    else if (unit === 'd') total += val * 86400;
++  }
++  return total;
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-20 14:18:24
+@@ -6,3 +6,16 @@
+   assert.equal(parseDuration("5m"), 300);
+ });
+ test("hours", () => assert.equal(parseDuration("1h"), 3600));
++
++test("combinations", () => {
++  assert.equal(parseDuration("1h30m"), 5400);
++  assert.equal(parseDuration("2d 4h"), 187200);
++  assert.equal(parseDuration("2d 4h 30m 10s"), 189010);
++});
++
++test("garbage inputs", () => {
++  assert.throws(() => parseDuration("1h30x"), /bad duration/);
++  assert.throws(() => parseDuration("garbage"), /bad duration/);
++  assert.throws(() => parseDuration(""), /bad duration/);
++  assert.throws(() => parseDuration(null), /bad duration/);
++});

@@ -1,0 +1,89 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { Emitter } from "../src/emitter.js";
+
+test("listener after a once listener still runs", () => {
+  const e = new Emitter(); const got = [];
+  e.once("x", () => got.push("once"));
+  e.on("x", () => got.push("next"));
+  e.emit("x");
+  assert.deepEqual(got, ["once", "next"], "both the once listener and the next one should run");
+});
+
+test("several once listeners in a row all run", () => {
+  const e = new Emitter(); const got = [];
+  e.once("x", () => got.push(1));
+  e.once("x", () => got.push(2));
+  e.once("x", () => got.push(3));
+  e.emit("x");
+  assert.deepEqual(got, [1, 2, 3], "every once listener should run on the first emit");
+});
+
+test("once listener runs only one time", () => {
+  const e = new Emitter(); let n = 0;
+  e.once("x", () => n++);
+  e.emit("x"); e.emit("x");
+  assert.equal(n, 1, "once listener should run exactly once");
+});
+
+test("once listener receives the emitted arguments", () => {
+  const e = new Emitter(); const got = [];
+  e.once("x", (a, b) => got.push(a, b));
+  e.emit("x", 1, 2);
+  assert.deepEqual(got, [1, 2], "once listener should get the emit arguments");
+});
+
+test("regular listeners around a once listener keep running on later emits", () => {
+  const e = new Emitter(); const got = [];
+  e.on("x", () => got.push("a"));
+  e.once("x", () => got.push("o"));
+  e.on("x", () => got.push("b"));
+  e.emit("x"); e.emit("x");
+  assert.deepEqual(got, ["a", "o", "b", "a", "b"], "a and b run each time, o only the first time");
+});
+
+test("off removes a listener registered with once", () => {
+  const e = new Emitter(); let n = 0;
+  const fn = () => n++;
+  e.once("x", fn);
+  e.off("x", fn);
+  assert.equal(e.emit("x"), false, "no listener should remain after off");
+  assert.equal(n, 0, "removed once listener should not run");
+});
+
+test("off of a once listener leaves other listeners alone", () => {
+  const e = new Emitter(); const got = [];
+  const fn = () => got.push("once");
+  e.once("x", fn);
+  e.on("x", () => got.push("other"));
+  e.off("x", fn);
+  e.emit("x");
+  assert.deepEqual(got, ["other"], "only the other listener should run");
+});
+
+test("off still removes a regular listener", () => {
+  const e = new Emitter(); let n = 0;
+  const fn = () => n++;
+  e.on("x", fn);
+  e.off("x", fn);
+  e.emit("x");
+  assert.equal(n, 0, "removed listener should not run");
+});
+
+test("off with an unknown event or function does not throw", () => {
+  const e = new Emitter();
+  assert.doesNotThrow(() => e.off("nope", () => {}), "off on unknown event should not throw");
+  e.on("x", () => {});
+  assert.doesNotThrow(() => e.off("x", () => {}), "off with unregistered fn should not throw");
+});
+
+test("emit returns whether listeners existed, and API chains", () => {
+  const e = new Emitter();
+  assert.equal(e.on("x", () => {}), e, "on should return the emitter");
+  assert.equal(e.once("y", () => {}), e, "once should return the emitter");
+  assert.equal(e.off("x", () => {}), e, "off should return the emitter");
+  assert.equal(e.emit("x"), true, "emit with listeners returns true");
+  assert.equal(e.emit("z"), false, "emit with no listeners returns false");
+});
+```

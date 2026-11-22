@@ -1,0 +1,75 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-20 12:20:33
+@@ -1 +1,25 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++const CURRENCIES = {
++  USD: { symbol: "$", fractionDigits: 2 },
++  EUR: { symbol: "€", fractionDigits: 2 },
++  GBP: { symbol: "£", fractionDigits: 2 },
++};
++
++export const formatMoney = (cents, currency) => {
++  if (!Number.isInteger(cents)) {
++    throw new Error("cents must be an integer");
++  }
++
++  const currencyConfig = CURRENCIES[currency];
++  if (!currencyConfig) {
++    throw new Error(`Unsupported currency: ${currency}`);
++  }
++
++  const { symbol, fractionDigits } = currencyConfig;
++  const dollars = cents / 100;
++  const formattedDollars = dollars.toFixed(fractionDigits);
++  const parts = formattedDollars.split(".");
++  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
++  return `${symbol}${parts.join(".")}`;
++};
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/formatmoney-cents-currency.test.js b/test/formatmoney-cents-currency.test.js
+--- a/test/formatmoney-cents-currency.test.js	1970-01-01 02:00:00
++++ b/test/formatmoney-cents-currency.test.js	2026-11-20 12:20:33
+@@ -0,0 +1,42 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { toCents, formatMoney } from "../src/money.js";
++
++test("formatMoney formats GBP", () => {
++  assert.equal(typeof formatMoney, "function");
++  assert.equal(formatMoney(123456, "GBP"), "£1,234.56");
++});
++
++test("formatMoney throws for unsupported currency", () => {
++  assert.equal(typeof formatMoney, "function");
++  assert.throws(() => formatMoney(123456, "CAD"), Error);
++});
++
++test("formatMoney throws for non-integers", () => {
++  assert.equal(typeof formatMoney, "function");
++  assert.throws(() => formatMoney(1234.56, "USD"), Error);
++  assert.throws(() => formatMoney(NaN, "USD"), Error);
++  assert.throws(() => formatMoney("1234", "USD"), Error);
++});
++
++test("toCents pins normal behavior", () => {
++  assert.equal(toCents(12.34), 1234);
++  assert.equal(toCents(5), 500);
++});
++
++test("Repeating the operation many times keeps working the same way each time", () => {
++  for (let i = 0; i < 50; i++) {
++    assert.equal(toCents(12.34), 1234);
++  }
++});
++
++test("Works on empty input: no throw, and the same result shape", () => {
++  const result = toCents();
++  assert.equal(typeof result, "number");
++  assert.ok(Number.isNaN(result));
++});
++
++test("The result keeps its type and format", () => {
++  const result = toCents(12.34);
++  assert.equal(typeof result, "number");
++});

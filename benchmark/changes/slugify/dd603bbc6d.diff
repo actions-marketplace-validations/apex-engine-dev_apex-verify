@@ -1,0 +1,63 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-21 07:40:35
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/slug.js b/src/slug.js
+--- a/src/slug.js	2026-11-19 21:42:44
++++ b/src/slug.js	2026-11-21 07:43:46
+@@ -1,3 +1,10 @@
+ export function slugify(text) {
+-  return String(text).toLowerCase().trim().replace(/\s+/g, "-");
++  return String(text)
++    .normalize("NFKD")
++    .replace(/[\u0300-\u036f]/g, "")
++    .toLowerCase()
++    .trim()
++    .replace(/[^a-z0-9]+/g, "-")
++    .replace(/^-+|-+$/g, "");
+ }
++
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-21 07:45:19
+@@ -1,7 +1,35 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { slugify } from "../src/slug.js";
++
+ test("basic", () => {
+   assert.equal(slugify("Hello World"), "hello-world");
+   assert.equal(slugify("Hello, World!"), "hello-world");
++});
++
++test("handles accents and diacritics", () => {
++  assert.equal(slugify("Crème Brûlée"), "creme-brulee");
++  assert.equal(slugify("café au lait"), "cafe-au-lait");
++  assert.equal(slugify("naïve façade"), "naive-facade");
++});
++
++test("handles punctuation and special characters", () => {
++  assert.equal(slugify("Hello, World!"), "hello-world");
++  assert.equal(slugify("foo @ bar # baz $ qux"), "foo-bar-baz-qux");
++  assert.equal(slugify("...leading and trailing..."), "leading-and-trailing");
++  assert.equal(slugify("---dashes---already---present---"), "dashes-already-present");
++  assert.equal(slugify("multiple   spaces   and---hyphens"), "multiple-spaces-and-hyphens");
++});
++
++test("handles digits and alphanumeric combinations", () => {
++  assert.equal(slugify("Top 10 Songs of 2024!"), "top-10-songs-of-2024");
++  assert.equal(slugify("123 456"), "123-456");
++  assert.equal(slugify(12345), "12345");
++});
++
++test("handles empty and whitespace strings", () => {
++  assert.equal(slugify(""), "");
++  assert.equal(slugify("   "), "");
++  assert.equal(slugify("---"), "");
++  assert.equal(slugify("!@#$%^&*()"), "");
+ });

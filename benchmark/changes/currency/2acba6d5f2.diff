@@ -1,0 +1,74 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-20 07:59:04
+@@ -1 +1,18 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++const currencyFormatters = {
++  USD: new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }),
++  EUR: new Intl.NumberFormat("en-EU", { style: "currency", currency: "EUR" }),
++  GBP: new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }),
++};
++
++export const formatMoney = (cents, currency) => {
++  if (!Number.isInteger(cents)) {
++    throw new Error("Cents must be an integer.");
++  }
++  const formatter = currencyFormatters[currency];
++  if (!formatter) {
++    throw new Error(`Unsupported currency: ${currency}`);
++  }
++  return formatter.format(cents / 100);
++};
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/formatmoney-cents-currency.test.js b/test/formatmoney-cents-currency.test.js
+--- a/test/formatmoney-cents-currency.test.js	1970-01-01 02:00:00
++++ b/test/formatmoney-cents-currency.test.js	2026-11-20 07:59:04
+@@ -0,0 +1,48 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { toCents, formatMoney } from "../src/money.js";
++
++test("formatMoney formats USD, EUR, GBP correctly", () => {
++  assert.equal(typeof formatMoney, "function", "formatMoney should be exported");
++  assert.equal(formatMoney(123456, "USD"), "$1,234.56");
++  assert.equal(formatMoney(500, "EUR"), "€5.00");
++  assert.equal(formatMoney(100, "GBP"), "£1.00");
++});
++
++test("formatMoney throws for unsupported currencies", () => {
++  assert.equal(typeof formatMoney, "function", "formatMoney should be exported");
++  assert.throws(() => formatMoney(100, "CAD"), Error);
++  assert.throws(() => formatMoney(100, "JPY"), Error);
++});
++
++test("formatMoney throws for non-integers and NaN", () => {
++  assert.equal(typeof formatMoney, "function", "formatMoney should be exported");
++  assert.throws(() => formatMoney(100.5, "USD"), Error);
++  assert.throws(() => formatMoney(NaN, "USD"), Error);
++  assert.throws(() => formatMoney("100", "USD"), Error);
++  assert.throws(() => formatMoney(Infinity, "USD"), Error);
++});
++
++test("toCents converts dollars to cents (nearby behavior)", () => {
++  assert.equal(toCents(12.34), 1234);
++  assert.equal(toCents(0), 0);
++  assert.equal(toCents(1), 100);
++});
++
++test("Repeating the operation many times keeps working the same way each time", () => {
++  for (let i = 0; i < 50; i++) {
++    assert.equal(toCents(5.99), 599);
++  }
++});
++
++test("Works on empty input: no throw, and the same result shape", () => {
++  const result = toCents();
++  assert.equal(typeof result, "number");
++  assert.ok(Number.isNaN(result));
++});
++
++test("The result keeps its type and format", () => {
++  const result = toCents(42);
++  assert.equal(typeof result, "number");
++  assert.equal(result, 4200);
++});

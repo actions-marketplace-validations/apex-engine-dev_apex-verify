@@ -1,0 +1,50 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const ms = require("../index.js");
+
+test("ms('-10.5h') parses to -37800000", () => {
+  assert.equal(ms("-10.5h"), -37800000, "-10.5h should be -37800000");
+});
+
+test("ms('-12.25m') parses to -735000", () => {
+  assert.equal(ms("-12.25m"), -735000, "-12.25m should be -735000");
+});
+
+test("negative decimals with many digits before the point parse", () => {
+  assert.equal(ms("-100.5s"), -100500, "-100.5s should be -100500");
+  assert.equal(ms("-123.5ms"), -123.5, "-123.5ms should be -123.5");
+});
+
+test("negative decimals with a long unit and a space parse", () => {
+  assert.equal(ms("-10.5 hours"), -37800000, "-10.5 hours should be -37800000");
+  assert.equal(ms("-12.25 minutes"), -735000, "-12.25 minutes should be -735000");
+});
+
+test("positive and negative decimals match in magnitude", () => {
+  assert.equal(ms("-10.5h"), -ms("10.5h"), "-10.5h should be the negation of 10.5h");
+  assert.equal(ms("-12.25m"), -ms("12.25m"), "-12.25m should be the negation of 12.25m");
+});
+
+test("results that parsed before are unchanged", () => {
+  assert.equal(ms("-1.5h"), -5400000, "-1.5h should stay -5400000");
+  assert.equal(ms("-.5ms"), -0.5, "-.5ms should stay -0.5");
+  assert.equal(ms("-5"), -5, "-5 should stay -5");
+  assert.equal(ms("-100ms"), -100, "-100ms should stay -100");
+  assert.equal(ms("-.5h"), -1800000, "-.5h should stay -1800000");
+});
+
+test("positive parsing and number formatting are unchanged", () => {
+  assert.equal(ms("1.5h"), 5400000, "1.5h should stay 5400000");
+  assert.equal(ms("12.25m"), 735000, "12.25m should stay 735000");
+  assert.equal(ms(-3 * 60000), "-3m", "formatting -180000 should stay '-3m'");
+});
+
+test("invalid strings still do not parse to a number", () => {
+  assert.ok(!Number.isFinite(ms("☃")), "a non-numeric string should not give a finite number");
+  assert.throws(() => ms(""), "empty string should still throw");
+});
+```

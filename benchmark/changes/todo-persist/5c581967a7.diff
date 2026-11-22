@@ -1,0 +1,35 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-19 22:40:57
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/todos.js b/src/todos.js
+--- a/src/todos.js	2026-11-19 21:42:44
++++ b/src/todos.js	2026-11-19 22:41:06
+@@ -19,4 +19,22 @@
+   pending() {
+     return this.items.filter((i) => !i.done);
+   }
++
++  toJSON() {
++    return {
++      items: this.items,
++      nextId: this.nextId,
++    };
++  }
++
++  static fromJSON(obj) {
++    const list = new TodoList();
++    list.items = obj.items || [];
++    // Ensure nextId is greater than any existing id
++    if (list.items.length > 0) {
++      const maxId = Math.max(...list.items.map(item => item.id));
++      list.nextId = Math.max(list.nextId, maxId + 1);
++    }
++    return list;
++  }
+ }

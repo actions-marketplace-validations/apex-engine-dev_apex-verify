@@ -1,0 +1,32 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 12:27:36
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/lru.js b/src/lru.js
+--- a/src/lru.js	2026-11-19 21:42:44
++++ b/src/lru.js	2026-11-20 12:27:59
+@@ -4,10 +4,17 @@
+     this.map = new Map();
+   }
+   get(key) {
+-    return this.map.get(key);
++    const value = this.map.get(key);
++    if (value !== undefined) {
++      this.map.delete(key);
++      this.map.set(key, value);
++    }
++    return value;
+   }
+   set(key, value) {
+-    if (this.map.size >= this.capacity) {
++    if (this.map.has(key)) {
++      this.map.delete(key);
++    } else if (this.map.size >= this.capacity) {
+       const oldest = this.map.keys().next().value;
+       this.map.delete(oldest);
+     }

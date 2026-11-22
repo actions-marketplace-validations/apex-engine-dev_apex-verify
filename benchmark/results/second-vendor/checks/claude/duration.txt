@@ -1,0 +1,52 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { parseDuration } from "../src/duration.js";
+
+test("hours", () => {
+  assert.equal(parseDuration("1h"), 3600, "expected 1h to be 3600 seconds");
+  assert.equal(parseDuration("2h"), 7200, "expected 2h to be 7200 seconds");
+});
+
+test("days", () => {
+  assert.equal(parseDuration("1d"), 86400, "expected 1d to be 86400 seconds");
+  assert.equal(parseDuration("2d"), 172800, "expected 2d to be 172800 seconds");
+});
+
+test("combination without spaces", () => {
+  assert.equal(parseDuration("1h30m"), 5400, "expected 1h30m to be 5400 seconds");
+});
+
+test("combination with a space", () => {
+  assert.equal(parseDuration("2d 4h"), 2 * 86400 + 4 * 3600, "expected 2d 4h to be 187200 seconds");
+});
+
+test("three parts, with and without spaces", () => {
+  assert.equal(parseDuration("1h 30m 15s"), 5415, "expected spaced 1h 30m 15s to be 5415");
+  assert.equal(parseDuration("1h30m15s"), 5415, "expected 1h30m15s to be 5415");
+});
+
+test("all four units", () => {
+  assert.equal(parseDuration("1d 1h 1m 1s"), 86400 + 3600 + 60 + 1, "expected 1d 1h 1m 1s to be 90061");
+});
+
+test("result is a number", () => {
+  assert.equal(typeof parseDuration("1h30m"), "number", "expected a number of seconds");
+});
+
+test("garbage throws an Error", () => {
+  for (const bad of ["abc", "", "5x", "h", "1h x", "hello 5m", "1.5h"]) {
+    assert.throws(() => parseDuration(bad), Error, "expected " + JSON.stringify(bad) + " to throw an Error");
+  }
+});
+
+test("a number without a unit throws", () => {
+  assert.throws(() => parseDuration("90"), Error, "expected a bare number to throw");
+  assert.throws(() => parseDuration("1h 30"), Error, "expected a trailing bare number to throw");
+});
+
+test("existing seconds and minutes still work", () => {
+  assert.equal(parseDuration("90s"), 90, "expected 90s to be 90");
+  assert.equal(parseDuration("5m"), 300, "expected 5m to be 300");
+});
+```

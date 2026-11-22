@@ -1,0 +1,115 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/lru.js b/src/lru.js
+--- a/src/lru.js	2026-11-19 21:42:44
++++ b/src/lru.js	2026-11-20 12:28:46
+@@ -2,16 +2,34 @@
+   constructor(capacity) {
+     this.capacity = capacity;
+     this.map = new Map();
++    this.order = []; // To maintain the order of usage
+   }
+   get(key) {
+-    return this.map.get(key);
++    if (this.map.has(key)) {
++      // Move the accessed key to the end of the order list
++      this.order.splice(this.order.indexOf(key), 1);
++      this.order.push(key);
++      return this.map.get(key);
++    }
++    return undefined;
+   }
+   set(key, value) {
+-    if (this.map.size >= this.capacity) {
+-      const oldest = this.map.keys().next().value;
+-      this.map.delete(oldest);
++    if (this.map.has(key)) {
++      // If key exists, update value and move to end of order list
++      this.map.set(key, value);
++      this.order.splice(this.order.indexOf(key), 1);
++      this.order.push(key);
++    } else {
++      // If key is new
++      if (this.map.size >= this.capacity) {
++        // Evict the least recently used item (first in order list)
++        const oldestKey = this.order.shift();
++        this.map.delete(oldestKey);
++      }
++      // Add new key-value pair and add key to the end of order list
++      this.map.set(key, value);
++      this.order.push(key);
+     }
+-    this.map.set(key, value);
+   }
+   get size() {
+     return this.map.size;
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/our-lrucache-src.test.js b/test/our-lrucache-src.test.js
+--- a/test/our-lrucache-src.test.js	1970-01-01 02:00:00
++++ b/test/our-lrucache-src.test.js	2026-11-20 12:28:46
+@@ -0,0 +1,68 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { LRUCache } from "../src/lru.js";
++
++test("get updates recentness so recently read items are not evicted", () => {
++  const c = new LRUCache(2);
++  c.set("a", 1);
++  c.set("b", 2);
++  c.get("a"); // read recently
++  c.set("c", 3); // should evict 'b', not 'a'
++  assert.equal(c.get("b"), undefined);
++  assert.equal(c.get("a"), 1);
++});
++
++test("set on existing key updates recentness and does not evict unrelated entry", () => {
++  const c = new LRUCache(2);
++  c.set("a", 1);
++  c.set("b", 2);
++  c.set("b", 20); // re-setting a key that already exists
++  assert.equal(c.get("a"), 1); // currently 'a' gets pushed out incorrectly
++  assert.equal(c.get("b"), 20);
++  assert.equal(c.size, 2);
++});
++
++test("normal case: evicts oldest when capacity is reached", () => {
++  const c = new LRUCache(2);
++  c.set("a", 1);
++  c.set("b", 2);
++  c.set("c", 3);
++  assert.equal(c.get("a"), undefined);
++  assert.equal(c.get("b"), 2);
++  assert.equal(c.get("c"), 3);
++  assert.equal(c.size, 2);
++});
++
++test("edge case: repeating the operation many times keeps working the same way each time", () => {
++  const c = new LRUCache(2);
++  c.set("keep", "value");
++  for (let i = 0; i < 50; i++) {
++    c.set("temp" + i, i);
++    c.get("keep"); // keep it recently used
++  }
++  assert.equal(c.get("keep"), "value");
++  assert.equal(c.get("temp49"), 49);
++  assert.equal(c.get("temp48"), undefined);
++  assert.equal(c.size, 2);
++});
++
++test("edge case: works on empty input: no throw, and the same result shape", () => {
++  const c = new LRUCache(2);
++  assert.doesNotThrow(() => {
++    const res = c.get("nonexistent");
++    assert.equal(res, undefined);
++  });
++  assert.equal(c.size, 0);
++});
++
++test("edge case: the result keeps its type and format", () => {
++  const c = new LRUCache(2);
++  c.set("a", 1);
++  const val = c.get("a");
++  const size = c.size;
++  
++  assert.equal(typeof val, "number");
++  assert.equal(typeof size, "number");
++  assert.equal(val, 1);
++  assert.equal(size, 1);
++});

@@ -1,0 +1,73 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/duration.js b/src/duration.js
+--- a/src/duration.js	2026-11-19 21:42:44
++++ b/src/duration.js	2026-11-20 14:15:09
+@@ -1,5 +1,23 @@
++const UNITS = {
++  s: 1,
++  m: 60,
++  h: 3600,
++  d: 86400,
++};
++
+ export function parseDuration(str) {
+-  const m = /^(\d+)([sm])$/.exec(str);
+-  if (!m) throw new Error("bad duration: " + str);
+-  return Number(m[1]) * (m[2] === "m" ? 60 : 1);
++  if (typeof str !== "string") throw new Error("bad duration: " + str);
++  if (str === "") return 0;
++
++  if (!/^\s*(?:\d+[smhd]\s*)+$/.test(str)) {
++    throw new Error("bad duration: " + str);
++  }
++
++  let total = 0;
++  const regex = /(\d+)([smhd])/g;
++  let match;
++  while ((match = regex.exec(str)) !== null) {
++    total += Number(match[1]) * UNITS[match[2]];
++  }
++  return total;
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/src-duration-js.test.js b/test/src-duration-js.test.js
+--- a/test/src-duration-js.test.js	1970-01-01 02:00:00
++++ b/test/src-duration-js.test.js	2026-11-20 14:15:09
+@@ -0,0 +1,39 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { parseDuration } from "../src/duration.js";
++
++test("supports hours and days", () => {
++  assert.equal(parseDuration("1h"), 3600);
++  assert.equal(parseDuration("1d"), 86400);
++});
++
++test("supports combinations with and without spaces", () => {
++  assert.equal(parseDuration("1h30m"), 5400);
++  assert.equal(parseDuration("2d 4h"), 187200);
++});
++
++test("pins existing behavior: plain seconds and minutes", () => {
++  assert.equal(parseDuration("90s"), 90);
++  assert.equal(parseDuration("5m"), 300);
++});
++
++test("pins existing behavior: throws on garbage input", () => {
++  assert.throws(() => parseDuration("1x"));
++  assert.throws(() => parseDuration("abc"));
++});
++
++test("edge case: repeating the operation many times", () => {
++  for (let i = 0; i < 50; i++) {
++    assert.equal(parseDuration("5m"), 300);
++  }
++});
++
++test("edge case: works on empty input", () => {
++  assert.equal(parseDuration(""), 0);
++});
++
++test("edge case: result keeps its type and format", () => {
++  const result = parseDuration("5m");
++  assert.equal(typeof result, "number");
++  assert.ok(!Number.isNaN(result));
++});

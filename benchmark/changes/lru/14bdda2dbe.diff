@@ -1,0 +1,32 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/lru.js b/src/lru.js
+--- a/src/lru.js	2026-11-19 21:42:44
++++ b/src/lru.js	2026-11-20 07:36:34
+@@ -2,16 +2,25 @@
+   constructor(capacity) {
+     this.capacity = capacity;
+     this.map = new Map();
++    this.order = [];
+   }
+   get(key) {
+-    return this.map.get(key);
++    if (this.map.has(key)) {
++      this.order.splice(this.order.indexOf(key), 1);
++      this.order.push(key);
++      return this.map.get(key);
++    }
++    return undefined;
+   }
+   set(key, value) {
+-    if (this.map.size >= this.capacity) {
+-      const oldest = this.map.keys().next().value;
++    if (this.map.has(key)) {
++      this.order.splice(this.order.indexOf(key), 1);
++    } else if (this.map.size >= this.capacity) {
++      const oldest = this.order.shift();
+       this.map.delete(oldest);
+     }
+     this.map.set(key, value);
++    this.order.push(key);
+   }
+   get size() {
+     return this.map.size;

@@ -1,0 +1,11 @@
+{
+  "id": "slugify",
+  "kind": "fix",
+  "title": "slugify leaves punctuation and accents",
+  "prompt": "Users report that our slugify() in src/slug.js produces bad URLs. For example slugify(\"Hello, World!\") gives \"hello,-world!\" and a title with accents like \"Cr\u00e8me Br\u00fbl\u00e9e\" comes out with the accents still in it. It should return a clean URL slug: lowercase letters and digits separated by single dashes.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

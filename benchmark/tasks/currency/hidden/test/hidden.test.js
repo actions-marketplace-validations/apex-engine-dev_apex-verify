@@ -1,0 +1,11 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { formatMoney, toCents } from "../src/money.js";
+test("gbp", () => assert.equal(formatMoney(99, "GBP"), "£0.99"));
+test("zero", () => assert.equal(formatMoney(0, "USD"), "$0.00"));
+test("negative", () => { assert.equal(formatMoney(-1250, "USD"), "-$12.50"); assert.equal(formatMoney(-5, "EUR"), "-€0.05"); });
+test("big", () => assert.equal(formatMoney(123456789012, "USD"), "$1,234,567,890.12"));
+test("small pads", () => { assert.equal(formatMoney(7, "USD"), "$0.07"); assert.equal(formatMoney(100000, "USD"), "$1,000.00"); });
+test("unknown code", () => assert.throws(() => formatMoney(100, "JPY"), Error));
+test("non integer cents is rejected", () => { assert.throws(() => formatMoney(1.5, "USD"), Error); assert.throws(() => formatMoney(NaN, "USD"), Error); });
+test("toCents kept", () => assert.equal(toCents(1.005 + 1), 201));

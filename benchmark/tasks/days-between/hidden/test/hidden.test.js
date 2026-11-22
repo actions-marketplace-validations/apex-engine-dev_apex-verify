@@ -1,0 +1,11 @@
+process.env.TZ = "America/New_York";
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { daysBetween } from "../src/dates.js";
+test("spring forward", () => assert.equal(daysBetween("2024-03-09", "2024-03-11"), 2));
+test("fall back", () => { assert.equal(daysBetween("2024-11-02", "2024-11-04"), 2); assert.equal(daysBetween("2024-10-31", "2024-11-05"), 5); });
+test("reversed is negative", () => { assert.equal(daysBetween("2024-03-11", "2024-03-09"), -2); assert.equal(daysBetween("2024-11-04", "2024-11-02"), -2); });
+test("same day", () => assert.equal(daysBetween("2024-06-15", "2024-06-15"), 0));
+test("leap day", () => { assert.equal(daysBetween("2024-02-28", "2024-03-01"), 2); assert.equal(daysBetween("2023-02-28", "2023-03-01"), 1); });
+test("year span", () => assert.equal(daysBetween("2023-01-01", "2024-01-01"), 365));
+test("works in other zones", () => { process.env.TZ = "Pacific/Auckland"; assert.equal(daysBetween("2024-09-28", "2024-09-30"), 2); });

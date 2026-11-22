@@ -1,0 +1,63 @@
+```python
+import os
+import sys
+import pytest
+
+# Add the project root to sys.path so we can import slugify
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from slugify.special import add_uppercase_char
+
+
+def test_add_uppercase_char_success_in_place():
+    """Test that the function modifies the list in place and returns the same object."""
+    original = [('x', 'y')]
+    result = add_uppercase_char(original)
+    
+    assert result is original, "Expected the function to return the exact same list object"
+    assert result == [('X', 'Y'), ('x', 'y')], "Expected uppercase pair to be inserted at the beginning"
+
+
+def test_add_uppercase_char_rollback_on_error():
+    """Test that if an element is malformed, the list is left exactly as it was."""
+    # The first element is valid, the second is a 1-tuple which will cause a ValueError on unpack
+    original = [('a', 'b'), ('c',)]
+    original_copy = list(original)
+    
+    with pytest.raises(ValueError):
+        add_uppercase_char(original)
+        
+    assert original == original_copy, "Expected the list to be left exactly as it was on error"
+
+
+def test_add_uppercase_char_empty_list():
+    """Test edge case with an empty list."""
+    original = []
+    result = add_uppercase_char(original)
+    
+    assert result is original, "Expected the function to return the exact same list object"
+    assert result == [], "Expected empty list to remain empty"
+
+
+def test_add_uppercase_char_already_uppercase():
+    """Pin nearby behavior: no changes if the characters are already uppercase."""
+    original = [('X', 'Y')]
+    original_copy = list(original)
+    result = add_uppercase_char(original)
+    
+    assert result is original
+    assert result == original_copy, "Expected no changes if already uppercase"
+
+
+def test_add_uppercase_char_multiple_items():
+    """Pin nearby behavior: handles multiple valid items correctly."""
+    original = [('a', 'b'), ('c', 'd')]
+    result = add_uppercase_char(original)
+    
+    assert result is original
+    assert len(result) == 4, "Expected two new uppercase tuples to be added"
+    assert ('A', 'B') in result, "Expected ('A', 'B') to be in the result"
+    assert ('C', 'D') in result, "Expected ('C', 'D') to be in the result"
+    assert ('a', 'b') in result, "Expected original ('a', 'b') to be in the result"
+    assert ('c', 'd') in result, "Expected original ('c', 'd') to be in the result"
+```

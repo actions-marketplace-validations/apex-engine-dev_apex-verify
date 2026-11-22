@@ -1,0 +1,77 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { parseCSV } from "../src/csv.js";
+
+test("quoted field keeps its comma", () => {
+  assert.deepEqual(
+    parseCSV('id,"Smith, John",x\n'),
+    [["id", "Smith, John", "x"]],
+    "expected the comma inside quotes to stay in one field"
+  );
+});
+
+test("doubled quotes inside a quoted field become one quote", () => {
+  assert.deepEqual(
+    parseCSV('a,"say ""hi"" now",b\n'),
+    [["a", 'say "hi" now', "b"]],
+    "expected doubled quotes to collapse to a single quote character"
+  );
+});
+
+test("line break inside quotes stays in the field", () => {
+  assert.deepEqual(
+    parseCSV('a,"line1\nline2",b\n'),
+    [["a", "line1\nline2", "b"]],
+    "expected a newline inside quotes to remain part of one field, in one row"
+  );
+});
+
+test("rows after a multi-line quoted field are still separate rows", () => {
+  assert.deepEqual(
+    parseCSV('h1,h2\n"x\ny",2\n3,4\n'),
+    [["h1", "h2"], ["x\ny", "2"], ["3", "4"]],
+    "expected three rows with the multi-line field kept inside row two"
+  );
+});
+
+test("quoted field with comma, quotes and newline together", () => {
+  assert.deepEqual(
+    parseCSV('"a, ""b""\nc",z\n'),
+    [['a, "b"\nc', "z"]],
+    "expected comma, doubled quotes and newline all handled in one field"
+  );
+});
+
+test("field that is only an escaped quote", () => {
+  assert.deepEqual(
+    parseCSV('"""",x\n'),
+    [['"', "x"]],
+    "expected a field of four quote characters to parse to one quote"
+  );
+});
+
+test("quoted empty field is an empty string", () => {
+  assert.deepEqual(
+    parseCSV('a,"",c\n'),
+    [["a", "", "c"]],
+    "expected an empty quoted field to give an empty string"
+  );
+});
+
+test("unquoted empty fields still work", () => {
+  assert.deepEqual(
+    parseCSV("a,,c\n"),
+    [["a", "", "c"]],
+    "expected unquoted empty field to stay an empty string"
+  );
+});
+
+test("plain rows are unchanged", () => {
+  assert.deepEqual(
+    parseCSV("a,b\n1,2\n3,4\n"),
+    [["a", "b"], ["1", "2"], ["3", "4"]],
+    "expected plain rows to parse as before"
+  );
+});
+```

@@ -1,0 +1,54 @@
+```javascript
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { paginate } from "../src/paginate.js";
+
+test("page 1 returns the first chunk (1-based pages)", () => {
+  const r = paginate(["a", "b", "c"], 1, 2);
+  assert.deepEqual(r.items, ["a", "b"], "page 1 should return the first 2 items");
+});
+
+test("totalPages is correct when the last page is partly full", () => {
+  const r = paginate([1, 2, 3, 4, 5], 1, 2);
+  assert.equal(r.totalPages, 3, "5 items with size 2 should have 3 totalPages");
+});
+
+test("totalPages is correct when the last page is exactly full", () => {
+  const r = paginate([1, 2, 3, 4], 1, 2);
+  assert.equal(r.totalPages, 2, "4 items with size 2 should have 2 totalPages");
+});
+
+test("asking for a page past the end gives back an empty page", () => {
+  const r = paginate([1, 2], 3, 2);
+  assert.deepEqual(r.items, [], "should return empty items for page past the end");
+  assert.equal(r.page, 3, "should still return the requested page");
+});
+
+test("throws RangeError when size is less than 1", () => {
+  assert.throws(() => paginate([1, 2], 1, 0), RangeError, "size 0 should throw RangeError");
+  assert.throws(() => paginate([1, 2], 1, -1), RangeError, "size -1 should throw RangeError");
+});
+
+test("throws RangeError when page is less than 1", () => {
+  assert.throws(() => paginate([1, 2], 0, 2), RangeError, "page 0 should throw RangeError");
+  assert.throws(() => paginate([1, 2], -1, 2), RangeError, "page -1 should throw RangeError");
+});
+
+test("empty items array returns 0 totalPages and empty items", () => {
+  const r = paginate([], 1, 2);
+  assert.deepEqual(r.items, [], "empty items should return empty items");
+  assert.equal(r.totalPages, 0, "empty items should have 0 totalPages");
+});
+
+test("returns the requested page number and correct items for subsequent pages", () => {
+  const r = paginate([1, 2, 3, 4, 5], 2, 2);
+  assert.equal(r.page, 2, "should return the requested page number");
+  assert.deepEqual(r.items, [3, 4], "page 2 should return the second chunk");
+});
+
+test("does not mutate the original array", () => {
+  const items = [1, 2, 3];
+  paginate(items, 1, 2);
+  assert.deepEqual(items, [1, 2, 3], "original array should not be mutated");
+});
+```

@@ -1,0 +1,27 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/emitter.js b/src/emitter.js
+--- a/src/emitter.js	2026-11-19 21:42:44
++++ b/src/emitter.js	2026-11-21 02:25:54
+@@ -11,18 +11,20 @@
+       this.off(event, wrapper);
+       fn(...args);
+     };
++    wrapper.fn = fn;
+     return this.on(event, wrapper);
+   }
+   off(event, fn) {
+     const list = this.handlers[event];
+     if (!list) return this;
+-    const i = list.indexOf(fn);
++    const i = list.findIndex((item) => item === fn || item.fn === fn);
+     if (i >= 0) list.splice(i, 1);
+     return this;
+   }
+   emit(event, ...args) {
+     const list = this.handlers[event] || [];
+-    for (const fn of list) fn(...args);
+-    return list.length > 0;
++    const copy = [...list];
++    for (const fn of copy) fn(...args);
++    return copy.length > 0;
+   }
+ }

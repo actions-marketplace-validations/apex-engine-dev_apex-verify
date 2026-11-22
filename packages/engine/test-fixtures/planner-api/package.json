@@ -1,0 +1,14 @@
+{
+  "name": "planner-api",
+  "version": "0.3.0",
+  "description": "Sample Co planner: a small task API with sign-in and time zones.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test",
+    "start": "node src/main.js",
+    "dev": "node --watch src/main.js"
+  }
+}

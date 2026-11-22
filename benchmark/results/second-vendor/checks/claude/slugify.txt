@@ -1,0 +1,54 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { slugify } from "../src/slug.js";
+
+const CLEAN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+test("punctuation is removed", () => {
+  assert.equal(slugify("Hello, World!"), "hello-world", "'Hello, World!' should be 'hello-world'");
+});
+
+test("accents are removed", () => {
+  assert.equal(slugify("Crème Brûlée"), "creme-brulee", "'Crème Brûlée' should be 'creme-brulee'");
+});
+
+test("result is lowercase", () => {
+  assert.equal(slugify("HELLO World"), "hello-world", "should be lowercase");
+});
+
+test("digits are kept", () => {
+  assert.equal(slugify("Top 10 Tips"), "top-10-tips", "digits should stay");
+});
+
+test("repeated spaces and punctuation collapse into a single dash", () => {
+  const r = slugify("a   b --- c,,, d");
+  assert.ok(!r.includes("--"), "should not contain double dashes, got " + r);
+  assert.equal(r, "a-b-c-d", "separators should collapse to single dashes");
+});
+
+test("output only has lowercase letters, digits and single dashes", () => {
+  for (const input of ["Hello, World!", "Crème Brûlée", "  Spaced   out  ", "Ünï-cödé & Symbols #1", "a_b.c/d"]) {
+    const r = slugify(input);
+    assert.match(r, CLEAN, "slug for " + JSON.stringify(input) + " should be clean, got " + JSON.stringify(r));
+  }
+});
+
+test("various accented letters are reduced to plain letters", () => {
+  assert.equal(slugify("Café Münster Señor"), "cafe-munster-senor", "accents should be stripped");
+});
+
+test("no leading or trailing dash for surrounding spaces or punctuation", () => {
+  const r = slugify("  !Hello World!  ");
+  assert.equal(r, "hello-world", "surrounding junk should not leave dashes");
+});
+
+test("simple plain words are unchanged", () => {
+  assert.equal(slugify("hello"), "hello", "a plain lowercase word should stay the same");
+  assert.equal(slugify("Hello World"), "hello-world", "spaces still become a dash");
+});
+
+test("already clean slug stays the same", () => {
+  assert.equal(slugify("already-clean-slug"), "already-clean-slug", "a clean slug should be idempotent");
+});
+```

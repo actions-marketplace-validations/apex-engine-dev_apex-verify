@@ -1,0 +1,78 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-21 00:47:24
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-21 00:51:55
+@@ -1 +1,30 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++const CURRENCY_SYMBOLS = {
++  USD: "$",
++  EUR: "€",
++  GBP: "£",
++};
++
++export function formatMoney(cents, currency) {
++  if (!Number.isInteger(cents)) {
++    throw new Error("Invalid cents: must be an integer");
++  }
++
++  if (typeof currency !== "string" || !Object.hasOwn(CURRENCY_SYMBOLS, currency)) {
++    throw new Error(`Unsupported currency: ${currency}`);
++  }
++
++  const symbol = CURRENCY_SYMBOLS[currency];
++  const isNegative = cents < 0;
++  const absCents = Math.abs(cents);
++  const major = Math.floor(absCents / 100);
++  const minor = absCents % 100;
++
++  const majorFormatted = major.toLocaleString("en-US");
++  const minorFormatted = minor.toString().padStart(2, "0");
++
++  const sign = isNegative ? "-" : "";
++  return `${sign}${symbol}${majorFormatted}.${minorFormatted}`;
++}
++
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-21 00:53:27
+@@ -1,5 +1,31 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { formatMoney } from "../src/money.js";
++
+ test("usd", () => assert.equal(formatMoney(123456, "USD"), "$1,234.56"));
+ test("eur", () => assert.equal(formatMoney(500, "EUR"), "€5.00"));
++test("gbp", () => assert.equal(formatMoney(750, "GBP"), "£7.50"));
++test("zero", () => assert.equal(formatMoney(0, "USD"), "$0.00"));
++test("single digit cents", () => assert.equal(formatMoney(5, "USD"), "$0.05"));
++test("large amount", () => assert.equal(formatMoney(123456789, "USD"), "$1,234,567.89"));
++test("negative amount", () => assert.equal(formatMoney(-500, "USD"), "-$5.00"));
++
++test("throws for non-integer cents", () => {
++  assert.throws(() => formatMoney(NaN, "USD"), Error);
++  assert.throws(() => formatMoney(12.34, "USD"), Error);
++  assert.throws(() => formatMoney("100", "USD"), Error);
++  assert.throws(() => formatMoney(null, "USD"), Error);
++  assert.throws(() => formatMoney(undefined, "USD"), Error);
++  assert.throws(() => formatMoney(Infinity, "USD"), Error);
++  assert.throws(() => formatMoney(-Infinity, "USD"), Error);
++  assert.throws(() => formatMoney({}, "USD"), Error);
++});
++
++test("throws for unsupported currency", () => {
++  assert.throws(() => formatMoney(100, "JPY"), Error);
++  assert.throws(() => formatMoney(100, "CAD"), Error);
++  assert.throws(() => formatMoney(100, "usd"), Error);
++  assert.throws(() => formatMoney(100, ""), Error);
++  assert.throws(() => formatMoney(100, null), Error);
++});
++

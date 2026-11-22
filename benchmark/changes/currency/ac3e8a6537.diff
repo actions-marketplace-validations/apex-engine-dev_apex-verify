@@ -1,0 +1,62 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 12:20:34
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-20 12:20:59
+@@ -1 +1,28 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++export const formatMoney = (cents, currency) => {
++  if (!Number.isInteger(cents)) {
++    throw new Error("cents must be an integer");
++  }
++
++  const symbols = {
++    USD: "$",
++    EUR: "€",
++    GBP: "£"
++  };
++
++  if (!(currency in symbols)) {
++    throw new Error("Unsupported currency code");
++  }
++
++  const symbol = symbols[currency];
++  const isNegative = cents < 0;
++  const absCents = Math.abs(cents);
++
++  const wholePart = Math.floor(absCents / 100).toString();
++  const fractionalPart = (absCents % 100).toString().padStart(2, '0');
++
++  const wholePartWithCommas = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
++
++  return `${isNegative ? "-" : ""}${symbol}${wholePartWithCommas}.${fractionalPart}`;
++};
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-20 12:21:09
+@@ -1,5 +1,17 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { formatMoney } from "../src/money.js";
++
+ test("usd", () => assert.equal(formatMoney(123456, "USD"), "$1,234.56"));
+ test("eur", () => assert.equal(formatMoney(500, "EUR"), "€5.00"));
++test("gbp", () => assert.equal(formatMoney(1000, "GBP"), "£10.00"));
++
++test("invalid currency throws", () => {
++    assert.throws(() => formatMoney(100, "CAD"), /Unsupported currency code/);
++});
++
++test("non-integers throw", () => {
++    assert.throws(() => formatMoney(12.34, "USD"), /cents must be an integer/);
++    assert.throws(() => formatMoney(NaN, "USD"), /cents must be an integer/);
++    assert.throws(() => formatMoney("100", "USD"), /cents must be an integer/);
++});

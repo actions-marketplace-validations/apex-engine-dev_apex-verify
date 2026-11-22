@@ -1,0 +1,55 @@
+{
+  "name": "reallydone-cli",
+  "version": "0.2.0",
+  "description": "ReallyDone: proof that an AI's change is really done. Any agent's change in, ready / not ready out, with proof.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "reallydone": "./dist/main.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test dist/*.test.js"
+  },
+  "dependencies": {
+    "reallydone-engine": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.js",
+    "!dist/**/*.test.d.ts",
+    "!dist/**/*.map",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apex-engine-dev/apex-done-checker.git",
+    "directory": "packages/cli"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "coding-agent",
+    "llm",
+    "verification",
+    "benchmark",
+    "code-graph"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/apex-engine-dev/apex-done-checker#readme",
+  "bugs": {
+    "url": "https://github.com/apex-engine-dev/apex-done-checker/issues"
+  },
+  "author": "ReallyDone contributors",
+  "private": true
+}

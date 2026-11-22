@@ -1,0 +1,56 @@
+```python
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from tabulate import tabulate
+from common import assert_equal
+
+def test_empty_table_with_maxheadercolwidths():
+    """Task: tabulate([], headers=['one','two','three'], maxheadercolwidths=5) 
+    should return the same output it gives for an empty table without maxheadercolwidths."""
+    headers = ['one', 'two', 'three']
+    expected = tabulate([], headers=headers)
+    result = tabulate([], headers=headers, maxheadercolwidths=5)
+    assert_equal(expected, result)
+
+def test_empty_table_with_maxheadercolwidths_line_count():
+    """Edge case: exact output format should be just the header row and the separator line."""
+    headers = ['one', 'two', 'three']
+    result = tabulate([], headers=headers, maxheadercolwidths=5)
+    lines = result.splitlines()
+    assert len(lines) == 2, f"Expected exactly 2 lines (header and separator), got {len(lines)}"
+
+def test_empty_table_with_maxheadercolwidths_and_maxcolwidths():
+    """Edge case: empty table with both maxheadercolwidths and maxcolwidths."""
+    headers = ['one', 'two', 'three']
+    expected = tabulate([], headers=headers)
+    result = tabulate([], headers=headers, maxheadercolwidths=5, maxcolwidths=10)
+    assert_equal(expected, result)
+
+def test_empty_table_with_maxheadercolwidths_different_format():
+    """Edge case: empty table with maxheadercolwidths and a different table format."""
+    headers = ['one', 'two', 'three']
+    expected = tabulate([], headers=headers, tablefmt="grid")
+    result = tabulate([], headers=headers, maxheadercolwidths=5, tablefmt="grid")
+    assert_equal(expected, result)
+
+def test_non_empty_table_with_maxheadercolwidths():
+    """Nearby behavior: non-empty table with maxheadercolwidths works today."""
+    headers = ['one_long_header', 'two', 'three']
+    table = [[1, 2, 3]]
+    result = tabulate(table, headers=headers, maxheadercolwidths=5)
+    assert "one_l" in result, "Expected header to be wrapped"
+    assert "1" in result, "Expected table data to be present"
+
+def test_empty_table_without_maxheadercolwidths():
+    """Nearby behavior: empty table without maxheadercolwidths works today."""
+    headers = ['one', 'two', 'three']
+    result = tabulate([], headers=headers)
+    lines = result.splitlines()
+    assert len(lines) == 2, "Expected exactly 2 lines for empty table without maxheadercolwidths"
+    assert "one" in lines[0]
+    assert "two" in lines[0]
+    assert "three" in lines[0]
+```

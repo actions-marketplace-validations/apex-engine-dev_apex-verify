@@ -1,0 +1,3000 @@
+[
+ {
+  "task": "csv",
+  "change": "2cb1453487",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "e784eb9529",
+  "correct": false,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "22e02f6ec1",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "09c17b6b35",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "2e31b63876",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "12724689ce",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "0a272b3b6d",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "d20c7e02e6",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "0d71c1ee23",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "f7f4c4ea12",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "fc5e21afa4",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "c2a6abffd8",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "18ac881f66",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "ade5521cdf",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "7d1c7fead2",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "ms-negative-decimals",
+  "change": "764aa2ca7c",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "ms-negative-decimals",
+  "change": "aeabf6cc41",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "dd44861b92",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "07ab76465f",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "12d75504a9",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "0224a589bb",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "3161ee3679",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "0fa467fbc1",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "94b27a4ec5",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "cdc3019c9a",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "95b05a63f4",
+  "correct": true,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "1e0e59a0ff",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "d25b123767",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "tab-empty-maxheader",
+  "change": "5b1a918803",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-empty-maxheader",
+  "change": "acf4b5a3e0",
+  "correct": false,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "5db13f4539",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "a92aa271c8",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "45642cc05a",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "cdfac50a01",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "5c581967a7",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "74b22cc119",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "de48a5c87e",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "caaee95845",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "017d584c08",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "8b1d7b781e",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "b507c87ffb",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "7cbf6ded0b",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "c3005aac62",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "5e2ff4cf4e",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "4104ac5ec0",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "2ea8b474d3",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "92360697bf",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "2b99d6dd43",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "bc8412fabc",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "5625d66195",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "dd618f2e8b",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "949330c899",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "b3614774a5",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "441a1363ff",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "01e3860f0a",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "79f51dec88",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "790bd33d44",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "fef053247b",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "14bdda2dbe",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "8da46ead73",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "4d828f05fb",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "e94488d657",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "13e1962f40",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "afc85423d6",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "bf13f61f30",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "2ea233d1e0",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "fe84bd787c",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "4f57c4fc07",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "d9ba692ad3",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "0393882900",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "e0297357ca",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "cf2bd73d91",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "e8d712857a",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "2981c215e7",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "885dc0ea3e",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "58a4c9260a",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "1f9baf748f",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "6c4965c556",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "2acba6d5f2",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "a6bb222fa5",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "6c2e053032",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "c8aa8a14c3",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "31db09b130",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "22fe3dead6",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "3991277f82",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "f1a2dfec15",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "44eb23a77a",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "9d70807f75",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "fc16163c8c",
+  "correct": false,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "f7b4b75e29",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "ac3e8a6537",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "99291616cb",
+  "correct": true,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "98ec2dd5de",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "b9c7fe46bf",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "fe030ef666",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "85b5ae49fa",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "1335c4e5ea",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "8ded289bb2",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "8cc88651a8",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "9bed4e479c",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "b574196501",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "198e7bb3b6",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "d2207be158",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "9dae534ea7",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "c133e0b89d",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "307b2efad6",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "ms-negative-decimals",
+  "change": "9d22021450",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "5df0139c4e",
+  "correct": false,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "dd3d4d5507",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "bbcb01824f",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "cbe9942277",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "csv",
+  "change": "1cf3933ea8",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "2fd3195c8e",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "109497ddc1",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "ed15731587",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "b43a542e72",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "currency",
+  "change": "0371522118",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "98b29a5e26",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "aea7f04135",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "b265aa98eb",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "e64c8d9c7f",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "09a0f0f853",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "days-between",
+  "change": "66d5d0e845",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": false
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "645bad49d4",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "8a5e70c531",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "97590fe628",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "1f4952e815",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "duration",
+  "change": "842722a689",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "2d93863de2",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "c2c11fdc35",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "2922674761",
+  "correct": false,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "9402ccc6ae",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "emitter",
+  "change": "d586328561",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "1c61c3e644",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "af092f13ff",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "a5683df5cc",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "41055ad5b6",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "16db03b4af",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "lru",
+  "change": "8c9992d277",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "db8e30747e",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "0abe95679b",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "409deced84",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "merge-config",
+  "change": "321ca6fb3b",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "ms-negative-decimals",
+  "change": "174f13e587",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "ms-negative-decimals",
+  "change": "65793edad9",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "ms-negative-decimals",
+  "change": "95f97a1056",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "ms-negative-decimals",
+  "change": "a10105ada6",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "ms-negative-decimals",
+  "change": "4963ab1efa",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "02e50d1718",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "c69a87a961",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "fb06e08a15",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "338874511e",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "019373a5b2",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "paginate",
+  "change": "2e15efa8dc",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "7797ee6851",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "b3332158d0",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "e83a327269",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "96f8495c7f",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "0e2a3f91e1",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "rename-fetch",
+  "change": "81f276275c",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "b216041440",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "aad0bd9949",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "764b12fd99",
+  "correct": false,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "ef1d47f970",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "3b8042833d",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "retry",
+  "change": "57446a10e0",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "71c7e0c3ee",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "594ff37900",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "bff268927b",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "b509899a0c",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slug-uppercase-atomic",
+  "change": "d8308885b4",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "b0e842783b",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "75876e5617",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "00705abdc7",
+  "correct": false,
+  "testsPass": false,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "dd603bbc6d",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "cb13e52ad1",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "slugify",
+  "change": "66620c40a6",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "tab-empty-maxheader",
+  "change": "6dce181ed2",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-empty-maxheader",
+  "change": "37f62d2c3f",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-empty-maxheader",
+  "change": "42995f697e",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-empty-maxheader",
+  "change": "d2e39203c9",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "7503d755e3",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "796a71731d",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "7cb37617fd",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "tab-wide-char-hang",
+  "change": "97923aae37",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": false
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "b4bcb0bbb8",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "ce0e4618bf",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "3b5830e399",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "a2aaa3a282",
+  "correct": false,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": false,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "d856c4e70d",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ },
+ {
+  "task": "todo-persist",
+  "change": "d6637436db",
+  "correct": true,
+  "testsPass": true,
+  "gemini": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  },
+  "claude": {
+   "draft": true,
+   "pass": true,
+   "proven": true
+  }
+ }
+]

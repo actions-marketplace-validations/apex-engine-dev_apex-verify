@@ -1,0 +1,11 @@
+{
+  "id": "paginate",
+  "kind": "fix",
+  "title": "paginate skips and mislabels pages",
+  "prompt": "Bug report: paginate(items, page, size) in src/paginate.js is wrong. Pages are meant to be 1-based, but page 1 returns the second chunk of items. Also the returned totalPages looks off when the last page is only partly full, and asking for a page past the end blows up instead of just giving back an empty page. Throw a RangeError when size is less than 1 or when page is less than 1.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

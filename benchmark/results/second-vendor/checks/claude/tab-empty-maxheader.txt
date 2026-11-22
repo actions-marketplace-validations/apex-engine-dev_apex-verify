@@ -1,0 +1,59 @@
+```python
+"""Task check: tabulate with an empty table and maxheadercolwidths."""
+from pathlib import Path
+import sys
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(HERE))
+
+from tabulate import tabulate
+
+HEADERS = ['one', 'two', 'three']
+
+
+def test_empty_table_with_maxheadercolwidths_does_not_raise():
+    result = tabulate([], headers=HEADERS, maxheadercolwidths=5)
+    assert isinstance(result, str), "expected a string result, not an exception"
+
+
+def test_empty_table_output_equals_output_without_maxheadercolwidths():
+    expected = tabulate([], headers=HEADERS)
+    result = tabulate([], headers=HEADERS, maxheadercolwidths=5)
+    assert result == expected, "expected the same output as without maxheadercolwidths"
+
+
+def test_empty_table_output_is_header_row_and_separator_line():
+    result = tabulate([], headers=HEADERS, maxheadercolwidths=5)
+    lines = result.splitlines()
+    assert len(lines) == 2, "expected exactly a header row and a separator line"
+    for name in HEADERS:
+        assert name in lines[0], "expected header %r in the first line" % name
+    assert set(lines[1]) <= set("- "), "expected the second line to be a separator of dashes"
+    assert "-" in lines[1], "expected the separator line to contain dashes"
+
+
+def test_empty_table_with_various_widths_matches_baseline():
+    expected = tabulate([], headers=HEADERS)
+    for width in (1, 3, 5, 100):
+        result = tabulate([], headers=HEADERS, maxheadercolwidths=width)
+        assert result == expected, "expected baseline output for maxheadercolwidths=%r" % width
+
+
+def test_empty_table_other_formats_match_baseline():
+    for fmt in ("grid", "pipe", "plain"):
+        expected = tabulate([], headers=HEADERS, tablefmt=fmt)
+        result = tabulate([], headers=HEADERS, tablefmt=fmt, maxheadercolwidths=5)
+        assert result == expected, "expected baseline output for tablefmt=%r" % fmt
+
+
+def test_empty_table_without_maxheadercolwidths_still_lists_headers():
+    result = tabulate([], headers=HEADERS)
+    for name in HEADERS:
+        assert name in result, "expected header %r in the baseline output" % name
+
+
+def test_nonempty_table_with_maxheadercolwidths_still_wraps_headers():
+    result = tabulate([["a"]], headers=["longheaderword"], maxheadercolwidths=5)
+    assert "longh" in result, "expected the wrapped first chunk of the header"
+    assert len(result.splitlines()) > 3, "expected the header to wrap onto several lines"

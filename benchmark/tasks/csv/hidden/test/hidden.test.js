@@ -1,0 +1,12 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { parseCSV } from "../src/csv.js";
+test("quoted comma", () => assert.deepEqual(parseCSV('x,"Smith, John",y'), [["x", "Smith, John", "y"]]));
+test("escaped quotes", () => assert.deepEqual(parseCSV('a,"say ""hi""",b'), [["a", 'say "hi"', "b"]]));
+test("newline inside quotes", () => assert.deepEqual(parseCSV('a,"l1\nl2",b\nc,d,e'), [["a", "l1\nl2", "b"], ["c", "d", "e"]]));
+test("crlf", () => assert.deepEqual(parseCSV("a,b\r\n1,2\r\n"), [["a", "b"], ["1", "2"]]));
+test("trailing newline gives no empty row", () => assert.deepEqual(parseCSV("a\n"), [["a"]]));
+test("empty fields", () => assert.deepEqual(parseCSV("a,,c\n,,\n"), [["a", "", "c"], ["", "", ""]]));
+test("empty input", () => assert.deepEqual(parseCSV(""), []));
+test("quoted empty", () => assert.deepEqual(parseCSV('"",x'), [["", "x"]]));
+test("last row without newline", () => assert.deepEqual(parseCSV("a,b\nc,d"), [["a", "b"], ["c", "d"]]));

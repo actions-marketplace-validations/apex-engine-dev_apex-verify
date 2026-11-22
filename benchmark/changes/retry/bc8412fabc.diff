@@ -1,0 +1,23 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/retry.js b/src/retry.js
+--- a/src/retry.js	2026-11-19 21:42:44
++++ b/src/retry.js	2026-11-20 07:31:05
+@@ -1 +1,19 @@
+ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
++
++export const retry = async (fn, options = {}) => {
++  const { retries = 2, delayMs = 100, factor = 2, shouldRetry } = options;
++  let attempt = 1;
++  let delay = delayMs;
++  while (true) {
++    try {
++      return await fn(attempt);
++    } catch (err) {
++      if (attempt > retries || (shouldRetry && !shouldRetry(err))) {
++        throw err;
++      }
++      await sleep(delay);
++      delay *= factor;
++      attempt++;
++    }
++  }
++};

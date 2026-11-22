@@ -1,0 +1,97 @@
+```python
+"""Task check: add_uppercase_char leaves the list untouched on error."""
+from pathlib import Path
+import sys
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from slugify.special import add_uppercase_char
+
+
+def test_single_pair_modified_in_place_and_same_object_returned():
+    chars = [('x', 'y')]
+    result = add_uppercase_char(chars)
+    assert result is chars, "expected the very same list object to be returned"
+    assert chars == [('X', 'Y'), ('x', 'y')], "expected [('X','Y'),('x','y')] after the call"
+
+
+def test_in_place_modification_visible_to_caller_with_several_pairs():
+    chars = [('a', 'b'), ('c', 'd')]
+    result = add_uppercase_char(chars)
+    assert result is chars, "expected the same list object back"
+    assert ('A', 'B') in chars, "expected ('A','B') added to the caller's list"
+    assert ('C', 'D') in chars, "expected ('C','D') added to the caller's list"
+    assert ('a', 'b') in chars and ('c', 'd') in chars, "expected the original pairs kept"
+    assert len(chars) == 4, "expected exactly two pairs added"
+
+
+def test_later_malformed_element_raises_value_error_and_list_unchanged():
+    chars = [('a', 'b'), ('c',)]
+    snapshot = list(chars)
+    with pytest.raises(ValueError):
+        add_uppercase_char(chars)
+    assert chars == snapshot, "expected the list to be exactly as before the failed call"
+
+
+def test_failure_after_several_valid_pairs_leaves_list_unchanged():
+    chars = [('a', 'b'), ('c', 'd'), ('e', 'f'), ('g',)]
+    snapshot = list(chars)
+    with pytest.raises(ValueError):
+        add_uppercase_char(chars)
+    assert len(chars) == len(snapshot), "expected no pairs left inserted after the error"
+    assert chars == snapshot, "expected the same elements in the same order after the error"
+
+
+def test_malformed_first_element_raises_and_list_unchanged():
+    chars = [('a',)]
+    snapshot = list(chars)
+    with pytest.raises(ValueError):
+        add_uppercase_char(chars)
+    assert chars == snapshot, "expected the list unchanged when the first element is malformed"
+
+
+def test_too_long_tuple_raises_and_list_unchanged():
+    chars = [('a', 'b'), ('c', 'd', 'e')]
+    snapshot = list(chars)
+    with pytest.raises(ValueError):
+        add_uppercase_char(chars)
+    assert chars == snapshot, "expected the list unchanged when an element has three items"
+
+
+def test_failed_call_keeps_same_element_objects_in_same_order():
+    first, second, bad = ('a', 'b'), ('c', 'd'), ('e',)
+    chars = [first, second, bad]
+    with pytest.raises(ValueError):
+        add_uppercase_char(chars)
+    assert len(chars) == 3, "expected still three elements"
+    assert chars[0] is first and chars[1] is second and chars[2] is bad, \
+        "expected the original element objects in their original positions"
+
+
+def test_empty_list_returns_same_empty_list():
+    chars = []
+    result = add_uppercase_char(chars)
+    assert result is chars, "expected the same list object back"
+    assert chars == [], "expected an empty list to stay empty"
+
+
+def test_pair_whose_char_is_already_uppercase_is_not_duplicated():
+    chars = [('X', 'Y')]
+    result = add_uppercase_char(chars)
+    assert result is chars, "expected the same list object back"
+    assert chars == [('X', 'Y')], "expected an already-uppercase pair to add nothing"
+
+
+def test_existing_uppercase_pair_is_not_added_twice():
+    chars = [('x', 'y'), ('X', 'Y')]
+    add_uppercase_char(chars)
+    assert chars.count(('X', 'Y')) == 1, "expected ('X','Y') to appear exactly once"
+    assert len(chars) == 2, "expected no new pair when the uppercase pair exists"
+
+
+def test_translation_is_capitalized_for_new_pair():
+    chars = [('ä', 'ae')]
+    add_uppercase_char(chars)
+    assert ('Ä', 'Ae') in chars, "expected the uppercase pair to carry the capitalized translation"

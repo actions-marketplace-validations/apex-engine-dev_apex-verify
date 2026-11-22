@@ -1,0 +1,6 @@
+id,name,email,plan,time_zone
+c-001,Example Person One,person.one@example.invalid,team,Asia/Jerusalem
+c-002,Example Person Two,person.two@example.invalid,free,Europe/Berlin
+c-003,Example Person Three,person.three@example.invalid,team,America/New_York
+c-004,Example Person Four,person.four@example.invalid,enterprise,Asia/Tokyo
+c-005,Example Person Five,person.five@example.invalid,free,UTC

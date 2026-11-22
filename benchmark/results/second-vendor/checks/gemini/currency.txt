@@ -1,0 +1,43 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { formatMoney, toCents } from "../src/money.js";
+
+test("formatMoney formats USD correctly", () => {
+  assert.equal(formatMoney(123456, "USD"), "$1,234.56", "Should format 123456 cents as $1,234.56");
+});
+
+test("formatMoney formats EUR correctly", () => {
+  assert.equal(formatMoney(500, "EUR"), "€5.00", "Should format 500 cents as €5.00");
+});
+
+test("formatMoney formats GBP correctly", () => {
+  assert.equal(formatMoney(150, "GBP"), "£1.50", "Should format 150 cents as £1.50");
+});
+
+test("formatMoney handles edge case of 0 cents", () => {
+  assert.equal(formatMoney(0, "USD"), "$0.00", "Should format 0 cents as $0.00");
+});
+
+test("formatMoney throws for unsupported currency codes", () => {
+  assert.throws(() => formatMoney(100, "CAD"), Error, "Should throw an Error for CAD");
+  assert.throws(() => formatMoney(100, "JPY"), Error, "Should throw an Error for JPY");
+  assert.throws(() => formatMoney(100, ""), Error, "Should throw an Error for empty string currency");
+  assert.throws(() => formatMoney(100, null), Error, "Should throw an Error for null currency");
+  assert.throws(() => formatMoney(100), Error, "Should throw an Error for missing currency");
+});
+
+test("formatMoney throws for non-integer cents", () => {
+  assert.throws(() => formatMoney(12.34, "USD"), Error, "Should throw an Error for float values");
+  assert.throws(() => formatMoney(NaN, "USD"), Error, "Should throw an Error for NaN");
+  assert.throws(() => formatMoney("100", "USD"), Error, "Should throw an Error for string values");
+  assert.throws(() => formatMoney(null, "USD"), Error, "Should throw an Error for null");
+  assert.throws(() => formatMoney(undefined, "USD"), Error, "Should throw an Error for undefined");
+});
+
+test("toCents converts dollars to cents correctly (nearby behavior)", () => {
+  assert.equal(toCents(12.34), 1234, "12.34 dollars should be converted to 1234 cents");
+  assert.equal(toCents(0), 0, "0 dollars should be converted to 0 cents");
+  assert.equal(toCents(5), 500, "5 dollars should be converted to 500 cents");
+});
+```

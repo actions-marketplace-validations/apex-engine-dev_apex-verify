@@ -1,0 +1,10 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { TodoList } from "../src/todos.js";
+test("ids continue after restore", () => { const l = new TodoList(); l.add("a"); l.add("b"); const r = TodoList.fromJSON(l.toJSON()); assert.equal(r.add("c").id, 3); });
+test("ids are not reused after remove and restore", () => { const l = new TodoList(); l.add("a"); l.add("b"); l.remove(2); const r = TodoList.fromJSON(l.toJSON()); assert.equal(r.add("c").id, 3); });
+test("done state kept", () => { const l = new TodoList(); l.add("a"); l.add("b"); l.complete(2); const r = TodoList.fromJSON(l.toJSON()); assert.deepEqual(r.items.map((i) => i.done), [false, true]); });
+test("survives JSON text", () => { const l = new TodoList(); l.add("a"); const r = TodoList.fromJSON(JSON.parse(JSON.stringify(l.toJSON()))); assert.equal(r.items[0].text, "a"); });
+test("snapshot is a copy", () => { const l = new TodoList(); l.add("a"); const snap = l.toJSON(); l.complete(1); assert.equal(snap.items[0].done, false); const r = TodoList.fromJSON(snap); r.complete(1); assert.equal(snap.items[0].done, false); });
+test("empty list", () => { const r = TodoList.fromJSON(new TodoList().toJSON()); assert.equal(r.items.length, 0); assert.equal(r.add("x").id, 1); });
+test("restored object is a TodoList", () => assert.ok(TodoList.fromJSON(new TodoList().toJSON()) instanceof TodoList));

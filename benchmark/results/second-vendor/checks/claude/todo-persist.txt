@@ -1,0 +1,134 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { TodoList } from "../src/todos.js";
+
+function sample() {
+  const l = new TodoList();
+  l.add("a");
+  l.add("b");
+  l.add("c");
+  l.complete(2);
+  return l;
+}
+
+test("toJSON returns a plain object", () => {
+  const snap = sample().toJSON();
+  assert.equal(typeof snap, "object", "expected an object snapshot");
+  assert.notEqual(snap, null, "expected a non-null snapshot");
+  assert.equal(Object.getPrototypeOf(snap), Object.prototype, "expected a plain object, not a TodoList");
+  assert.ok(!(snap instanceof TodoList), "expected the snapshot not to be a TodoList instance");
+});
+
+test("snapshot survives a JSON string round trip", () => {
+  const snap = JSON.parse(JSON.stringify(sample().toJSON()));
+  const r = TodoList.fromJSON(snap);
+  assert.deepEqual(r.items.map((i) => i.text), ["a", "b", "c"], "expected texts restored in order");
+});
+
+test("fromJSON returns a TodoList", () => {
+  const r = TodoList.fromJSON(sample().toJSON());
+  assert.ok(r instanceof TodoList, "expected a TodoList instance");
+});
+
+test("restored list keeps ids, texts and done flags", () => {
+  const original = sample();
+  const r = TodoList.fromJSON(original.toJSON());
+  assert.equal(r.items.length, 3, "expected three items restored");
+  for (let i = 0; i < 3; i++) {
+    assert.equal(r.items[i].id, original.items[i].id, "expected the same id at position " + i);
+    assert.equal(r.items[i].text, original.items[i].text, "expected the same text at position " + i);
+    assert.equal(r.items[i].done, original.items[i].done, "expected the same done flag at position " + i);
+  }
+});
+
+test("done items stay done after restoring", () => {
+  const r = TodoList.fromJSON(sample().toJSON());
+  assert.equal(r.items.find((i) => i.text === "b").done, true, "expected b to stay done");
+  assert.deepEqual(r.pending().map((i) => i.text), ["a", "c"], "expected only a and c pending");
+});
+
+test("adding after restore does not reuse an existing id", () => {
+  const r = TodoList.fromJSON(sample().toJSON());
+  const existing = r.items.map((i) => i.id);
+  const added = r.add("d");
+  assert.ok(!existing.includes(added.id), "expected a new id different from " + existing.join(","));
+  const ids = r.items.map((i) => i.id);
+  assert.equal(new Set(ids).size, ids.length, "expected all ids unique");
+});
+
+test("adding repeatedly after restore keeps ids unique", () => {
+  const r = TodoList.fromJSON(sample().toJSON());
+  r.add("d");
+  r.add("e");
+  const ids = r.items.map((i) => i.id);
+  assert.equal(new Set(ids).size, 5, "expected five distinct ids");
+});
+
+test("no id clash when earlier items were removed before the snapshot", () => {
+  const l = sample();
+  l.remove(1);
+  const r = TodoList.fromJSON(l.toJSON());
+  const existing = r.items.map((i) => i.id);
+  assert.deepEqual(existing, [2, 3], "expected the remaining ids to be kept");
+  const added = r.add("d");
+  assert.ok(!existing.includes(added.id), "expected the new id not to clash with 2 or 3");
+});
+
+test("no id clash when the highest item was removed", () => {
+  const l = sample();
+  l.remove(3);
+  const r = TodoList.fromJSON(l.toJSON());
+  const added = r.add("d");
+  assert.ok(![1, 2].includes(added.id), "expected the new id not to clash with 1 or 2");
+});
+
+test("empty list round trips and accepts new items", () => {
+  const r = TodoList.fromJSON(new TodoList().toJSON());
+  assert.equal(r.items.length, 0, "expected no items");
+  assert.equal(r.pending().length, 0, "expected nothing pending");
+  const added = r.add("x");
+  assert.equal(r.items.length, 1, "expected one item after adding");
+  assert.equal(added.done, false, "expected the new item to be not done");
+});
+
+test("snapshot is a copy that later changes to the list do not affect", () => {
+  const l = sample();
+  const snap = l.toJSON();
+  l.add("later");
+  l.complete(1);
+  const r = TodoList.fromJSON(snap);
+  assert.equal(r.items.length, 3, "expected the snapshot to hold the three items from before");
+  assert.equal(r.items.find((i) => i.id === 1).done, false, "expected item 1 still not done in the snapshot");
+});
+
+test("restored list is independent of the original", () => {
+  const l = sample();
+  const r = TodoList.fromJSON(l.toJSON());
+  r.add("only in restored");
+  r.complete(1);
+  assert.equal(l.items.length, 3, "expected the original to keep three items");
+  assert.equal(l.items.find((i) => i.id === 1).done, false, "expected the original item 1 still pending");
+});
+
+test("restored list still supports complete and unknown id errors", () => {
+  const r = TodoList.fromJSON(sample().toJSON());
+  r.complete(1);
+  assert.equal(r.items.find((i) => i.id === 1).done, true, "expected item 1 done");
+  assert.throws(() => r.complete(999), /no such todo/, "expected an error for an unknown id");
+});
+
+test("existing behaviour: add numbers from 1 and starts not done", () => {
+  const l = new TodoList();
+  const a = l.add("a");
+  const b = l.add("b");
+  assert.equal(a.id, 1, "expected the first id to be 1");
+  assert.equal(b.id, 2, "expected the second id to be 2");
+  assert.equal(a.done, false, "expected a new item not done");
+});
+
+test("existing behaviour: remove drops the item", () => {
+  const l = sample();
+  l.remove(2);
+  assert.deepEqual(l.items.map((i) => i.id), [1, 3], "expected item 2 removed");
+});

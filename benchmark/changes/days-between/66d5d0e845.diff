@@ -1,0 +1,13 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/dates.js b/src/dates.js
+--- a/src/dates.js	2026-11-19 21:42:44
++++ b/src/dates.js	2026-11-21 01:24:34
+@@ -1,7 +1,7 @@
+ function parse(s) {
+   const [y, m, d] = s.split("-").map(Number);
+-  return new Date(y, m - 1, d);
++  return Date.UTC(y, m - 1, d);
+ }
+ export function daysBetween(a, b) {
+-  return Math.floor((parse(b) - parse(a)) / 86400000);
++  return Math.round((parse(b) - parse(a)) / 86400000);
+ }

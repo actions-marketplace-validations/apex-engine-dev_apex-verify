@@ -1,0 +1,10 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mergeConfig } from "../src/config.js";
+test("does not mutate base", () => { const base = { a: 1, n: { x: 1 } }; const snap = structuredClone(base); mergeConfig(base, { a: 2, n: { x: 5, z: 1 } }); assert.deepEqual(base, snap); });
+test("does not mutate override", () => { const o = { n: { x: 5 } }; const snap = structuredClone(o); mergeConfig({ n: { y: 1 } }, o); assert.deepEqual(o, snap); });
+test("result does not share nested objects", () => { const base = { n: { x: 1 } }; const r = mergeConfig(base, {}); r.n.x = 99; assert.equal(base.n.x, 1); const o = { m: { q: 1 } }; const r2 = mergeConfig({}, o); r2.m.q = 7; assert.equal(o.m.q, 1); });
+test("arrays are replaced", () => assert.deepEqual(mergeConfig({ l: [1, 2, 3] }, { l: [9] }), { l: [9] }));
+test("null and falsy override", () => assert.deepEqual(mergeConfig({ a: 1, b: { c: 1 }, d: true }, { a: 0, b: null, d: false }), { a: 0, b: null, d: false }));
+test("undefined in override is ignored", () => assert.deepEqual(mergeConfig({ a: 1 }, { a: undefined }), { a: 1 }));
+test("object over primitive", () => assert.deepEqual(mergeConfig({ a: 1 }, { a: { b: 2 } }), { a: { b: 2 } }));

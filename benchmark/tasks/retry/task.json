@@ -1,0 +1,11 @@
+{
+  "id": "retry",
+  "kind": "feature",
+  "title": "retry helper with backoff",
+  "prompt": "Add an async helper retry(fn, options) to src/retry.js and export it. It calls fn(attempt) (attempt starts at 1) and returns its result. If fn rejects, wait and try again, up to options.retries extra attempts (so retries: 2 means at most 3 calls in total). The wait starts at options.delayMs and is multiplied by options.factor (default 2) after each failure. If every attempt fails, reject with the last error. If options.shouldRetry is given and returns false for an error, reject immediately with that error.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

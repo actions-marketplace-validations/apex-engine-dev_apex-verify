@@ -1,0 +1,92 @@
+```javascript
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import * as index from "../src/index.js";
+import * as store from "../src/store.js";
+import * as service from "../src/service.js";
+import * as commands from "../src/commands.js";
+
+test("loadItem is exported and works", () => {
+  assert.equal(typeof store.loadItem, "function", "store.js should export loadItem");
+  assert.equal(typeof index.loadItem, "function", "index.js should export loadItem");
+  
+  const item = store.loadItem("a");
+  assert.deepEqual(item, { id: "a", n: 1 }, "loadItem should return the correct item");
+  
+  const missing = store.loadItem("missing");
+  assert.equal(missing, null, "loadItem should return null for missing items");
+});
+
+test("fetchItem is no longer exported", () => {
+  assert.equal(store.fetchItem, undefined, "store.js should not export fetchItem");
+  assert.equal(index.fetchItem, undefined, "index.js should not export fetchItem");
+});
+
+test("commands.run('get') works with the new name", () => {
+  const item = commands.run("get", "b");
+  assert.deepEqual(item, { id: "b", n: 2 }, "run('get') should return the correct item");
+});
+
+test("commands.run('count') still works (nearby behavior)", () => {
+  const count = commands.run("count");
+  assert.equal(count, 2, "run('count') should return the correct count");
+});
+
+test("service functions still work", () => {
+  assert.equal(service.describe("a"), "item a (1)", "describe should work for existing item");
+  assert.equal(service.describe("missing"), "missing", "describe should work for missing item");
+  assert.equal(service.total(["a", "b", "zz"]), 3, "total should work for mixed items");
+  assert.equal(service.total([]), 0, "total should work for empty array");
+});
+
+test("file contents are updated", () => {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const rootDir = path.join(__dirname, "..");
+  
+  function walk(dir, callback) {
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+      const filepath = path.join(dir, file);
+      const stat = fs.statSync(filepath);
+      if (stat.isDirectory()) {
+        if (["node_modules", ".git", "dist"].includes(file)) continue;
+        walk(filepath, callback);
+      } else {
+        if (file.includes("apex-task-check")) continue;
+        callback(filepath);
+      }
+    }
+  }
+
+  const filesWithLoadItem = [];
+  const filesWithFetchItem = [];
+
+  walk(rootDir, (filepath) => {
+    const content = fs.readFileSync(filepath, "utf8");
+    if (content.includes("loadItem")) {
+      filesWithLoadItem.push(path.relative(rootDir, filepath));
+    }
+    if (content.includes("fetchItem")) {
+      filesWithFetchItem.push(path.relative(rootDir, filepath));
+    }
+  });
+
+  assert.deepEqual(filesWithFetchItem, [], "fetchItem should not be present in any file");
+  
+  const expectedFiles = [
+    "README.md",
+    path.join("src", "commands.js"),
+    path.join("src", "index.js"),
+    path.join("src", "service.js"),
+    path.join("src", "store.js")
+  ];
+
+  for (const expected of expectedFiles) {
+    assert.ok(filesWithLoadItem.includes(expected), `${expected} should contain 'loadItem'`);
+  }
+});
+```

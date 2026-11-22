@@ -1,0 +1,115 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/retry.js b/src/retry.js
+--- a/src/retry.js	2026-11-19 21:42:44
++++ b/src/retry.js	2026-11-20 07:51:10
+@@ -1 +1,20 @@
+ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
++
++export const retry = async (fn, options = {}) => {
++  const { retries = 0, delayMs = 100, factor = 2, shouldRetry } = options;
++  let currentDelay = delayMs;
++  for (let attempt = 1; attempt <= retries + 1; attempt++) {
++    try {
++      return await fn(attempt);
++    } catch (error) {
++      if (attempt > retries) {
++        throw error;
++      }
++      if (shouldRetry && !shouldRetry(error)) {
++        throw error;
++      }
++      await sleep(currentDelay);
++      currentDelay *= factor;
++    }
++  }
++};
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/async-helper-retry.test.js b/test/async-helper-retry.test.js
+--- a/test/async-helper-retry.test.js	1970-01-01 02:00:00
++++ b/test/async-helper-retry.test.js	2026-11-20 07:51:10
+@@ -0,0 +1,87 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { sleep, retry } from "../src/retry.js";
++
++// Pin nearby behavior that works today
++test("sleep resolves after given ms", async () => {
++  const start = Date.now();
++  await sleep(10);
++  assert.ok(Date.now() - start >= 5);
++});
++
++// Failing tests for the bug
++test("retry passes attempt number and returns result", async () => {
++  const attempts = [];
++  const result = await retry(async (attempt) => {
++    attempts.push(attempt);
++    if (attempt < 3) throw new Error("fail");
++    return "success";
++  }, { retries: 2, delayMs: 1 });
++  
++  assert.deepEqual(attempts, [1, 2, 3]);
++  assert.equal(result, "success");
++});
++
++test("retry throws last error if all attempts fail, and respects delayMs and factor", async () => {
++  let count = 0;
++  const start = Date.now();
++  try {
++    await retry(async () => {
++      count++;
++      throw new Error(`error ${count}`);
++    }, { retries: 2, delayMs: 10, factor: 3 });
++    assert.fail("should have thrown");
++  } catch (err) {
++    const duration = Date.now() - start;
++    assert.equal(err?.message, "error 3");
++    assert.equal(count, 3);
++    // delays: 10ms, then 30ms. Total wait ~40ms.
++    assert.ok(duration >= 20, `duration was ${duration}`);
++  }
++});
++
++test("retry respects shouldRetry and default factor", async () => {
++  let count = 0;
++  try {
++    await retry(async () => {
++      count++;
++      throw new Error("fatal");
++    }, { 
++      retries: 5, 
++      delayMs: 1, 
++      shouldRetry: (err) => err.message !== "fatal" 
++    });
++    assert.fail("should have thrown");
++  } catch (err) {
++    assert.equal(err?.message, "fatal");
++    assert.equal(count, 1);
++  }
++});
++
++// Edge cases
++test("Repeating the operation many times keeps working the same way each time", async () => {
++  for (let i = 0; i < 50; i++) {
++    let attempts = 0;
++    const res = await retry(async () => {
++      attempts++;
++      if (attempts < 2) throw new Error("fail");
++      return i;
++    }, { retries: 2, delayMs: 1 });
++    
++    assert.equal(res, i);
++    assert.equal(attempts, 2);
++  }
++});
++
++test("Works on empty input: no throw, and the same result shape", async () => {
++  const res = await retry(async () => {}, {});
++  assert.equal(res, undefined);
++});
++
++test("The result keeps its type and format", async () => {
++  const expected = { data: [1, 2, 3] };
++  const res = await retry(async () => expected, { retries: 1, delayMs: 1 });
++  
++  assert.equal(res, expected);
++  assert.deepEqual(res, { data: [1, 2, 3] });
++});

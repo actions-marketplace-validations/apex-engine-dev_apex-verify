@@ -1,0 +1,60 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { Emitter } from "../src/emitter.js";
+
+test("once() does not skip the next listener when it fires", () => {
+  const e = new Emitter();
+  const got = [];
+  e.once("x", () => got.push(1));
+  e.on("x", () => got.push(2));
+  e.emit("x");
+  assert.deepEqual(got, [1, 2], "Both listeners should run, the second should not be skipped");
+});
+
+test("off() removes a listener registered with once()", () => {
+  const e = new Emitter();
+  const got = [];
+  const fn = () => got.push(1);
+  e.once("x", fn);
+  e.off("x", fn);
+  e.emit("x");
+  assert.deepEqual(got, [], "Listener registered with once() should have been removed by off()");
+});
+
+test("multiple once() listeners in a row all fire", () => {
+  const e = new Emitter();
+  const got = [];
+  e.once("x", () => got.push(1));
+  e.once("x", () => got.push(2));
+  e.once("x", () => got.push(3));
+  e.emit("x");
+  assert.deepEqual(got, [1, 2, 3], "All once listeners should run without skipping each other");
+});
+
+test("once() fires only once", () => {
+  const e = new Emitter();
+  const got = [];
+  e.once("x", () => got.push(1));
+  e.emit("x");
+  e.emit("x");
+  assert.deepEqual(got, [1], "Listener should only fire the first time");
+});
+
+test("off() removes a listener registered with on()", () => {
+  const e = new Emitter();
+  const got = [];
+  const fn = () => got.push(1);
+  e.on("x", fn);
+  e.off("x", fn);
+  e.emit("x");
+  assert.deepEqual(got, [], "Listener registered with on() should have been removed by off()");
+});
+
+test("off() does not throw when removing an unregistered listener", () => {
+  const e = new Emitter();
+  const fn = () => {};
+  e.off("x", fn);
+  assert.ok(true, "off() should not throw for unknown event or listener");
+});
+```

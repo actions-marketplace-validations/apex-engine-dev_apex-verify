@@ -1,0 +1,66 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/dates.js b/src/dates.js
+--- a/src/dates.js	2026-11-19 21:42:44
++++ b/src/dates.js	2026-11-20 07:46:23
+@@ -1,7 +1,13 @@
+ function parse(s) {
++  if (!s) return new Date(0); // Handle empty string case
+   const [y, m, d] = s.split("-").map(Number);
+-  return new Date(y, m - 1, d);
++  // Use UTC to avoid timezone issues
++  return new Date(Date.UTC(y, m - 1, d));
+ }
+ export function daysBetween(a, b) {
+-  return Math.floor((parse(b) - parse(a)) / 86400000);
++  const dateA = parse(a);
++  const dateB = parse(b);
++  const diffTime = dateB.getTime() - dateA.getTime();
++  // Divide by milliseconds in a day (24 * 60 * 60 * 1000)
++  return Math.floor(diffTime / 86400000);
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/daysbetween-src-dates.test.js b/test/daysbetween-src-dates.test.js
+--- a/test/daysbetween-src-dates.test.js	1970-01-01 02:00:00
++++ b/test/daysbetween-src-dates.test.js	2026-11-20 07:46:23
+@@ -0,0 +1,43 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++
++// Force timezone to New York to reliably reproduce the DST bug
++process.env.TZ = "America/New_York";
++
++import { daysBetween } from "../src/dates.js";
++
++test("DST crossing in March (spring forward)", () => {
++  // Fails currently: returns 1 instead of 2 due to 23-hour day
++  assert.equal(daysBetween("2024-03-09", "2024-03-11"), 2);
++});
++
++test("DST crossing in November (fall back, reverse order)", () => {
++  // Fails currently: returns -3 instead of -2 due to 25-hour day and Math.floor
++  assert.equal(daysBetween("2024-11-04", "2024-11-02"), -2);
++});
++
++test("Normal case without DST crossing", () => {
++  // Pins nearby behavior that works today
++  assert.equal(daysBetween("2024-01-01", "2024-01-10"), 9);
++  assert.equal(daysBetween("2024-06-01", "2024-06-15"), 14);
++});
++
++test("Repeating the operation many times", () => {
++  // Edge case: Repeating the operation many times keeps working the same way
++  for (let i = 0; i < 50; i++) {
++    assert.equal(daysBetween("2024-03-09", "2024-03-11"), 2);
++  }
++});
++
++test("Works on empty input", () => {
++  // Edge case: Works on empty input (a empty): no throw, and the same result shape
++  const result = daysBetween("", "2024-03-11");
++  assert.equal(typeof result, "number");
++});
++
++test("Result keeps its type and format", () => {
++  // Edge case: The result keeps its type and format (same shape and value types)
++  const result = daysBetween("2024-01-01", "2024-01-02");
++  assert.equal(typeof result, "number");
++  assert.equal(Number.isInteger(result), true);
++});

@@ -1,0 +1,94 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-19 21:47:02
+@@ -1 +1,25 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++const CURRENCY_FORMATS = {
++  USD: { symbol: "$", fractionDigits: 2 },
++  EUR: { symbol: "€", fractionDigits: 2 },
++  GBP: { symbol: "£", fractionDigits: 2 },
++};
++
++export const formatMoney = (cents, currency) => {
++  if (!Number.isInteger(cents)) {
++    throw new Error("Input must be an integer");
++  }
++
++  const format = CURRENCY_FORMATS[currency];
++  if (!format) {
++    throw new Error("Unsupported currency");
++  }
++
++  const dollars = cents / 100;
++  const formattedAmount = dollars.toFixed(format.fractionDigits);
++  const parts = formattedAmount.split(".");
++  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
++
++  return `${format.symbol}${parts.join(".")}`;
++};
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/formatmoney-cents-currency.test.js b/test/formatmoney-cents-currency.test.js
+--- a/test/formatmoney-cents-currency.test.js	1970-01-01 02:00:00
++++ b/test/formatmoney-cents-currency.test.js	2026-11-19 21:47:02
+@@ -0,0 +1,61 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { formatMoney, toCents } from "../src/money.js";
++
++// Tests that should FAIL due to the bug
++test("formatMoney - USD example", () => {
++  assert.equal(formatMoney(123456, "USD"), "$1,234.56");
++});
++
++test("formatMoney - EUR example", () => {
++  assert.equal(formatMoney(500, "EUR"), "€5.00");
++});
++
++test("formatMoney - GBP example", () => {
++  assert.equal(formatMoney(999, "GBP"), "£9.99");
++});
++
++test("formatMoney - unsupported currency", () => {
++  assert.throws(() => formatMoney(1000, "JPY"), /Unsupported currency/);
++});
++
++test("formatMoney - non-integer cents", () => {
++  assert.throws(() => formatMoney(123.45, "USD"), /Input must be an integer/);
++});
++
++test("formatMoney - NaN input", () => {
++  assert.throws(() => formatMoney(NaN, "USD"), /Input must be an integer/);
++});
++
++// Tests that should PASS now and must not change
++test("toCents - normal operation", () => {
++  assert.equal(toCents(12.34), 1234);
++  assert.equal(toCents(0.5), 50);
++  assert.equal(toCents(100), 10000);
++});
++
++test("formatMoney - zero value", () => {
++  assert.equal(formatMoney(0, "USD"), "$0.00");
++});
++
++// Edge case tests (should pass once the bug is fixed)
++test("formatMoney - repeating operation", () => {
++  let total = 0;
++  for (let i = 0; i < 50; i++) {
++    total = toCents(total + 0.01); // Simulate adding small amounts
++    assert.equal(formatMoney(total, "USD").startsWith("$"), true);
++  }
++});
++
++test("formatMoney - empty input", () => {
++  // Assuming formatMoney(0, "USD") is the expected behavior for "empty"
++  assert.equal(formatMoney(0, "USD"), "$0.00");
++  // Also test with an empty string or null if that's a possible interpretation,
++  // but the prompt implies integer cents, so 0 is the most likely "empty"
++});
++
++test("formatMoney - result type and format", () => {
++  const result = formatMoney(12345, "EUR");
++  assert.strictEqual(typeof result, "string");
++  assert.equal(result, "€123.45");
++});

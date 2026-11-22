@@ -1,0 +1,46 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/csv.js b/src/csv.js
+--- a/src/csv.js	2026-11-19 21:42:44
++++ b/src/csv.js	2026-11-20 07:29:02
+@@ -1,6 +1,38 @@
+ export function parseCSV(text) {
+-  return text
+-    .split("\n")
+-    .filter((line) => line.length > 0)
+-    .map((line) => line.split(","));
++  const rows = [];
++  let currentRow = [];
++  let currentField = "";
++  let inQuotes = false;
++
++  for (let i = 0; i < text.length; i++) {
++    const char = text[i];
++
++    if (char === '"') {
++      if (inQuotes && text[i + 1] === '"') {
++        // Double quote inside quoted field
++        currentField += '"';
++        i++; // Skip the next quote
++      } else {
++        inQuotes = !inQuotes;
++      }
++    } else if (char === "," && !inQuotes) {
++      currentRow.push(currentField);
++      currentField = "";
++    } else if (char === "\n" && !inQuotes) {
++      currentRow.push(currentField);
++      rows.push(currentRow);
++      currentField = "";
++      currentRow = [];
++    } else {
++      currentField += char;
++    }
++  }
++
++  // Add the last field and row if they exist
++  if (currentField.length > 0 || currentRow.length > 0) {
++    currentRow.push(currentField);
++    rows.push(currentRow);
++  }
++
++  return rows;
+ }

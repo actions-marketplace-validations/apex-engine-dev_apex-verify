@@ -1,0 +1,72 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-20 07:45:47
+@@ -1 +1,24 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++const CURRENCIES = {
++  USD: { symbol: "$", fraction: 2 },
++  EUR: { symbol: "€", fraction: 2 },
++  GBP: { symbol: "£", fraction: 2 },
++};
++
++export const formatMoney = (cents, currency) => {
++  if (!Number.isInteger(cents)) {
++    throw new Error("Cents must be an integer.");
++  }
++
++  const currencyConfig = CURRENCIES[currency];
++  if (!currencyConfig) {
++    throw new Error(`Unsupported currency: ${currency}`);
++  }
++
++  const { symbol, fraction } = currencyConfig;
++  const dollars = (cents / 100).toFixed(fraction);
++  const parts = dollars.split(".");
++  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
++  return `${symbol}${parts.join(".")}`;
++};
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/formatmoney-cents-currency.test.js b/test/formatmoney-cents-currency.test.js
+--- a/test/formatmoney-cents-currency.test.js	1970-01-01 02:00:00
++++ b/test/formatmoney-cents-currency.test.js	2026-11-20 07:45:47
+@@ -0,0 +1,40 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { toCents, formatMoney } from "../src/money.js";
++
++test("toCents converts dollars to cents correctly", () => {
++  assert.equal(toCents(10), 1000);
++  assert.equal(toCents(12.34), 1234);
++});
++
++test("Repeating the operation many times keeps working the same way each time", () => {
++  for (let i = 0; i < 50; i++) {
++    assert.equal(toCents(15.99), 1599);
++  }
++});
++
++test("Works on empty input: no throw, and the same result shape", () => {
++  const result = toCents();
++  assert.equal(typeof result, "number");
++  assert.ok(Number.isNaN(result));
++});
++
++test("The result keeps its type and format", () => {
++  const result = toCents(42);
++  assert.equal(typeof result, "number");
++});
++
++test("formatMoney formats supported currencies", () => {
++  assert.equal(formatMoney(123456, "USD"), "$1,234.56");
++  assert.equal(formatMoney(500, "EUR"), "€5.00");
++  assert.equal(formatMoney(1000, "GBP"), "£10.00");
++});
++
++test("formatMoney throws for invalid inputs", () => {
++  assert.equal(typeof formatMoney, "function");
++  assert.throws(() => formatMoney(100, "AUD"), Error);
++  assert.throws(() => formatMoney(100, "XYZ"), Error);
++  assert.throws(() => formatMoney(12.5, "USD"), Error);
++  assert.throws(() => formatMoney(NaN, "USD"), Error);
++  assert.throws(() => formatMoney("100", "USD"), Error);
++});

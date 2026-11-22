@@ -1,0 +1,63 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/paginate.js b/src/paginate.js
+--- a/src/paginate.js	2026-11-19 21:42:44
++++ b/src/paginate.js	2026-11-20 18:08:21
+@@ -1,8 +1,11 @@
+ export function paginate(items, page, size) {
+-  const start = page * size;
++  if (page < 1 || size < 1) {
++    throw new RangeError("page and size must be at least 1");
++  }
++  const start = (page - 1) * size;
+   return {
+     items: items.slice(start, start + size),
+     page,
+-    totalPages: Math.floor(items.length / size),
++    totalPages: Math.ceil(items.length / size),
+   };
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/bug-report-paginate.test.js b/test/bug-report-paginate.test.js
+--- a/test/bug-report-paginate.test.js	1970-01-01 02:00:00
++++ b/test/bug-report-paginate.test.js	2026-11-20 18:08:21
+@@ -0,0 +1,42 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { paginate } from "../src/paginate.js";
++
++test("calculates 1-based pages and totalPages correctly", () => {
++  const r = paginate([1, 2, 3, 4, 5], 1, 2);
++  assert.deepEqual(r.items, [1, 2]);
++  assert.equal(r.totalPages, 3);
++});
++
++test("throws RangeError for invalid page or size", () => {
++  assert.throws(() => paginate([1, 2], 0, 2), RangeError);
++  assert.throws(() => paginate([1, 2], 1, 0), RangeError);
++});
++
++test("asking for a page past the end gives back an empty page", () => {
++  const r = paginate([1, 2], 5, 2);
++  assert.deepEqual(r.items, []);
++});
++
++test("repeating the operation many times keeps working the same way", () => {
++  const first = paginate([1, 2, 3], 1, 2);
++  for (let i = 0; i < 50; i++) {
++    const r = paginate([1, 2, 3], 1, 2);
++    assert.deepEqual(r, first);
++  }
++});
++
++test("works on empty input", () => {
++  const r = paginate([], 1, 2);
++  assert.deepEqual(r.items, []);
++  assert.equal(r.page, 1);
++  assert.equal(r.totalPages, 0);
++});
++
++test("keeps its type and format", () => {
++  const r = paginate([1, 2, 3, 4], 1, 2);
++  assert.equal(typeof r, "object");
++  assert.ok(Array.isArray(r.items));
++  assert.equal(typeof r.page, "number");
++  assert.equal(typeof r.totalPages, "number");
++});

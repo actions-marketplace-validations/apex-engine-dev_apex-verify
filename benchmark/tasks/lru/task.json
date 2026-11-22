@@ -1,0 +1,11 @@
+{
+  "id": "lru",
+  "kind": "fix",
+  "title": "LRU cache evicts the wrong entries",
+  "prompt": "Our LRUCache in src/lru.js evicts entries in the wrong order: something we read recently still gets thrown out, and re-setting a key that already exists can also push out an unrelated entry when the cache is full. Please fix it so it is a proper least-recently-used cache.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

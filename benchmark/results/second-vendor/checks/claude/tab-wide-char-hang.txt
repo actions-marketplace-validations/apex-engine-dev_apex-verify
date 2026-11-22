@@ -1,0 +1,88 @@
+```python
+"""Task check: _CustomTextWrap must make progress when width < one wide character."""
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+import pytest
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parent
+
+PRELUDE = (
+    "import sys, json\n"
+    "sys.path.insert(0, %r)\n"
+    "import tabulate as T\n"
+    "payload = json.loads(sys.argv[1])\n"
+) % str(ROOT)
+
+HANGUL2 = "청자"
+HANGUL3 = "청자청"
+HANGUL10 = HANGUL2 * 5
+
+
+def run_child(body, payload):
+    code = PRELUDE + body
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-c", code, json.dumps(payload)],
+            capture_output=True, timeout=30, cwd=str(ROOT),
+        )
+    except subprocess.TimeoutExpired:
+        pytest.fail("the call hung instead of finishing")
+    assert proc.returncode == 0, "child failed: %s" % proc.stderr.decode("utf-8", "replace")
+    return json.loads(proc.stdout.decode("utf-8"))
+
+
+WRAP = "print(json.dumps(T._CustomTextWrap(width=payload['w']).wrap(payload['t'])))\n"
+
+
+def test_two_hangul_with_width_one_gives_two_single_char_lines():
+    lines = run_child(WRAP, {"w": 1, "t": HANGUL2})
+    assert lines == ["청", "자"], "expected each character on its own line"
+
+
+def test_three_hangul_with_width_one_gives_three_lines():
+    lines = run_child(WRAP, {"w": 1, "t": HANGUL3})
+    assert len(lines) == 3, "expected three lines for three characters"
+    assert all(len(line) == 1 for line in lines), "expected one character per line"
+
+
+def test_longer_hangul_string_width_one_one_char_per_line_in_order():
+    lines = run_child(WRAP, {"w": 1, "t": HANGUL10})
+    assert len(lines) == 10, "expected ten lines for ten characters"
+    assert all(len(line) == 1 for line in lines), "expected one character per line"
+    assert "".join(lines) == HANGUL10, "expected the characters kept in order without loss"
+
+
+def test_mixed_ascii_and_wide_width_one_terminates_and_keeps_text():
+    text = "a청b"
+    lines = run_child(WRAP, {"w": 1, "t": text})
+    assert "".join(lines) == text, "expected all characters kept in order"
+    assert all(len(line) == 1 for line in lines), "expected one character per line at width 1"
+
+
+def test_wrap_text_to_colwidths_width_one_puts_chars_on_separate_lines():
+    body = "print(json.dumps(T._wrap_text_to_colwidths([[payload['t']]], [1])))\n"
+    result = run_child(body, {"t": HANGUL2})
+    assert result == [["청\n자"]], "expected the cell wrapped to one character per line"
+
+
+def test_tabulate_with_maxcolwidths_one_terminates_and_keeps_characters():
+    body = "print(json.dumps(T.tabulate([[payload['t']]], maxcolwidths=1)))\n"
+    result = run_child(body, {"t": HANGUL2})
+    assert "청" in result and "자" in result, "expected both characters in the table output"
+
+
+def test_ascii_wrapping_is_unchanged():
+    lines = run_child(WRAP, {"w": 5, "t": "hello world"})
+    assert lines == ["hello", "world"], "expected ordinary ASCII wrapping to be unchanged"
+
+
+def test_wide_chars_fit_when_width_is_large_enough():
+    pytest.importorskip("wcwidth")
+    lines = run_child(WRAP, {"w": 2, "t": HANGUL2})
+    assert lines == ["청", "자"], "expected one two-column character per line at width 2"
+    lines = run_child(WRAP, {"w": 4, "t": HANGUL3})
+    assert lines == ["청자", "청"], "expected two characters on the first line at width 4"

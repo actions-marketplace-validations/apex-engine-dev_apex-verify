@@ -1,0 +1,22 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-20 07:35:44
+@@ -1 +1,18 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++export const formatMoney = (cents, currency) => {
++  if (!Number.isInteger(cents)) {
++    throw new Error("cents must be an integer");
++  }
++
++  switch (currency) {
++    case "USD":
++      return `$${(cents / 100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
++    case "EUR":
++      return `€${(cents / 100).toFixed(2)}`;
++    case "GBP":
++      return `£${(cents / 100).toFixed(2)}`;
++    default:
++      throw new Error(`Unsupported currency: ${currency}`);
++  }
++};

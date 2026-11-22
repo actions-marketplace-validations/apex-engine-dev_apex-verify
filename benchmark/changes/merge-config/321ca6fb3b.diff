@@ -1,0 +1,79 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-21 03:12:21
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/config.js b/src/config.js
+--- a/src/config.js	2026-11-19 21:42:44
++++ b/src/config.js	2026-11-21 03:34:15
+@@ -1,10 +1,60 @@
+-export function mergeConfig(base, override) {
+-  for (const key of Object.keys(override)) {
+-    if (typeof override[key] === "object" && typeof base[key] === "object") {
+-      mergeConfig(base[key], override[key]);
++const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
++
++function isObject(val) {
++  return (
++    val !== null &&
++    typeof val === "object" &&
++    !Array.isArray(val) &&
++    Object.prototype.toString.call(val) === "[object Object]"
++  );
++}
++
++function clone(val) {
++  if (Array.isArray(val)) {
++    return val.map(clone);
++  }
++  if (val instanceof Date) {
++    return new Date(val.getTime());
++  }
++  if (val instanceof RegExp) {
++    return new RegExp(val.source, val.flags);
++  }
++  if (isObject(val)) {
++    const res = {};
++    for (const key of Object.keys(val)) {
++      if (key === "__proto__") continue;
++      res[key] = clone(val[key]);
++    }
++    return res;
++  }
++  return val;
++}
++
++export function mergeConfig(base = {}, override = {}) {
++  const result = {};
++  const safeBase = isObject(base) ? base : {};
++  const safeOverride = isObject(override) ? override : {};
++
++  for (const key of Object.keys(safeBase)) {
++    if (key === "__proto__") continue;
++    if (!hasOwn(safeOverride, key) || safeOverride[key] === undefined) {
++      result[key] = clone(safeBase[key]);
++    }
++  }
++
++  for (const key of Object.keys(safeOverride)) {
++    if (key === "__proto__") continue;
++    const overrideVal = safeOverride[key];
++    if (overrideVal === undefined) {
++      continue;
++    }
++    const baseVal = hasOwn(safeBase, key) ? safeBase[key] : undefined;
++    if (isObject(overrideVal)) {
++      result[key] = mergeConfig(isObject(baseVal) ? baseVal : {}, overrideVal);
+     } else {
+-      base[key] = override[key];
++      result[key] = clone(overrideVal);
+     }
+   }
+-  return base;
++
++  return result;
+ }

@@ -1,0 +1,81 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { TodoList } from "../src/todos.js";
+
+test("toJSON returns a plain object snapshot", () => {
+  const list = new TodoList();
+  list.add("test");
+  const snapshot = list.toJSON();
+  assert.equal(typeof snapshot, "object", "Snapshot must be an object");
+  assert.notEqual(snapshot, null, "Snapshot must not be null");
+});
+
+test("fromJSON rebuilds list and preserves done status", () => {
+  const list = new TodoList();
+  const item1 = list.add("task 1");
+  const item2 = list.add("task 2");
+  list.complete(item1.id);
+
+  const restored = TodoList.fromJSON(list.toJSON());
+  const pending = restored.pending();
+
+  assert.equal(pending.length, 1, "Restored list should have 1 pending item");
+  assert.equal(pending[0].id, item2.id, "The pending item should be the one that was not completed");
+
+  const restoredItem1 = restored.items.find(i => i.id === item1.id);
+  assert.equal(restoredItem1.done, true, "Completed item must stay done after restoring");
+});
+
+test("adding a new todo after restoring must not clash with existing ids", () => {
+  const list = new TodoList();
+  const item1 = list.add("task 1");
+  const item2 = list.add("task 2");
+
+  const restored = TodoList.fromJSON(list.toJSON());
+  const item3 = restored.add("task 3");
+
+  assert.notEqual(item3.id, item1.id, "New item ID must not clash with first item ID");
+  assert.notEqual(item3.id, item2.id, "New item ID must not clash with second item ID");
+
+  const ids = restored.items.map(i => i.id);
+  const uniqueIds = new Set(ids);
+  assert.equal(uniqueIds.size, ids.length, "All IDs in the restored list must be unique");
+});
+
+test("fromJSON handles empty list snapshot correctly", () => {
+  const list = new TodoList();
+  const restored = TodoList.fromJSON(list.toJSON());
+  assert.equal(restored.pending().length, 0, "Restored empty list should have 0 pending items");
+
+  const newItem = restored.add("new task");
+  assert.ok(newItem.id !== undefined, "Should be able to add items to a restored empty list");
+  assert.equal(restored.pending().length, 1, "Restored list should track new pending items");
+});
+
+test("restoring a list with removed items does not reuse IDs", () => {
+  const list = new TodoList();
+  const item1 = list.add("task 1");
+  const item2 = list.add("task 2");
+  list.remove(item2.id);
+
+  const restored = TodoList.fromJSON(list.toJSON());
+  const item3 = restored.add("task 3");
+
+  assert.notEqual(item3.id, item1.id, "New ID must not clash with existing item");
+  assert.notEqual(item3.id, item2.id, "New ID must not clash with removed item");
+});
+
+test("pin: complete() throws on non-existent id", () => {
+  const list = new TodoList();
+  assert.throws(() => list.complete(999), /no such todo 999/, "Should throw when completing non-existent todo");
+});
+
+test("pin: remove() filters out the item", () => {
+  const list = new TodoList();
+  const item = list.add("task");
+  list.remove(item.id);
+  assert.equal(list.pending().length, 0, "List should be empty after removing the only item");
+  assert.equal(list.items.length, 0, "Items array should be empty");
+});
+```

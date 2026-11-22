@@ -1,0 +1,53 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 12:23:13
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/duration.js b/src/duration.js
+--- a/src/duration.js	2026-11-19 21:42:44
++++ b/src/duration.js	2026-11-20 12:23:45
+@@ -1,5 +1,37 @@
+ export function parseDuration(str) {
+-  const m = /^(\d+)([sm])$/.exec(str);
+-  if (!m) throw new Error("bad duration: " + str);
+-  return Number(m[1]) * (m[2] === "m" ? 60 : 1);
++  if (typeof str !== 'string' || str.trim().length === 0) {
++    throw new Error(`Invalid input: Duration must be a non-empty string. Received: ${str}`);
++  }
++
++  const unitMap = {
++    's': 1,
++    'm': 60,
++    'h': 3600,
++    'd': 86400,
++  };
++
++  let totalSeconds = 0;
++  const regex = /(\d+)\s*([dhms])/gi; // Global flag to find all occurrences
++  let match;
++  let consumedLength = 0; // Track total length of matched valid duration strings
++
++  while ((match = regex.exec(str)) !== null) {
++    const value = parseInt(match[1], 10);
++    const unit = match[2].toLowerCase();
++    totalSeconds += value * unitMap[unit];
++    consumedLength += match[0].length; // Add the length of the token matched (e.g., "1h", "30 m")
++  }
++
++  // Check if the entire string was consumed by valid duration parts and spaces between them.
++  // If consumedLength is less than the trimmed string length, it means there's extra garbage.
++  if (consumedLength < str.trim().length) {
++      throw new Error(`Invalid duration format: unexpected characters in "${str}"`);
++  }
++
++  // If the string had content but no valid parts were parsed.
++  if (str.trim().length > 0 && consumedLength === 0) {
++      throw new Error(`Invalid duration format: no valid duration parts found in "${str}"`);
++  }
++
++  return totalSeconds;
+ }

@@ -1,0 +1,135 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-19 21:42:47
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/csv.js b/src/csv.js
+--- a/src/csv.js	2026-11-19 21:42:44
++++ b/src/csv.js	2026-11-19 21:42:58
+@@ -1,6 +1,44 @@
+ export function parseCSV(text) {
+-  return text
+-    .split("\n")
+-    .filter((line) => line.length > 0)
+-    .map((line) => line.split(","));
++  const rows = [];
++  let currentRow = [];
++  let currentField = '';
++  let inQuotes = false;
++
++  for (let i = 0; i < text.length; i++) {
++    const char = text[i];
++    const nextChar = text[i + 1];
++
++    if (char === '"') {
++      if (inQuotes && nextChar === '"') {
++        // Escaped quote
++        currentField += '"';
++        i++; // Skip the next quote
++      } else {
++        // Toggle inQuotes state
++        inQuotes = !inQuotes;
++      }
++    } else if (char === "," && !inQuotes) {
++      // End of field, not in quotes
++      currentRow.push(currentField);
++      currentField = '';
++    } else if (char === "
++" && !inQuotes) {
++      // End of row, not in quotes
++      currentRow.push(currentField);
++      rows.push(currentRow);
++      currentRow = [];
++      currentField = '';
++    } else {
++      // Regular character, append to current field
++      currentField += char;
++    }
++  }
++
++  // Add the last field and row if they exist
++  if (currentField.length > 0 || currentRow.length > 0) {
++    currentRow.push(currentField);
++    rows.push(currentRow);
++  }
++
++  return rows;
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-19 21:45:05
+@@ -1,5 +1,68 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { parseCSV } from "../src/csv.js";
+-test("plain", () => assert.deepEqual(parseCSV("a,b\n1,2\n"), [["a", "b"], ["1", "2"]]));
+-test("quoted comma", () => assert.deepEqual(parseCSV('x,"Smith, John",y\n'), [["x", "Smith, John", "y"]]));
++
++test("plain CSV", () => {
++  const csv = `a,b
++1,2
++`;
++  const expected = [["a", "b"], ["1", "2"]];
++  assert.deepEqual(parseCSV(csv), expected);
++});
++
++test("quoted field with comma", () => {
++  const csv = `x,"Smith, John",y
++`;
++  const expected = [["x", "Smith, John", "y"]];
++  assert.deepEqual(parseCSV(csv), expected);
++});
++
++test("quoted field with escaped double quotes", () => {
++  // CSV format for "He said ""Hello""" is "He said ""Hello"""
++  const csv = `"name,description
++User 1","He said ""Hello"""
++`;
++  // The expected JavaScript string is "He said "Hello"".
++  // In a JS string literal, this becomes "He said "Hello""
++  const expected = [["name", "description"], ["User 1", "He said "Hello""]];
++  assert.deepEqual(parseCSV(csv), expected);
++});
++
++test("quoted field with newline inside", () => {
++  // CSV format for "123 Main St
++Anytown, USA" is "123 Main St
++Anytown, USA"
++  const csv = `id,address
++1,"123 Main St
++Anytown, USA"
++`;
++  const expected = [["id", "address"], ["1", "123 Main St
++Anytown, USA"]];
++  assert.deepEqual(parseCSV(csv), expected);
++});
++
++test("complex CSV with multiple issues", () => {
++  // CSV format:
++  // "ID","Name, Full","Description, with ""quotes"" and
++newlines"
++  // 1,"Alice","This is a ""test"" description."
++  // 2,"Bob","Another description
++with more ""stuff"" and
++multiple lines."
++  const csv = `"ID","Name, Full","Description, with ""quotes"" and
++newlines"
++1,"Alice","This is a ""test"" description."
++2,"Bob","Another description
++with more ""stuff"" and
++multiple lines."
++`;
++  const expected = [
++    ["ID", "Name, Full", "Description, with "quotes" and
++newlines"],
++    ["1", "Alice", "This is a "test" description."],
++    ["2", "Bob", "Another description
++with more "stuff" and
++multiple lines."]
++  ];
++  assert.deepEqual(parseCSV(csv), expected);
++});

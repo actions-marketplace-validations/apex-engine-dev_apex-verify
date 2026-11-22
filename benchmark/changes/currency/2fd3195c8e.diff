@@ -1,0 +1,45 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 13:06:28
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/money.js b/src/money.js
+--- a/src/money.js	2026-11-19 21:42:44
++++ b/src/money.js	2026-11-20 13:12:31
+@@ -1 +1,32 @@
+ export const toCents = (dollars) => Math.round(dollars * 100);
++
++export function formatMoney(cents, currency) {
++  if (!Number.isInteger(cents)) {
++    throw new Error("cents must be an integer");
++  }
++  
++  let symbol;
++  switch (currency) {
++    case "USD":
++      symbol = "$";
++      break;
++    case "EUR":
++      symbol = "€";
++      break;
++    case "GBP":
++      symbol = "£";
++      break;
++    default:
++      throw new Error("Invalid currency");
++  }
++
++  const isNegative = cents < 0;
++  const absCents = Math.abs(cents);
++  const dollars = Math.floor(absCents / 100);
++  const remainder = absCents % 100;
++
++  const formattedDollars = dollars.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
++  const formattedRemainder = remainder.toString().padStart(2, "0");
++
++  return (isNegative ? "-" : "") + symbol + formattedDollars + "." + formattedRemainder;
++}

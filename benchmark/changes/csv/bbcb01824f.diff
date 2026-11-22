@@ -1,0 +1,130 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 12:34:20
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/csv.js b/src/csv.js
+--- a/src/csv.js	2026-11-19 21:42:44
++++ b/src/csv.js	2026-11-20 12:38:41
+@@ -1,6 +1,80 @@
+ export function parseCSV(text) {
+-  return text
+-    .split("\n")
+-    .filter((line) => line.length > 0)
+-    .map((line) => line.split(","));
++  if (typeof text !== "string" || text.length === 0) {
++    return [];
++  }
++
++  const rows = [];
++  let currentRow = [];
++  let currentField = "";
++  let inQuotes = false;
++  let isQuoted = false;
++  let hasField = false;
++
++  for (let i = 0; i < text.length; i++) {
++    const char = text[i];
++
++    if (inQuotes) {
++      if (char === '"') {
++        if (i + 1 < text.length && text[i + 1] === '"') {
++          currentField += '"';
++          i++;
++        } else {
++          inQuotes = false;
++        }
++      } else {
++        currentField += char;
++      }
++    } else {
++      if (char === '"') {
++        if (currentField.trim() === "") {
++          currentField = "";
++          inQuotes = true;
++          isQuoted = true;
++          hasField = true;
++        } else {
++          currentField += char;
++          hasField = true;
++        }
++      } else if (char === ',') {
++        currentRow.push(currentField);
++        currentField = "";
++        isQuoted = false;
++        hasField = true;
++      } else if (char === '\r') {
++        if (i + 1 < text.length && text[i + 1] === '\n') {
++          i++;
++        }
++        if (hasField || currentRow.length > 0) {
++          currentRow.push(currentField);
++          rows.push(currentRow);
++          currentRow = [];
++          currentField = "";
++          isQuoted = false;
++          hasField = false;
++        }
++      } else if (char === '\n') {
++        if (hasField || currentRow.length > 0) {
++          currentRow.push(currentField);
++          rows.push(currentRow);
++          currentRow = [];
++          currentField = "";
++          isQuoted = false;
++          hasField = false;
++        }
++      } else {
++        if (isQuoted && (char === ' ' || char === '\t')) {
++          continue;
++        }
++        currentField += char;
++        hasField = true;
++      }
++    }
++  }
++
++  if (hasField || currentRow.length > 0) {
++    currentRow.push(currentField);
++    rows.push(currentRow);
++  }
++
++  return rows;
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-20 12:38:53
+@@ -1,5 +1,29 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { parseCSV } from "../src/csv.js";
++
+ test("plain", () => assert.deepEqual(parseCSV("a,b\n1,2\n"), [["a", "b"], ["1", "2"]]));
+ test("quoted comma", () => assert.deepEqual(parseCSV('x,"Smith, John",y\n'), [["x", "Smith, John", "y"]]));
++test("doubled quotes", () => assert.deepEqual(parseCSV('x,"Smith, ""John"" Jr.",y\n'), [["x", 'Smith, "John" Jr.', "y"]]));
++test("single quote inside quotes", () => assert.deepEqual(parseCSV('""""\n'), [['"']]));
++test("line break inside quotes", () => assert.deepEqual(parseCSV('x,"line 1\nline 2",y\n'), [["x", "line 1\nline 2", "y"]]));
++test("CRLF line break inside quotes", () => assert.deepEqual(parseCSV('x,"line 1\r\nline 2",y\n'), [["x", "line 1\r\nline 2", "y"]]));
++test("CRLF row separators", () => assert.deepEqual(parseCSV("a,b\r\n1,2\r\n"), [["a", "b"], ["1", "2"]]));
++test("without trailing newline", () => assert.deepEqual(parseCSV("a,b\n1,2"), [["a", "b"], ["1", "2"]]));
++test("empty input", () => {
++  assert.deepEqual(parseCSV(""), []);
++  assert.deepEqual(parseCSV("\n"), []);
++  assert.deepEqual(parseCSV("\r\n"), []);
++});
++test("empty fields", () => {
++  assert.deepEqual(parseCSV(",\n"), [["", ""]]);
++  assert.deepEqual(parseCSV("a,,b\n"), [["a", "", "b"]]);
++  assert.deepEqual(parseCSV('""\n'), [[""]]);
++  assert.deepEqual(parseCSV('"a",,"b"'), [["a", "", "b"]]);
++});
++test("combined complex field", () => {
++  assert.deepEqual(
++    parseCSV('"Smith, John","123 Main St\nApt ""B""",active\n'),
++    [["Smith, John", '123 Main St\nApt "B"', "active"]]
++  );
++});

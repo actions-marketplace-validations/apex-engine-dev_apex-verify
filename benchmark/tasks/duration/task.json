@@ -1,0 +1,11 @@
+{
+  "id": "duration",
+  "kind": "feature",
+  "title": "parseDuration with units",
+  "prompt": "src/duration.js has parseDuration(str) which only understands plain seconds like \"90s\" and minutes like \"5m\". Please extend it to also support hours (h) and days (d), and combinations such as \"1h30m\" or \"2d 4h\" (spaces allowed between parts). It returns a number of seconds. Garbage input should throw an Error.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

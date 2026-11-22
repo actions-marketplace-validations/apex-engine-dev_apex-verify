@@ -1,0 +1,44 @@
+```js
+const { describe, it } = require('node:test');
+const assert = require('node:assert');
+const ms = require('../index.js');
+
+describe('ms() negative decimal parsing', () => {
+  it('should parse negative decimal strings with multiple digits before the decimal point', () => {
+    assert.strictEqual(
+      ms('-10.5h'),
+      -37800000,
+      "ms('-10.5h') should return -37800000"
+    );
+    assert.strictEqual(
+      ms('-12.25m'),
+      -735000,
+      "ms('-12.25m') should return -735000"
+    );
+  });
+
+  it('should preserve existing behavior for negative decimal strings with a single digit before the decimal point', () => {
+    assert.strictEqual(
+      ms('-1.5h'),
+      -5400000,
+      "ms('-1.5h') should return -5400000"
+    );
+  });
+
+  it('should preserve existing behavior for negative decimal strings with no digit before the decimal point', () => {
+    assert.strictEqual(
+      ms('-.5ms'),
+      -0.5,
+      "ms('-.5ms') should return -0.5"
+    );
+  });
+
+  it('should preserve existing behavior for negative integers', () => {
+    assert.strictEqual(
+      ms('-5'),
+      -5,
+      "ms('-5') should return -5"
+    );
+  });
+});
+```

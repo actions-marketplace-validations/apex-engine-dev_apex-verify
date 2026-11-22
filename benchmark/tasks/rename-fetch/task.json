@@ -1,0 +1,11 @@
+{
+  "id": "rename-fetch",
+  "kind": "refactor",
+  "title": "Rename fetchItem to loadItem",
+  "prompt": "Please rename the function fetchItem to loadItem everywhere in this project (its definition, every caller, re-exports, the command registry and the docs/comments). Behaviour must stay exactly the same.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

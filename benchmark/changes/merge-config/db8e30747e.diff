@@ -1,0 +1,54 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 16:15:45
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/config.js b/src/config.js
+--- a/src/config.js	2026-11-19 21:42:44
++++ b/src/config.js	2026-11-20 16:37:53
+@@ -1,10 +1,35 @@
+ export function mergeConfig(base, override) {
+-  for (const key of Object.keys(override)) {
+-    if (typeof override[key] === "object" && typeof base[key] === "object") {
+-      mergeConfig(base[key], override[key]);
+-    } else {
+-      base[key] = override[key];
++  const isObject = (val) =>
++    Object.prototype.toString.call(val) === "[object Object]";
++
++  const clone = (val) => {
++    if (isObject(val)) {
++      const res = {};
++      for (const k of Object.keys(val)) {
++        res[k] = clone(val[k]);
++      }
++      return res;
+     }
++    if (Array.isArray(val)) {
++      return val.map(clone);
++    }
++    return val;
++  };
++
++  const result = clone(base);
++
++  if (override) {
++    for (const key of Object.keys(override)) {
++      if (override[key] === undefined) {
++        continue;
++      }
++      if (isObject(override[key]) && isObject(result[key])) {
++        result[key] = mergeConfig(result[key], override[key]);
++      } else {
++        result[key] = clone(override[key]);
++      }
++    }
+   }
+-  return base;
++
++  return result;
+ }

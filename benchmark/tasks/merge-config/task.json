@@ -1,0 +1,11 @@
+{
+  "id": "merge-config",
+  "kind": "fix",
+  "title": "mergeConfig mutates its inputs",
+  "prompt": "mergeConfig(base, override) in src/config.js is supposed to give back a new merged config, but after calling it our defaults object changes, and later calls see leftovers from earlier ones. Fix it. Nested objects should be merged key by key, anything else in the override wins. Do not modify either argument, and the result must not share nested objects with them. A key whose override value is undefined counts as not set.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

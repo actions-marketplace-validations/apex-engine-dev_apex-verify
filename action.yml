@@ -1,0 +1,113 @@
+name: ReallyDone verify
+description: Is this AI-written change really done? An independent model writes checks from the task, proves they can fail, and gates the pull request with a ready / not ready verdict.
+author: ReallyDone
+branding:
+  icon: check-circle
+  color: green
+inputs:
+  task:
+    description: What the change should do. Defaults to the pull request title and description.
+    required: false
+    default: ""
+  api-key:
+    description: API key of the model that writes the checks (pass it as a secret). Without it (or on fork pull requests, where GitHub withholds secrets) only the tests and the cheating scan run, and the verdict is at most unknown.
+    required: false
+    default: ""
+  model:
+    description: The model that writes the checks. Use a different, ideally stronger one than the agent that made the change.
+    required: false
+    default: gemini-3.1-pro-preview
+  provider:
+    description: gemini or openai (or set base-url).
+    required: false
+    default: gemini
+  base-url:
+    description: Any hosted OpenAI-compatible endpoint (overrides provider).
+    required: false
+    default: ""
+  base:
+    description: The commit to compare with. Defaults to the pull request's base commit.
+    required: false
+    default: ""
+  test-command:
+    description: Your test command when the project's tests are not detected.
+    required: false
+    default: ""
+  fail-on:
+    description: When to fail the job - not_ready (default), unknown (also fail when there is not enough to say) or never.
+    required: false
+    default: not_ready
+  comment:
+    description: Post (and update) one comment on the pull request.
+    required: false
+    default: "true"
+outputs:
+  verdict:
+    description: ready, not_ready or unknown.
+    value: ${{ steps.run.outputs.verdict }}
+  report:
+    description: Path of the full JSON report.
+    value: ${{ steps.run.outputs.report }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "20"
+    - name: Install ReallyDone
+      shell: bash
+      run: |
+        cd "$GITHUB_ACTION_PATH"
+        npm install --no-audit --no-fund --loglevel=error   # the "prepare" script builds and bundles dist/reallydone.mjs
+        test -f dist/reallydone.mjs
+    - name: Verify
+      id: run
+      shell: bash
+      env:
+        INPUT_TASK: ${{ inputs.task }}
+        INPUT_KEY: ${{ inputs.api-key }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_PROVIDER: ${{ inputs.provider }}
+        INPUT_BASE_URL: ${{ inputs.base-url }}
+        INPUT_BASE: ${{ inputs.base }}
+        INPUT_TEST: ${{ inputs.test-command }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_COMMENT: ${{ inputs.comment }}
+        PR_TITLE: ${{ github.event.pull_request.title }}
+        PR_BODY: ${{ github.event.pull_request.body }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+      run: |
+        set +e   # GitHub starts steps with -e; the exit code is handled below
+        set -uo pipefail
+        # Everything from the pull request reaches the script through environment variables, never through the shell text.
+        TASK="${INPUT_TASK}"
+        if [ -z "$TASK" ]; then TASK="${PR_TITLE:-}"; [ -n "${PR_BODY:-}" ] && TASK="$TASK"$'\n\n'"$PR_BODY"; fi
+        if [ -z "$TASK" ]; then TASK="the change in this commit"; fi
+        BASE="${INPUT_BASE:-${PR_BASE_SHA:-HEAD~1}}"
+        OUT="$RUNNER_TEMP/reallydone"; mkdir -p "$OUT"
+        ARGS=(verify "$TASK" --dir "$GITHUB_WORKSPACE" --base "$BASE" --quiet --format text --markdown-out "$OUT/report.md" --sarif-out "$OUT/report.sarif" --json-out "$OUT/report.json")
+        [ -n "$INPUT_TEST" ] && ARGS+=(--test "$INPUT_TEST")
+        if [ -n "$INPUT_BASE_URL" ]; then ARGS+=(--base-url "$INPUT_BASE_URL" --model "$INPUT_MODEL" --api-key-env APEX_CHECKER_KEY)
+        else ARGS+=(--provider "$INPUT_PROVIDER" --model "$INPUT_MODEL" --api-key-env APEX_CHECKER_KEY); fi
+        if [ -z "$INPUT_KEY" ]; then
+          ARGS+=(--no-model)
+          echo "::notice title=ReallyDone verify::No API key (or a fork pull request): running the tests and the cheating scan only, so the verdict is at most unknown."
+        else export APEX_CHECKER_KEY="$INPUT_KEY"; fi
+        node "$GITHUB_ACTION_PATH/dist/reallydone.mjs" "${ARGS[@]}" | tee "$OUT/report.txt"
+        CODE=${PIPESTATUS[0]}
+        VERDICT=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).verdict)}catch{console.log("error")}' "$OUT/report.json")
+        echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"; echo "report=$OUT/report.json" >> "$GITHUB_OUTPUT"
+        [ -f "$OUT/report.md" ] && cat "$OUT/report.md" >> "$GITHUB_STEP_SUMMARY"
+        if [ "$INPUT_COMMENT" = "true" ] && [ -n "${PR_NUMBER:-}" ] && [ -f "$OUT/report.md" ]; then
+          ID=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '[.[] | select(.body | contains("<!-- reallydone -->"))][0].id // empty' 2>/dev/null || true)
+          if [ -n "$ID" ]; then gh api -X PATCH "repos/$REPO/issues/comments/$ID" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not update the ReallyDone comment (read-only token on a fork pull request?). The report is in the job summary."
+          else gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not post the ReallyDone comment (read-only token on a fork pull request?). The report is in the job summary."; fi
+        fi
+        case "$INPUT_FAIL_ON" in
+          never) exit 0 ;;
+          unknown) [ "$CODE" -ne 0 ] && exit 1 || exit 0 ;;
+          *) [ "$CODE" -eq 1 ] && exit 1 || exit 0 ;;
+        esac

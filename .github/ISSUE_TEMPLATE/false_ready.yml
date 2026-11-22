@@ -1,0 +1,22 @@
+name: Break it (said ready, but wrong)
+description: "`reallydone verify` said READY but the change is wrong. The most valuable bug report."
+labels: [bug, verifier]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. A `ready` that is wrong (a miss) is the failure this project exists to prevent. The smaller and more reproducible, the better. Do not paste secrets or private code.
+  - type: textarea
+    attributes: { label: The task you gave, description: The exact task text }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: What was wrong with the change, description: What the change did and what it should have done (the failing case) }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: "`reallydone verify --json` output (or the report.json from the Action)", description: Which checks were written and what they covered; this shows what was missed }
+    validations: { required: true }
+  - type: input
+    attributes: { label: Checker model, description: "e.g. gemini-3.1-pro-preview" }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: A project that reproduces it, description: A small public repo or a snippet plus the diff we can run; ideal - a test that fails on the change }

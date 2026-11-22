@@ -1,0 +1,20 @@
+name: False alarm (said not ready, but it is right)
+description: "`reallydone verify` said NOT READY but the change is correct."
+labels: [bug, verifier]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. A wrong `not ready` costs people's trust, so we measure and publish the rate. Do not paste secrets or private code.
+  - type: textarea
+    attributes: { label: The task you gave, description: The exact task text }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: "`reallydone verify` output (the failing check, expected and actual)", description: Paste the text output or `--json` }
+    validations: { required: true }
+  - type: textarea
+    attributes: { label: Why the change is correct and the check is wrong }
+    validations: { required: true }
+  - type: input
+    attributes: { label: Checker model, description: "e.g. gemini-3.1-pro-preview" }
+    validations: { required: true }

@@ -1,0 +1,29 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/emitter.js b/src/emitter.js
+--- a/src/emitter.js	2026-11-19 21:42:44
++++ b/src/emitter.js	2026-11-20 07:36:20
+@@ -11,18 +11,22 @@
+       this.off(event, wrapper);
+       fn(...args);
+     };
++    wrapper.originalFn = fn; // Store original function for off()
+     return this.on(event, wrapper);
+   }
+   off(event, fn) {
+     const list = this.handlers[event];
+     if (!list) return this;
+-    const i = list.indexOf(fn);
++    // Find the handler, checking for originalFn if it's a once() wrapper
++    const i = list.findIndex(handler => handler === fn || handler.originalFn === fn);
+     if (i >= 0) list.splice(i, 1);
+     return this;
+   }
+   emit(event, ...args) {
+     const list = this.handlers[event] || [];
+-    for (const fn of list) fn(...args);
+-    return list.length > 0;
++    // Create a copy of the list to avoid issues if listeners are removed during iteration
++    const handlersToRun = [...list];
++    for (const fn of handlersToRun) fn(...args);
++    return handlersToRun.length > 0;
+   }
+ }

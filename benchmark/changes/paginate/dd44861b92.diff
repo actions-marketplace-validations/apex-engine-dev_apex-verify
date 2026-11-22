@@ -1,0 +1,63 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-19 22:03:15
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/paginate.js b/src/paginate.js
+--- a/src/paginate.js	2026-11-19 21:42:44
++++ b/src/paginate.js	2026-11-19 22:03:48
+@@ -1,8 +1,11 @@
+ export function paginate(items, page, size) {
+-  const start = page * size;
++  if (page < 1 || size < 1) {
++    throw new RangeError("Page and size must be at least 1");
++  }
++  const start = (page - 1) * size;
+   return {
+     items: items.slice(start, start + size),
+     page,
+-    totalPages: Math.floor(items.length / size),
++    totalPages: Math.ceil(items.length / size),
+   };
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-19 22:03:52
+@@ -1,8 +1,33 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { paginate } from "../src/paginate.js";
++
+ test("first page", () => {
+   const r = paginate([1, 2, 3, 4, 5, 6], 1, 2);
+   assert.deepEqual(r.items, [1, 2]);
+   assert.equal(r.page, 1);
++});
++
++test("second page", () => {
++  const r = paginate([1, 2, 3, 4, 5, 6], 2, 2);
++  assert.deepEqual(r.items, [3, 4]);
++  assert.equal(r.page, 2);
++});
++
++test("totalPages calculation with partial last page", () => {
++  const r = paginate([1, 2, 3, 4, 5], 1, 2);
++  assert.equal(r.totalPages, 3);
++});
++
++test("page past the end gives empty array", () => {
++  const r = paginate([1, 2], 3, 2);
++  assert.deepEqual(r.items, []);
++  assert.equal(r.page, 3);
++  assert.equal(r.totalPages, 1);
++});
++
++test("throws RangeError for invalid page or size", () => {
++  assert.throws(() => paginate([], 0, 2), RangeError);
++  assert.throws(() => paginate([], 1, 0), RangeError);
++  assert.throws(() => paginate([], -1, -1), RangeError);
+ });

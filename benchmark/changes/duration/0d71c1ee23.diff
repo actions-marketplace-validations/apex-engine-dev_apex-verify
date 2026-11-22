@@ -1,0 +1,121 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-19 21:49:20
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/duration.js b/src/duration.js
+--- a/src/duration.js	2026-11-19 21:42:44
++++ b/src/duration.js	2026-11-19 21:52:31
+@@ -1,5 +1,64 @@
+ export function parseDuration(str) {
+-  const m = /^(\d+)([sm])$/.exec(str);
+-  if (!m) throw new Error("bad duration: " + str);
+-  return Number(m[1]) * (m[2] === "m" ? 60 : 1);
++  const SECONDS_PER_DAY = 86400;
++  const SECONDS_PER_HOUR = 3600;
++  const SECONDS_PER_MINUTE = 60;
++
++  let totalSeconds = 0;
++  // Regex to find number-unit pairs (e.g., "2d", "4h"). Whitespace is handled separately.
++  const partRegex = /(\d+)([dhms])/g; 
++  
++  const matches = [...str.matchAll(partRegex)];
++
++  // If the string is not empty but no valid number-unit parts were found, it's an error.
++  if (str.length > 0 && matches.length === 0) {
++      throw new Error("bad duration: " + str);
++  }
++
++  let lastMatchEndIndex = 0; // Tracks the index AFTER the end of the last processed match.
++
++  for (let i = 0; i < matches.length; i++) {
++    const match = matches[i];
++    const value = parseInt(match[1], 10);
++    const unit = match[2];
++    let seconds = 0;
++
++    if (unit === 'd') seconds = value * SECONDS_PER_DAY;
++    else if (unit === 'h') seconds = value * SECONDS_PER_HOUR;
++    else if (unit === 'm') seconds = value * SECONDS_PER_MINUTE;
++    else if (unit === 's') seconds = value;
++    totalSeconds += seconds;
++
++    const currentMatchStartIndex = match.index;
++    const currentMatchLength = match[0].length;
++    const currentMatchEndIndex = currentMatchStartIndex + currentMatchLength;
++
++    // Check for invalid characters *before* the first match if it's not at the start of the string.
++    // This handles cases like " extra 1h"
++    if (i === 0 && currentMatchStartIndex > 0) {
++        const prefix = str.substring(0, currentMatchStartIndex);
++        if (prefix.length > 0 && !/^[ 	]+$/.test(prefix)) {
++            throw new Error("bad duration: " + str);
++        }
++    }
++
++    // Check for invalid characters BETWEEN matches.
++    // The characters between the end of the last fully processed match and the start of the current match must only be whitespace.
++    if (i > 0) { 
++        const gap = str.substring(lastMatchEndIndex, currentMatchStartIndex);
++        if (gap.length > 0 && !/^[ 	]+$/.test(gap)) { // If there's a non-whitespace gap between matches
++            throw new Error("bad duration: " + str);
++        }
++    }
++
++    lastMatchEndIndex = currentMatchEndIndex; // Update the end of the span covered so far
++  }
++  
++  // Validate the input string:
++  // 1. It cannot be empty.
++  // 2. The total span covered by all matches (including valid whitespace) must equal the string length.
++  if (str.length === 0 || lastMatchEndIndex !== str.length) {
++    throw new Error("bad duration: " + str);
++  }
++  
++  return totalSeconds;
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-19 21:49:50
+@@ -1,8 +1,37 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { parseDuration } from "../src/duration.js";
++
+ test("existing", () => {
+   assert.equal(parseDuration("90s"), 90);
+   assert.equal(parseDuration("5m"), 300);
+ });
++
+ test("hours", () => assert.equal(parseDuration("1h"), 3600));
++
++// Test for days
++test("days", () => assert.equal(parseDuration("2d"), 172800));
++
++// Test for combinations
++test("combinations", () => {
++  assert.equal(parseDuration("1h30m"), 5400);
++  assert.equal(parseDuration("2d 4h"), 187200);
++  assert.equal(parseDuration("1d 2h 3m 4s"), 93784);
++});
++
++// Test for zero values
++test("zero values", () => {
++  assert.equal(parseDuration("0s"), 0);
++  assert.equal(parseDuration("0m"), 0);
++  assert.equal(parseDuration("0h"), 0);
++  assert.equal(parseDuration("0d"), 0);
++});
++
++// Test for invalid input (should throw errors)
++test("invalid input throws error", () => {
++  assert.throws(() => parseDuration("10"), /bad duration: 10/);
++  assert.throws(() => parseDuration(""), /bad duration: /);
++  assert.throws(() => parseDuration("1x"), /bad duration: 1x/);
++  assert.throws(() => parseDuration("1h extra"), /bad duration: 1h extra/);
++  assert.throws(() => parseDuration("1h 30m s"), /bad duration: 1h 30m s/);
++});

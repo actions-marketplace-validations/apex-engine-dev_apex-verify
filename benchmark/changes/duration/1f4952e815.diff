@@ -1,0 +1,116 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-21 01:44:42
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/duration.js b/src/duration.js
+--- a/src/duration.js	2026-11-19 21:42:44
++++ b/src/duration.js	2026-11-21 01:50:48
+@@ -1,5 +1,20 @@
++const MULTIPLIERS = {
++  s: 1,
++  m: 60,
++  h: 3600,
++  d: 86400,
++};
++
++const DURATION_REGEX = /^(\d+[dhms])(?:\s*\d+[dhms])*$/;
++
+ export function parseDuration(str) {
+-  const m = /^(\d+)([sm])$/.exec(str);
+-  if (!m) throw new Error("bad duration: " + str);
+-  return Number(m[1]) * (m[2] === "m" ? 60 : 1);
++  if (typeof str !== "string" || !DURATION_REGEX.test(str)) {
++    throw new Error("bad duration: " + str);
++  }
++
++  let total = 0;
++  for (const match of str.matchAll(/(\d+)([dhms])/g)) {
++    total += Number(match[1]) * MULTIPLIERS[match[2]];
++  }
++  return total;
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-21 01:52:18
+@@ -1,8 +1,75 @@
+ import { test } from "node:test";
+ import assert from "node:assert/strict";
+ import { parseDuration } from "../src/duration.js";
++
+ test("existing", () => {
+   assert.equal(parseDuration("90s"), 90);
+   assert.equal(parseDuration("5m"), 300);
+ });
+-test("hours", () => assert.equal(parseDuration("1h"), 3600));
++
++test("hours", () => {
++  assert.equal(parseDuration("1h"), 3600);
++  assert.equal(parseDuration("2h"), 7200);
++});
++
++test("days", () => {
++  assert.equal(parseDuration("1d"), 86400);
++  assert.equal(parseDuration("2d"), 172800);
++});
++
++test("combinations without spaces", () => {
++  assert.equal(parseDuration("1h30m"), 5400);
++  assert.equal(parseDuration("1d2h3m4s"), 86400 + 7200 + 180 + 4);
++});
++
++test("combinations with spaces", () => {
++  assert.equal(parseDuration("2d 4h"), 187200);
++  assert.equal(parseDuration("1h 30m"), 5400);
++  assert.equal(parseDuration("2d  4h   30m  10s"), 187200 + 1800 + 10);
++});
++
++test("zero durations", () => {
++  assert.equal(parseDuration("0s"), 0);
++  assert.equal(parseDuration("0m"), 0);
++  assert.equal(parseDuration("0h"), 0);
++  assert.equal(parseDuration("0d"), 0);
++  assert.equal(parseDuration("0h0m0s"), 0);
++});
++
++test("garbage input throws Error", () => {
++  const garbage = [
++    "",
++    "   ",
++    "foo",
++    "10",
++    "s",
++    "h",
++    "d",
++    "m",
++    "10x",
++    "10ms",
++    "10w",
++    "1.5h",
++    "-5s",
++    "+5s",
++    "1 h",
++    "1h 30",
++    "1h 30m foo",
++    "1h-30m",
++    "1h:30m",
++    " 1h",
++    "1h ",
++    null,
++    undefined,
++    123,
++    {},
++  ];
++
++  for (const input of garbage) {
++    assert.throws(
++      () => parseDuration(input),
++      Error,
++      `Expected parseDuration(${JSON.stringify(input)}) to throw Error`
++    );
++  }
++});

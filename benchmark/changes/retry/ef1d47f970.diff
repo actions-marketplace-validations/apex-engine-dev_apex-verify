@@ -1,0 +1,194 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-21 05:44:26
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/retry.js b/src/retry.js
+--- a/src/retry.js	2026-11-19 21:42:44
++++ b/src/retry.js	2026-11-21 05:52:14
+@@ -1 +1,28 @@
+ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
++
++export async function retry(fn, options = {}) {
++  const opts = options || {};
++  const retries = Math.max(0, opts.retries ?? 0);
++  let delay = opts.delayMs ?? 0;
++  const factor = opts.factor ?? 2;
++  const shouldRetry = opts.shouldRetry;
++
++  let attempt = 1;
++  while (true) {
++    try {
++      return await fn(attempt);
++    } catch (err) {
++      if (shouldRetry && !(await shouldRetry(err))) {
++        throw err;
++      }
++      if (attempt > retries) {
++        throw err;
++      }
++      if (delay > 0) {
++        await sleep(delay);
++      }
++      delay *= factor;
++      attempt++;
++    }
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-21 05:53:47
+@@ -1,9 +1,148 @@
+-import { test } from "node:test";
++import { test, mock } from "node:test";
+ import assert from "node:assert/strict";
+ import { retry } from "../src/retry.js";
++
+ test("succeeds after failures", async () => {
+   let n = 0;
+   const r = await retry(async () => { if (++n < 3) throw new Error("x"); return "ok"; }, { retries: 3, delayMs: 1 });
+   assert.equal(r, "ok");
+   assert.equal(n, 3);
++});
++
++test("succeeds on first attempt without retrying", async () => {
++  let attempts = [];
++  const r = await retry(async (attempt) => {
++    attempts.push(attempt);
++    return "first try";
++  });
++  assert.equal(r, "first try");
++  assert.deepEqual(attempts, [1]);
++});
++
++test("passes attempt number starting at 1 to fn", async () => {
++  const attempts = [];
++  const r = await retry(async (attempt) => {
++    attempts.push(attempt);
++    if (attempt < 4) throw new Error(`fail ${attempt}`);
++    return `success on ${attempt}`;
++  }, { retries: 5, delayMs: 1 });
++
++  assert.equal(r, "success on 4");
++  assert.deepEqual(attempts, [1, 2, 3, 4]);
++});
++
++test("retries: 2 means at most 3 calls in total and rejects with the last error", async () => {
++  const attempts = [];
++  await assert.rejects(
++    () => retry(async (attempt) => {
++      attempts.push(attempt);
++      throw new Error(`error from attempt ${attempt}`);
++    }, { retries: 2, delayMs: 1 }),
++    { message: "error from attempt 3" }
++  );
++  assert.deepEqual(attempts, [1, 2, 3]);
++});
++
++test("default retries is 0 (at most 1 call in total)", async () => {
++  let calls = 0;
++  await assert.rejects(
++    () => retry(async () => {
++      calls++;
++      throw new Error("fail");
++    }),
++    { message: "fail" }
++  );
++  assert.equal(calls, 1);
++});
++
++test("synchronous errors thrown by fn are handled", async () => {
++  let calls = 0;
++  const r = await retry((attempt) => {
++    calls++;
++    if (attempt === 1) throw new Error("sync throw");
++    return "sync ok";
++  }, { retries: 1, delayMs: 1 });
++
++  assert.equal(r, "sync ok");
++  assert.equal(calls, 2);
++});
++
++test("shouldRetry returning false rejects immediately with that error", async () => {
++  const attempts = [];
++  const seenErrors = [];
++  await assert.rejects(
++    () => retry(async (attempt) => {
++      attempts.push(attempt);
++      const err = new Error(`error ${attempt}`);
++      err.code = attempt === 2 ? "FATAL" : "TRANSIENT";
++      throw err;
++    }, {
++      retries: 5,
++      delayMs: 1,
++      shouldRetry: (err) => {
++        seenErrors.push(err.message);
++        return err.code !== "FATAL";
++      }
++    }),
++    { message: "error 2" }
++  );
++
++  assert.deepEqual(attempts, [1, 2]);
++  assert.deepEqual(seenErrors, ["error 1", "error 2"]);
++});
++
++test("async shouldRetry returning false rejects immediately", async () => {
++  let attempts = 0;
++  await assert.rejects(
++    () => retry(async (attempt) => {
++      attempts = attempt;
++      throw new Error("stop");
++    }, {
++      retries: 3,
++      delayMs: 1,
++      shouldRetry: async () => false
++    }),
++    { message: "stop" }
++  );
++  assert.equal(attempts, 1);
++});
++
++test("exponential backoff with default factor (2)", async () => {
++  const timestamps = [];
++  let calls = 0;
++  await assert.rejects(
++    () => retry(async () => {
++      timestamps.push(Date.now());
++      calls++;
++      throw new Error("fail");
++    }, { retries: 2, delayMs: 50 }),
++    { message: "fail" }
++  );
++
++  assert.equal(calls, 3);
++  // Delays: wait ~50ms after attempt 1, ~100ms after attempt 2.
++  const delay1 = timestamps[1] - timestamps[0];
++  const delay2 = timestamps[2] - timestamps[1];
++  assert.ok(delay1 >= 40, `delay1 should be >= 40ms, got ${delay1}`);
++  assert.ok(delay2 >= 80, `delay2 should be >= 80ms, got ${delay2}`);
++});
++
++test("custom factor", async () => {
++  const timestamps = [];
++  let calls = 0;
++  await assert.rejects(
++    () => retry(async () => {
++      timestamps.push(Date.now());
++      calls++;
++      throw new Error("fail");
++    }, { retries: 2, delayMs: 30, factor: 3 }),
++    { message: "fail" }
++  );
++
++  assert.equal(calls, 3);
++  // Delays: wait ~30ms after attempt 1, ~90ms after attempt 2.
++  const delay1 = timestamps[1] - timestamps[0];
++  const delay2 = timestamps[2] - timestamps[1];
++  assert.ok(delay1 >= 25, `delay1 should be >= 25ms, got ${delay1}`);
++  assert.ok(delay2 >= 70, `delay2 should be >= 70ms, got ${delay2}`);
+ });

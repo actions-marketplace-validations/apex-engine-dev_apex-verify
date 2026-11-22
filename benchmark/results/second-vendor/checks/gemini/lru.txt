@@ -1,0 +1,79 @@
+```js
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { LRUCache } from "../src/lru.js";
+
+test("get updates recency so recently read items are not evicted", () => {
+  const c = new LRUCache(2);
+  c.set("a", 1);
+  c.set("b", 2);
+  
+  // Reading "a" should make it the most recently used
+  assert.equal(c.get("a"), 1, "should return value for 'a'");
+  
+  // Adding "c" should evict "b" (the least recently used), not "a"
+  c.set("c", 3);
+  
+  assert.equal(c.get("b"), undefined, "'b' should be evicted as it is the least recently used");
+  assert.equal(c.get("a"), 1, "'a' should be kept because it was recently read");
+  assert.equal(c.get("c"), 3, "'c' should be kept as it was just added");
+});
+
+test("set on an existing key updates recency and does not evict unrelated entries", () => {
+  const c = new LRUCache(2);
+  c.set("a", 1);
+  c.set("b", 2);
+  
+  // Re-setting "a" should update its value and make it most recently used, without increasing size
+  c.set("a", 10);
+  assert.equal(c.size, 2, "size should remain 2 after updating an existing key");
+  
+  // Adding "c" should evict "b", not "a"
+  c.set("c", 3);
+  
+  assert.equal(c.get("b"), undefined, "'b' should be evicted");
+  assert.equal(c.get("a"), 10, "'a' should be kept and have the updated value");
+  assert.equal(c.get("c"), 3, "'c' should be kept");
+});
+
+test("works correctly with capacity 1 (edge case)", () => {
+  const c = new LRUCache(1);
+  c.set("a", 1);
+  assert.equal(c.get("a"), 1, "can get single item");
+  
+  c.set("a", 2);
+  assert.equal(c.get("a"), 2, "can update single item without eviction");
+  assert.equal(c.size, 1, "size remains 1");
+  
+  c.set("b", 3);
+  assert.equal(c.get("a"), undefined, "'a' should be evicted when capacity is 1 and new item is added");
+  assert.equal(c.get("b"), 3, "'b' should be kept");
+});
+
+test("evicts oldest when capacity is reached (pinning existing behavior)", () => {
+  const c = new LRUCache(3);
+  c.set("a", 1);
+  c.set("b", 2);
+  c.set("c", 3);
+  c.set("d", 4);
+  
+  assert.equal(c.get("a"), undefined, "oldest item 'a' should be evicted");
+  assert.equal(c.get("b"), 2, "'b' should be kept");
+  assert.equal(c.get("c"), 3, "'c' should be kept");
+  assert.equal(c.get("d"), 4, "'d' should be kept");
+});
+
+test("size property reflects current number of items (pinning existing behavior)", () => {
+  const c = new LRUCache(2);
+  assert.equal(c.size, 0, "initial size should be 0");
+  
+  c.set("a", 1);
+  assert.equal(c.size, 1, "size should be 1 after one set");
+  
+  c.set("b", 2);
+  assert.equal(c.size, 2, "size should be 2 after two sets");
+  
+  c.set("c", 3);
+  assert.equal(c.size, 2, "size should remain 2 after eviction");
+});
+```

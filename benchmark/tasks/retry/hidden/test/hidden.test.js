@@ -1,0 +1,12 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { retry } from "../src/retry.js";
+test("retries means extra attempts", async () => { let n = 0; await assert.rejects(retry(async () => { n++; throw new Error("e" + n); }, { retries: 2, delayMs: 1 }), /e3/); assert.equal(n, 3); });
+test("retries 0 calls once", async () => { let n = 0; await assert.rejects(retry(async () => { n++; throw new Error("e"); }, { retries: 0, delayMs: 1 })); assert.equal(n, 1); });
+test("attempt number is passed", async () => { const seen = []; await retry(async (a) => { seen.push(a); if (a < 3) throw new Error("x"); }, { retries: 5, delayMs: 1 }); assert.deepEqual(seen, [1, 2, 3]); });
+test("backoff grows by factor", async () => { const t = []; const t0 = Date.now(); await assert.rejects(retry(async () => { t.push(Date.now() - t0); throw new Error("x"); }, { retries: 2, delayMs: 40, factor: 3 })); assert.ok(t[1] - t[0] >= 35, "first wait ~40ms"); assert.ok(t[2] - t[1] >= 110, "second wait ~120ms"); });
+test("default factor is 2", async () => { const t = []; const t0 = Date.now(); await assert.rejects(retry(async () => { t.push(Date.now() - t0); throw new Error("x"); }, { retries: 2, delayMs: 40 })); assert.ok(t[2] - t[1] >= 70, "second wait ~80ms"); });
+test("shouldRetry false stops immediately with that error", async () => { let n = 0; const err = new Error("fatal"); await assert.rejects(retry(async () => { n++; throw err; }, { retries: 5, delayMs: 1, shouldRetry: () => false }), (e) => e === err); assert.equal(n, 1); });
+test("shouldRetry gets the error", async () => { let n = 0; await assert.rejects(retry(async () => { n++; throw new Error(n === 1 ? "again" : "stop"); }, { retries: 5, delayMs: 1, shouldRetry: (e) => e.message === "again" }), /stop/); assert.equal(n, 2); });
+test("no wait after the final failure", async () => { const t0 = Date.now(); await assert.rejects(retry(async () => { throw new Error("x"); }, { retries: 1, delayMs: 300 })); assert.ok(Date.now() - t0 < 500); });
+test("synchronous throw is retried too", async () => { let n = 0; const r = await retry((a) => { if (a < 2) throw new Error("sync"); return n = a; }, { retries: 2, delayMs: 1 }); assert.equal(r, 2); });

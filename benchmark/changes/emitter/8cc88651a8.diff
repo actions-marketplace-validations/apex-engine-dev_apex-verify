@@ -1,0 +1,60 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 12:25:29
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/emitter.js b/src/emitter.js
+--- a/src/emitter.js	2026-11-19 21:42:44
++++ b/src/emitter.js	2026-11-20 12:26:04
+@@ -11,18 +11,19 @@
+       this.off(event, wrapper);
+       fn(...args);
+     };
++    wrapper.fn = fn;
+     return this.on(event, wrapper);
+   }
+   off(event, fn) {
+     const list = this.handlers[event];
+     if (!list) return this;
+-    const i = list.indexOf(fn);
++    const i = list.findIndex((f) => f === fn || f.fn === fn);
+     if (i >= 0) list.splice(i, 1);
+     return this;
+   }
+   emit(event, ...args) {
+     const list = this.handlers[event] || [];
+-    for (const fn of list) fn(...args);
++    for (const fn of [...list]) fn(...args);
+     return list.length > 0;
+   }
+ }
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/emitter.test.js b/test/emitter.test.js
+--- a/test/emitter.test.js	1970-01-01 02:00:00
++++ b/test/emitter.test.js	2026-11-20 12:25:55
+@@ -0,0 +1,22 @@
++import { test } from "node:test";
++import assert from "node:assert/strict";
++import { Emitter } from "../src/emitter.js";
++
++test("once firing skips next", () => {
++  const e = new Emitter();
++  let count = 0;
++  e.once("x", () => count++);
++  e.on("x", () => count++);
++  e.emit("x");
++  assert.equal(count, 2);
++});
++
++test("off with once", () => {
++  const e = new Emitter();
++  let count = 0;
++  const fn = () => count++;
++  e.once("x", fn);
++  e.off("x", fn);
++  e.emit("x");
++  assert.equal(count, 0);
++});

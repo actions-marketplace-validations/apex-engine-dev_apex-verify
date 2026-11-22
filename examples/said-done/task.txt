@@ -1,0 +1,1 @@
+Users report that our slugify() in src/slug.js produces bad URLs. For example slugify("Hello, World!") gives "hello,-world!" and a title with accents like "Crème Brûlée" comes out with the accents still in it. It should return a clean URL slug: lowercase letters and digits separated by single dashes.

@@ -1,0 +1,6 @@
+{
+  "name": "rename-fetch",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test" }
+}

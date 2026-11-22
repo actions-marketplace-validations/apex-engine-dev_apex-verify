@@ -1,0 +1,32 @@
+{
+  "name": "reallydone",
+  "private": true,
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "ReallyDone: proof that an AI's change is really done. Any agent's change in, ready / not ready out, with proof.",
+  "bin": {
+    "reallydone": "dist/reallydone.mjs",
+    "rd": "dist/reallydone.mjs"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "prepare": "npm run build && npm run bundle",
+    "build": "npm run build -w reallydone-engine && npm run build -w reallydone-cli",
+    "bundle": "esbuild packages/cli/dist/main.js --bundle --platform=node --format=esm --target=node20 --outfile=dist/reallydone.mjs --log-level=warning && node -e \"require('fs').chmodSync('dist/reallydone.mjs',0o755)\"",
+    "test": "npm run build && npm test -w reallydone-engine -w reallydone-cli"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

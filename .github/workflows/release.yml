@@ -1,0 +1,27 @@
+# Attaches the installable file to every release, so
+#   npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz verify "<task>"
+# always works (a 48 KB file, no build on the user's machine, no npm account needed).
+name: Release asset
+on:
+  release:
+    types: [published]
+permissions:
+  contents: write
+jobs:
+  asset:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - name: Pack and attach
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          npm pack
+          cp reallydone-*.tgz reallydone.tgz
+          gh release upload "${{ github.event.release.tag_name }}" reallydone-*.tgz reallydone.tgz --clobber

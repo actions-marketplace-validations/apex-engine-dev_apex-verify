@@ -1,0 +1,6 @@
+# Kept away from the AI: real-looking customer data used only for local testing.
+fixtures/private/**
+.env
+
+# Apex tooling, not part of the project
+.tracker-mcp/

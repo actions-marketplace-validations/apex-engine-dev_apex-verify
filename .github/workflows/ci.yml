@@ -1,0 +1,109 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm install
+      - run: npm test
+  # The same tests on macOS: the sandbox there is Seatbelt, and paths and tools differ.
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm test
+  # The built-in Linux sandbox (bubblewrap) must actually isolate: write outside the copy denied, external network denied, localhost allowed.
+  linux-sandbox:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install bubblewrap and allow unprivileged user namespaces (Ubuntu 24.04 restricts them by default)
+        run: |
+          sudo apt-get update && sudo apt-get install -y bubblewrap
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+      - run: npm install
+      - name: Sandbox tests (a missing or unusable sandbox fails here, it is not skipped)
+        env:
+          REALLYDONE_REQUIRE_SANDBOX: "1"
+        run: node --test packages/engine/dist/sandbox-linux.test.js
+      - name: A real verify run through the sandbox
+        run: |
+          set +e
+          cd examples/said-done
+          git init -q project && cd project && git add -A && git -c user.name=ci -c user.email=ci@example.com commit -qm base && cd ..
+          cp agent-change.diff /tmp/agent-change.diff
+          node ../../dist/reallydone.mjs "$(cat task.txt)" --dir project --diff /tmp/agent-change.diff --no-model | tee /tmp/out.txt
+          grep -q "sandbox: Linux bubblewrap" /tmp/out.txt
+  # The benchmark runs end to end (no model, no key): the gate on the labelled changes.
+  benchmark-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: node benchmark/run-gate.mjs --no-model --limit 8 --task slugify
+  # The installable file works: pack it and run it from a clean folder, the way a user does.
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm pack
+      - name: Run the packed file from a clean folder
+        run: |
+          mkdir /tmp/clean && cd /tmp/clean
+          TGZ=$(ls "$GITHUB_WORKSPACE"/reallydone-*.tgz)
+          npx --yes --package="$TGZ" -- reallydone --version
+          npx --yes --package="$TGZ" -- reallydone --help | head -2
+  dco:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Every commit is signed off
+        run: |
+          bad=0
+          for c in $(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
+            git log -1 --format=%B $c | grep -q '^Signed-off-by: ' || { echo "missing sign-off: $c (use git commit -s)"; bad=1; }
+          done
+          exit $bad
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the sandbox recipe
+        run: docker build -f docker/Dockerfile -t reallydone .
+      - name: Run it on the example, no network, project mounted read-only
+        run: |
+          set +e
+          cd examples/said-done
+          git init -q project && cd project && git add -A && git -c user.name=ci -c user.email=ci@example.com commit -qm base && cd ..
+          docker run --rm --network none -v "$PWD/project":/work:ro reallydone "slugify" --no-model --format json > out.json
+          echo "exit=$?"; head -c 400 out.json
+          grep -q '"verdict": "unknown"' out.json

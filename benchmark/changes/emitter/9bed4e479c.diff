@@ -1,0 +1,90 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 12:26:28
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/emitter.js b/src/emitter.js
+--- a/src/emitter.js	2026-11-19 21:42:44
++++ b/src/emitter.js	2026-11-20 12:26:58
+@@ -1,28 +1,72 @@
+ export class Emitter {
+   constructor() {
+     this.handlers = {};
++    // Map to store original function -> wrapper for once listeners
++    this.onceWrappers = {}; // { eventName: { originalFn: wrapperFn, ... }, ... }
+   }
++
+   on(event, fn) {
+     (this.handlers[event] ??= []).push(fn);
+     return this;
+   }
++
+   once(event, fn) {
+     const wrapper = (...args) => {
++      // Remove the wrapper itself first.
++      // This is important so that if emit modifies the list during iteration,
++      // the wrapper is still successfully removed.
+       this.off(event, wrapper);
++      // Call the original handler.
+       fn(...args);
+     };
++
++    // Store the mapping from original function to its wrapper.
++    this.onceWrappers[event] = this.onceWrappers[event] || {};
++    this.onceWrappers[event][fn] = wrapper;
++
++    // Add the wrapper as the actual handler.
+     return this.on(event, wrapper);
+   }
++
+   off(event, fn) {
+     const list = this.handlers[event];
+     if (!list) return this;
+-    const i = list.indexOf(fn);
+-    if (i >= 0) list.splice(i, 1);
++
++    // Check if 'fn' is an original function registered with 'once'.
++    if (this.onceWrappers[event] && this.onceWrappers[event][fn]) {
++      const wrapper = this.onceWrappers[event][fn];
++      // Remove the wrapper from the handlers.
++      const i = list.indexOf(wrapper);
++      if (i >= 0) {
++        list.splice(i, 1);
++      }
++      // Clean up the mapping.
++      delete this.onceWrappers[event][fn];
++      // If no more once wrappers for this event, clean up the event entry.
++      if (Object.keys(this.onceWrappers[event]).length === 0) {
++        delete this.onceWrappers[event];
++      }
++    } else {
++      // Otherwise, it's a regular handler, or a wrapper that's already been removed.
++      // Find and remove 'fn' directly.
++      const i = list.indexOf(fn);
++      if (i >= 0) {
++        list.splice(i, 1);
++      }
++    }
+     return this;
+   }
++
+   emit(event, ...args) {
+-    const list = this.handlers[event] || [];
+-    for (const fn of list) fn(...args);
+-    return list.length > 0;
++    // Iterate over a copy of the handlers list to prevent issues
++    // if handlers modify the list during iteration (e.g., by calling off).
++    const list = [...(this.handlers[event] || [])];
++    let emitted = false; // Track if any handlers were called
++    for (const fn of list) {
++      fn(...args);
++      emitted = true;
++    }
++    return emitted; // Return boolean indicating if any handlers ran
+   }
+ }
++

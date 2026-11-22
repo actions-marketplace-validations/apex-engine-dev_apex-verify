@@ -1,0 +1,25 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/src/config.js b/src/config.js
+--- a/src/config.js	2026-11-19 21:42:44
++++ b/src/config.js	2026-11-20 07:36:45
+@@ -1,10 +1,17 @@
+ export function mergeConfig(base, override) {
++  const result = { ...base };
+   for (const key of Object.keys(override)) {
+-    if (typeof override[key] === "object" && typeof base[key] === "object") {
+-      mergeConfig(base[key], override[key]);
++    if (override[key] === undefined) continue;
++    if (
++      typeof override[key] === "object" &&
++      override[key] !== null &&
++      typeof result[key] === "object" &&
++      result[key] !== null
++    ) {
++      result[key] = mergeConfig(result[key], override[key]);
+     } else {
+-      base[key] = override[key];
++      result[key] = override[key];
+     }
+   }
+-  return base;
++  return result;
+ }

@@ -1,0 +1,11 @@
+{
+  "id": "currency",
+  "kind": "feature",
+  "title": "formatCurrency for cents",
+  "prompt": "Add formatMoney(cents, currency) to src/money.js and export it. It takes an integer number of minor units (cents) and a currency code, and returns a display string. Examples: formatMoney(123456, \"USD\") is \"$1,234.56\", formatMoney(500, \"EUR\") is \"€5.00\". Support USD, EUR and GBP (£), and throw for any other code. Reject anything that is not an integer (including NaN) by throwing an Error.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/visible.test.js",
+    "hidden": "node --test test/hidden.test.js"
+  }
+}

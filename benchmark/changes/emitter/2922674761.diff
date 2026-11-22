@@ -1,0 +1,45 @@
+diff -ruN -x node_modules -x .DS_Store -x .git a/.gemini/settings.json b/.gemini/settings.json
+--- a/.gemini/settings.json	1970-01-01 02:00:00
++++ b/.gemini/settings.json	2026-11-20 14:43:50
+@@ -0,0 +1,5 @@
++{
++  "tools": {
++    "allowed": ["run_shell_command(npm test)", "run_shell_command(node --test)"]
++  }
++}
+diff -ruN -x node_modules -x .DS_Store -x .git a/test/visible.test.js b/test/visible.test.js
+--- a/test/visible.test.js	2026-11-19 21:42:44
++++ b/test/visible.test.js	2026-11-20 14:59:06
+@@ -8,3 +8,32 @@
+   assert.equal(e.emit("y"), false);
+   assert.deepEqual(got, [1]);
+ });
++
++test("when once() listener fires, subsequent listeners for the same event also run", () => {
++  const e = new Emitter();
++  const got = [];
++  e.once("x", () => got.push("first-once"));
++  e.on("x", () => got.push("second-on"));
++  e.once("x", () => got.push("third-once"));
++  e.on("x", () => got.push("fourth-on"));
++
++  assert.equal(e.emit("x"), true);
++  assert.deepEqual(got, ["first-once", "second-on", "third-once", "fourth-on"]);
++
++  // On second emit, only the persistent 'on' listeners should run
++  got.length = 0;
++  assert.equal(e.emit("x"), true);
++  assert.deepEqual(got, ["second-on", "fourth-on"]);
++});
++
++test("off(event, fn) removes a listener registered with once()", () => {
++  const e = new Emitter();
++  const got = [];
++  const fn = () => got.push("once-fn");
++  e.once("x", fn);
++  e.off("x", fn);
++
++  assert.equal(e.emit("x"), false);
++  assert.deepEqual(got, []);
++});
++

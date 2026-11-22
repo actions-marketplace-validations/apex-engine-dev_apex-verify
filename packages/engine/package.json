@@ -1,0 +1,67 @@
+{
+  "name": "reallydone-engine",
+  "version": "0.1.0",
+  "description": "Let any AI model edit your code safely: tries the change on a copy, runs your tests, says ready only when it holds up.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./graph": {
+      "types": "./dist/graph.d.ts",
+      "import": "./dist/graph.js"
+    },
+    "./check-results": {
+      "types": "./dist/check-results.d.ts",
+      "import": "./dist/check-results.js"
+    },
+    "./check-screen": {
+      "types": "./dist/check-screen.d.ts",
+      "import": "./dist/check-screen.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test dist/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.test.js",
+    "!dist/**/*.test.d.ts",
+    "!dist/**/*.map",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apex-engine-dev/apex-done-checker.git",
+    "directory": "packages/engine"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "coding-agent",
+    "llm",
+    "verification",
+    "benchmark",
+    "code-graph"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/apex-engine-dev/apex-done-checker#readme",
+  "bugs": {
+    "url": "https://github.com/apex-engine-dev/apex-done-checker/issues"
+  },
+  "author": "Apex contributors",
+  "private": true
+}
