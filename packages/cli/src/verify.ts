@@ -133,7 +133,8 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
     const changes: FileChange[] = [];
     for (const p of new Set([...a.keys(), ...b.keys()])) {
       const x = a.get(p) ?? null, y = b.get(p) ?? null;
-      if (x !== y) changes.push({ path: p, before: x, after: y });
+      // A file that differs only in line endings is not a change (Windows checkouts with autocrlf are CRLF, git archive is LF).
+      if (x !== y && (x === null || y === null || x.replace(/\r\n/g, "\n") !== y.replace(/\r\n/g, "\n"))) changes.push({ path: p, before: x, after: y });
     }
     changes.sort((m, n) => m.path.localeCompare(n.path));
     return { orig, next, mode, base, changes, cleanup };
