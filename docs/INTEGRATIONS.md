@@ -12,6 +12,8 @@ Apex verify does not replace your agent. It checks what the agent changed. Pick 
 | **Aider** | `test-cmd: apex verify "<task>" --no-model` in `.aider.conf.yml` | Informs only: Aider tries a fix when the command fails. |
 | **GitHub pull requests (any agent: Copilot, Cursor cloud, Codex cloud, a person)** | the Apex verify Action (below) | **Yes**, as a required check. |
 
+**Updating:** `npx` caches a URL install for good, so an `npx --yes <url>` you ran before keeps running the old version even after a new release. To update, delete the cached copy (`rm -rf ~/.npm/_npx`, it only holds npx downloads) or pin a version in the URL (`.../releases/download/v0.2.0/apex-verify.tgz`).
+
 Install is only ever one of: the command above, `claude plugin ...`, or a workflow file.
 
 ## What you need

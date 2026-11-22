@@ -60,7 +60,7 @@ Honest limits: these are small projects, the changes were written by Gemini mode
 |---|---|---|---|
 | **A terminal** | `apex verify "<task>"` | You read the verdict | **Tested in CI** |
 | **Pull requests (any agent, or people)** | the GitHub Action: `uses: apex-engine-dev/apex-verify@v1` | **Yes**, as a required check | **Tested on real PRs**; runs on this repo's own PRs |
-| **Claude Code** | `/plugin marketplace add apex-engine-dev/apex-verify` then `/plugin install apex-verify@apex` | **Yes**: the Stop hook hands the failing check back and Claude keeps working | Hook protocol tested in CI, plugin validated; **not yet run in a live session** ([#12](https://github.com/apex-engine-dev/apex-verify/issues/12)) |
+| **Claude Code** | `/plugin marketplace add apex-engine-dev/apex-verify` then `/plugin install apex-verify@apex` | **Yes**: the Stop hook hands the failing check back and Claude keeps working | **Run in a real Claude Code session** (v2.1): Claude said done on a wrong change, the hook blocked it with the failing checks, and Claude kept being stopped; plugin validated |
 | **Any MCP client** | the `verify_change` tool | The agent asks | Protocol tested in CI; not with a real client |
 | **Gemini CLI** | an `AfterAgent` hook | **Yes**: it blocked a wrong change, the agent fixed it | **Run in a real Gemini CLI session** (v0.32) |
 | **Codex CLI, Cursor** | a Stop hook and/or the MCP tool | Yes / partly | **Documented, not tested** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)) |
@@ -91,7 +91,6 @@ Honest list of what is not done yet, each with an issue you can pick up:
 | Not done yet | Issue |
 |---|---|
 | A **sandbox on Windows** (it runs there, unsandboxed) | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
-| Try the **Claude Code plugin** in a live session | [#12](https://github.com/apex-engine-dev/apex-verify/issues/12) (good first issue) |
 | Test the **Codex and Cursor** hooks (Gemini CLI is done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
 | Measure on **bigger, real projects** | [#13](https://github.com/apex-engine-dev/apex-verify/issues/13) |
 | Locked tests and **signed evidence** (so an agent cannot tamper with its own verdict) | [#7](https://github.com/apex-engine-dev/apex-verify/issues/7) |
