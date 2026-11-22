@@ -80,7 +80,7 @@ Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what i
 - **It is not a proof of correctness.** It raises the bar. A check can be wrong in both directions; the numbers above are the honest rates.
 - **It does not replace review or CI.** It runs next to them and gives a short, evidence-backed verdict.
 - **It sends your task and the relevant source files** (about 24 KB at most) to the checker model you configure, and nothing else. No telemetry.
-- **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort) and Linux bubblewrap, both tested in CI, with no network except localhost. **Windows is not supported natively** (use WSL2 or the [container recipe](docs/SANDBOX.md)). The sandbox is a safety net, not a security boundary.
+- **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort) and Linux bubblewrap, both tested in CI, with no network except localhost. **Windows runs (tested in CI) but has no sandbox yet**: use WSL2 or the [container recipe](docs/SANDBOX.md) for code you do not trust.
 - **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`).** For other stacks (Go and others) it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
 
 ## What's left
@@ -90,7 +90,7 @@ Honest list of what is not done yet, each with an issue you can pick up:
 | Not done yet | Issue |
 |---|---|
 | Checks for **Go** projects (Rust, Jest and Vitest are done) | [#2](https://github.com/apex-engine-dev/apex-verify/issues/2) |
-| **Windows** support | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
+| A **sandbox on Windows** (it runs there, unsandboxed) | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
 | Try the **Claude Code plugin** in a live session | [#12](https://github.com/apex-engine-dev/apex-verify/issues/12) (good first issue) |
 | Test the **Codex and Cursor** hooks (Gemini CLI is done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
 | **Two checkers from different companies**: re-measure on the full set (same-company pairs did not help) | [#6](https://github.com/apex-engine-dev/apex-verify/issues/6) |

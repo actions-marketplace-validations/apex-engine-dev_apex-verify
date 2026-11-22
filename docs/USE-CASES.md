@@ -24,5 +24,5 @@ Every use case the README claims, how it is tested, and its honest status. If a 
 | Sandbox: macOS Seatbelt | **Tested in CI** (macOS job) | `engine` tests |
 | Sandbox: Linux bubblewrap | **Tested in CI** (the `linux-sandbox` job must pass, it is not skipped) | `sandbox-linux.test.ts`: write outside the copy denied, external network denied, localhost allowed |
 | Sandbox: container recipe | **Tested in CI** | the `container` job |
-| Sandbox: Windows | **Not supported.** Use WSL2 (Linux sandbox) or the container | Windows is an open issue |
+| Windows | **Runs; tested in CI** (the `windows` job: unit and end-to-end tests). **No sandbox** | use WSL2 or the container for untrusted code |
 | How often the gate is right | **Measured**, preliminary | `benchmark/` (rerun with `node benchmark/run-gate.mjs`) |
