@@ -75,9 +75,9 @@ test("a project tested through npm test (any runner) gets its versions judged by
   const runner = await detectTestRunner(dir);
   assert.equal(runner?.kind, "npm");
   const r = await surgicalBestOfN({ gateway: gw, model: "m", root: dir, task: "Fix add in src/add.cjs", n: 2, repairs: 0, testCommand: runner!.command, testTimeoutSec: runner!.timeoutSec });
-  assert.equal(r.chosen?.index, 1);
+  assert.equal(r.chosen?.index, 1, JSON.stringify(r.candidates));
   assert.equal(r.chosen?.failed, 0);
-  assert.equal(r.candidates[0].failed, 1);
+  assert.equal(r.candidates[0].failed, 1, JSON.stringify(r.candidates.map((c: any) => ({ f: c.failed, p: c.passed, o: String(c.output ?? c.testOutput ?? "").slice(0, 400) }))));
 });
 
 test("node:test spec reporter (Node 22 default when not TAP) is counted, not read as 0/0", () => {

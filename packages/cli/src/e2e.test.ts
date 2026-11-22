@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFile, spawn, execFileSync } from "node:child_process";
 import { promisify } from "node:util";
+import { fileURLToPath } from "node:url";
 import type { AddressInfo } from "node:net";
 
 /**
@@ -14,7 +15,7 @@ import type { AddressInfo } from "node:net";
  * is run here, offline.
  */
 const run = promisify(execFile);
-const MAIN = path.join(path.dirname(new URL(import.meta.url).pathname), "main.js");
+const MAIN = path.join(path.dirname(fileURLToPath(import.meta.url)), "main.js");
 const CHECKS = "```js\nimport { test } from \"node:test\";\nimport assert from \"node:assert/strict\";\nimport { slugify } from \"../src/slug.js\";\ntest(\"replaces spaces with dashes\", () => { assert.equal(slugify(\"Hello Big World\"), \"hello-big-world\"); });\ntest(\"lower-cases\", () => { assert.equal(slugify(\"ABC\"), \"abc\"); });\n```";
 const TASK = "slugify should replace spaces with dashes and lower-case the text";
 
