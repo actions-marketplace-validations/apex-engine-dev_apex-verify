@@ -13,6 +13,6 @@ Honest state of the project. Updated with every release.
 | Engine (`reallydone-engine`) | Extracted from Apex Capsule IDE, a separate commercial product that depends on it. Tests green on Node 20 and 22. |
 | Languages | node:test and pytest checks; your own `--test` command for anything else. |
 | Sandbox | macOS Seatbelt and Linux bubblewrap, both tested in CI (best effort, not a security boundary); a container recipe tested in CI. Windows: not supported natively (WSL2 or the container). |
-| Install | A 48 KB file attached to every release (`npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz verify ...`), or clone and build. Not published to npm, and does not need to be. |
+| Install | A 48 KB file attached to every release (`npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz verify ...`), or clone and build. Not published to npm, and does not need to be. |
 | Licence | Apache-2.0; trademark policy in TRADEMARKS.md. |
 | Maintainers | One. A second is the most useful contribution of all. |

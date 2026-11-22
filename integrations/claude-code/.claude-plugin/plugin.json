@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Claude Code cannot say done until ReallyDone proves the change: checks written from your request by an independent model, shown to fail on the old code, run with your tests.",
   "author": { "name": "ReallyDone" },
-  "homepage": "https://github.com/apex-engine-dev/apex-done-checker",
-  "repository": "https://github.com/apex-engine-dev/apex-done-checker",
+  "homepage": "https://github.com/apex-engine-dev/apex-verify",
+  "repository": "https://github.com/apex-engine-dev/apex-verify",
   "keywords": ["verification", "testing", "quality", "stop-hook"]
 }

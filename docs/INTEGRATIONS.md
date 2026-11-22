@@ -4,7 +4,7 @@ ReallyDone does not replace your agent. It checks what the agent changed. Pick t
 
 | Where | How | Can it stop the agent from saying "done"? |
 |---|---|---|
-| **Any terminal** | `npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz verify "what the change should do"` | You read the verdict. Exit code 0 ready, 1 not ready, 3 unknown. |
+| **Any terminal** | `npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz verify "what the change should do"` | You read the verdict. Exit code 0 ready, 1 not ready, 3 unknown. |
 | **Claude Code** | the ReallyDone plugin (below): a Stop hook, a skill and an MCP tool | **Yes.** The hook hands the reasons back and Claude keeps working. |
 | **Codex CLI** | a Stop hook and/or the MCP tool (below) | **Yes**, same mechanism. |
 | **Gemini CLI** | an `AfterAgent` hook and/or the MCP tool | Yes (retry on the verdict). |
@@ -23,7 +23,7 @@ Install is only ever one of: the command above, `claude plugin ...`, or a workfl
 ## Claude Code
 
 ```
-/plugin marketplace add apex-engine-dev/apex-done-checker
+/plugin marketplace add apex-engine-dev/apex-verify
 /plugin install reallydone@reallydone
 ```
 
@@ -38,7 +38,7 @@ Set `GEMINI_API_KEY` (or `OPENAI_API_KEY` and `REALLYDONE_CHECKER_MODEL`) in the
 Manual hook instead of the plugin (`.claude/settings.json`):
 
 ```json
-{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz verify --hook", "timeout": 300 } ] } ] } }
+{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz verify --hook", "timeout": 300 } ] } ] } }
 ```
 
 ## Codex CLI
@@ -46,15 +46,15 @@ Manual hook instead of the plugin (`.claude/settings.json`):
 Codex supports the same Stop hook contract. In `~/.codex/hooks.json` (or `.codex/hooks.json` in a trusted project):
 
 ```json
-{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz verify --hook", "timeout": 300 } ] } ] } }
+{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz verify --hook", "timeout": 300 } ] } ] } }
 ```
 
-MCP tool: `codex mcp add reallydone -- npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz verify --mcp`
+MCP tool: `codex mcp add reallydone -- npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz verify --mcp`
 
 ## Any MCP client (Cursor, Gemini CLI, Claude Desktop, ...)
 
 ```json
-{ "mcpServers": { "reallydone": { "command": "npx", "args": ["--yes", "https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz", "verify", "--mcp"] } } }
+{ "mcpServers": { "reallydone": { "command": "npx", "args": ["--yes", "https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz", "verify", "--mcp"] } } }
 ```
 
 The tool is `verify_change(task, dir?, base?)`. Add a line to your `AGENTS.md` / `CLAUDE.md` so the agent uses it: *"Before you say a task is done, call verify_change with the user's request. Never claim success on NOT READY or UNKNOWN."* (A rule file only asks; the Stop hook enforces.)
@@ -71,7 +71,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - uses: apex-engine-dev/apex-done-checker@v1
+      - uses: apex-engine-dev/apex-verify@v1
         with:
           api-key: ${{ secrets.GEMINI_API_KEY }}
 ```

@@ -42,7 +42,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/apex-engine-dev/apex-done-checker.git",
+    "url": "git+https://github.com/apex-engine-dev/apex-verify.git",
     "directory": "packages/engine"
   },
   "engines": {
@@ -58,9 +58,9 @@
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://github.com/apex-engine-dev/apex-done-checker#readme",
+  "homepage": "https://github.com/apex-engine-dev/apex-verify#readme",
   "bugs": {
-    "url": "https://github.com/apex-engine-dev/apex-done-checker/issues"
+    "url": "https://github.com/apex-engine-dev/apex-verify/issues"
   },
   "author": "Apex contributors",
   "private": true

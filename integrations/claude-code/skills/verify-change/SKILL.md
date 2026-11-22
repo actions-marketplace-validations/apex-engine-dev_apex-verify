@@ -14,4 +14,4 @@ When you have finished a code change, do not just say it is done. Check it:
    - **UNKNOWN**: say plainly that the change could not be independently checked and why; do not describe it as verified.
 3. Never claim success on a NOT READY or UNKNOWN verdict.
 
-If the tool is unavailable, run `npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz verify "<the user's request>"` in the project folder and read its output the same way.
+If the tool is unavailable, run `npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz verify "<the user's request>"` in the project folder and read its output the same way.

@@ -45,7 +45,7 @@ export function renderMarkdown(r: VerifyReport): string {
   if (r.verdict === "ready") out.push("The checks written from the task pass, the tests pass, and nothing was weakened.");
   out.push("", `| | |`, `|---|---|`, `| ${testsLine(r).split(": ")[0]} | ${testsLine(r).split(": ").slice(1).join(": ")} |`, `| checks | ${checksLine(r).replace(/^checks: /, "")} |`, `| change | ${plural(r.change.files.length, "file")} vs \`${r.change.base}\` |`);
   if (r.warnings.length) out.push("", ...r.warnings.map((w) => `> note: ${w}`));
-  out.push("", `<sub>${r.usage.seconds}s, ${plural(r.usage.modelCalls, "model call")} · proof \`${r.proof.slice(0, 19)}…\` · [ReallyDone](https://github.com/apex-engine-dev/apex-done-checker)</sub>`);
+  out.push("", `<sub>${r.usage.seconds}s, ${plural(r.usage.modelCalls, "model call")} · proof \`${r.proof.slice(0, 19)}…\` · [ReallyDone](https://github.com/apex-engine-dev/apex-verify)</sub>`);
   return out.join("\n");
 }
 
@@ -57,7 +57,7 @@ export function renderSarif(r: VerifyReport): string {
     locations: [{ physicalLocation: { artifactLocation: { uri: r.change.files[0]?.path ?? "." } } }],
   }));
   const rules = [...new Set(r.reasons.map((x) => x.kind))].map((k) => ({ id: `reallydone/${k}`, shortDescription: { text: k.replace(/_/g, " ") } }));
-  return JSON.stringify({ $schema: "https://json.schemastore.org/sarif-2.1.0.json", version: "2.1.0", runs: [{ tool: { driver: { name: "reallydone verify", informationUri: "https://github.com/apex-engine-dev/apex-done-checker", rules } }, results }] }, null, 2);
+  return JSON.stringify({ $schema: "https://json.schemastore.org/sarif-2.1.0.json", version: "2.1.0", runs: [{ tool: { driver: { name: "reallydone verify", informationUri: "https://github.com/apex-engine-dev/apex-verify", rules } }, results }] }, null, 2);
 }
 
 /** The exit codes: 0 ready, 1 not ready, 3 unknown (2 is a usage or setup error). */

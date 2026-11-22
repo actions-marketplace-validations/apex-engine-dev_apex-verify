@@ -13,6 +13,6 @@ reallydone verify --mcp                         # as an MCP server (tool: verify
 
 Exit codes: `0` ready, `1` not ready, `3` unknown, `2` usage or setup error. `reallydone --help` lists every flag; environment equivalents for hooks and CI: `REALLYDONE_CHECKER_MODEL`, `REALLYDONE_PROVIDER`, `REALLYDONE_BASE_URL`, `REALLYDONE_API_KEY_ENV`, `REALLYDONE_MODE=warn`.
 
-Install without npm: `npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz verify "<task>"`. As a library: `import { verify } from "reallydone-cli"` (see `src/index.ts`).
+Install without npm: `npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz verify "<task>"`. As a library: `import { verify } from "reallydone-cli"` (see `src/index.ts`).
 
 Files: `verify.ts` (the gate), `cheats.ts` (the scan), `report.ts` (formats), `verify-cmd.ts` (arguments), `hook.ts`, `mcp.ts`, `providers.ts`, `openai-client.ts`. End-to-end tests: `e2e.test.ts`.

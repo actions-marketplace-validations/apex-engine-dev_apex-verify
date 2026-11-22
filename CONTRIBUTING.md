@@ -15,7 +15,7 @@ npm test
 
 ## Ways to help
 
-- **Break it.** Find a change `reallydone verify` calls `ready` that is wrong, or blocks one that is right ([issue templates](https://github.com/apex-engine-dev/apex-done-checker/issues/new/choose)). Add it to `benchmark/` as a labelled change if you can.
+- **Break it.** Find a change `reallydone verify` calls `ready` that is wrong, or blocks one that is right ([issue templates](https://github.com/apex-engine-dev/apex-verify/issues/new/choose)). Add it to `benchmark/` as a labelled change if you can.
 - **Languages and test runners:** write checks for Jest/Vitest, Go, Rust (today: node:test and pytest); better detection of a project's own tests. See issues labelled `good first issue`.
 - **Integrations:** try the Codex, Cursor or Gemini CLI hook or an MCP client and fix the documented configuration ([docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)). Windows support.
 - **Measurements:** a checker from another vendor, bigger real projects, more labelled changes (`benchmark/README.md`).

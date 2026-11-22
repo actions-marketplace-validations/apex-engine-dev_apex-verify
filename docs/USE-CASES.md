@@ -16,7 +16,7 @@ Every use case the README claims, how it is tested, and its honest status. If a 
 | MCP server (`verify_change`) | Protocol **tested in CI**; **not tested with a real MCP client** | `e2e.test.ts` (initialize, tools/list, tools/call over stdio) |
 | GitHub Action: comment updated in place, job summary, fail-on policy, fork PRs without a model | **Tested on real pull requests** (and runs on every PR to this repository) | the `ReallyDone verify` workflow; two throwaway PRs found and fixed one bug |
 | Codex CLI, Gemini CLI, Cursor hooks and MCP | **Documented, not tested** | `docs/INTEGRATIONS.md` has the configuration; please try one and tell us |
-| Install with `npx --yes https://github.com/apex-engine-dev/apex-done-checker/releases/latest/download/reallydone.tgz` | **Tested by hand** from a clean folder; the bundled file is used by CI | run the commands in the README |
+| Install with `npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz` | **Tested by hand** from a clean folder; the bundled file is used by CI | run the commands in the README |
 | Languages: your tests run for what is detected (npm/node, pytest, go, cargo, make) or `--test "<cmd>"` | Node and Python **tested**; Go, Rust, others **detected but not tested by us** | `engine/src/runner-detect.test.ts`, `test-runner.test.ts` |
 | Checks *written* by the model | **node:test and pytest only**; other stacks give `unknown`, never a wrong `ready` | `proof-gate.ts`; Jest/Vitest, Go, Rust are open issues |
 | Sandbox: macOS Seatbelt | **Tested in CI** (macOS job) | `engine` tests |
