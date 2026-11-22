@@ -61,7 +61,7 @@ export function checkCommand(testCommand: string[], file: string): { run: string
   return null;
 }
 
-export type Framework = "vitest" | "jest" | "cargo";
+export type Framework = "vitest" | "jest" | "cargo" | "go";
 /** The project's own JavaScript test framework when it is Vitest or Jest (from package.json), else null: node:test and pytest need no help. */
 export async function detectFramework(root: string): Promise<Framework | null> {
   try {
@@ -72,12 +72,41 @@ export async function detectFramework(root: string): Promise<Framework | null> {
     if (deps.jest || /\bjest\b/.test(script)) return "jest";
   } catch { /* no package.json */ }
   if (await fs.access(path.join(root, "Cargo.toml")).then(() => true, () => false)) return "cargo";
+  if (await fs.access(path.join(root, "go.mod")).then(() => true, () => false)) return "go";
   return null;
 }
 /** The Rust crate's name (for `use <name>::...` in an integration test), from Cargo.toml. */
 export async function cargoCrateName(root: string): Promise<string> {
   try { const m = /^\s*name\s*=\s*"([^"]+)"/m.exec(await fs.readFile(path.join(root, "Cargo.toml"), "utf8")); if (m) return m[1]!.replace(/-/g, "_"); } catch { /* none */ }
   return "crate_name";
+}
+/** Where a Go check file goes: the folder holding most of the non-test .go files (the root when it has any), and that package's name. */
+export function goPackageOf(files: string[], read: (rel: string) => string): { dir: string; pkg: string } {
+  const counts = new Map<string, string[]>();
+  for (const f of files) if (/\.go$/.test(f) && !/_test\.go$/.test(f) && !/(^|\/)(vendor|testdata)\//.test(f)) { const d = path.posix.dirname(f); counts.set(d === "." ? "" : d, [...(counts.get(d === "." ? "" : d) ?? []), f]); }
+  const best = counts.has("") ? "" : [...counts.entries()].sort((a, b) => b[1].length - a[1].length)[0]?.[0] ?? "";
+  const first = counts.get(best)?.[0];
+  let pkg = "main";
+  if (first) { try { pkg = /^\s*package\s+(\w+)/m.exec(read(first))?.[1] ?? "main"; } catch { /* unreadable */ } }
+  return { dir: best, pkg };
+}
+/** go test -v output ("--- FAIL: TestX", then the t.Errorf lines) as TAP, so check results are read the same way for every runner. */
+export function goToTap(output: string): string {
+  const plain = output.replace(/\x1b\[[0-9;]*m/g, "").split("\n");
+  const lines: string[] = []; let n = 0;
+  for (let i = 0; i < plain.length; i++) {
+    const m = /^\s*--- (PASS|FAIL): (\S+)/.exec(plain[i]!);
+    if (!m || m[2]!.includes("/")) continue;
+    n++;
+    if (m[1] === "PASS") { lines.push(`ok ${n} - ${m[2]}`); continue; }
+    const body: string[] = [];
+    // The t.Errorf lines come before the "--- FAIL" line, after "=== RUN   Name".
+    for (let j = i - 1; j >= 0 && !/^=== (?:RUN|PAUSE|CONT)/.test(plain[j]!) && /^\s{4}\S/.test(plain[j]!); j--) body.unshift(plain[j]!.trim());
+    const text = body.join(" ");
+    const got = /\b(?:got|actual)[:=]?\s*([^,;]+?)(?:,\s*|;\s*|\s+)(?:want|expected)[:=]?\s*(.+)$/i.exec(text);
+    lines.push(`not ok ${n} - ${m[2]}`, "  ---", `  error: ${(body[0] ?? "failed").replace(/^\S+\.go:\d+:\s*/, "")}`, ...(got ? [`  actual: ${got[1]!.trim()}`, `  expected: ${got[2]!.trim()}`] : []), "  ...");
+  }
+  return lines.length ? `${output}\n${lines.join("\n")}\n` : output;
 }
 /** Whether a JavaScript project's source is TypeScript (a tsconfig, or .ts files under src), which plain node cannot import. */
 export async function usesTypeScript(root: string): Promise<boolean> {
@@ -86,6 +115,7 @@ export async function usesTypeScript(root: string): Promise<boolean> {
 }
 /** How one check file runs under the project's own framework (the local binary: nothing is downloaded). */
 export function frameworkCheckCommand(fw: Framework, file: string): string[] {
+  if (fw === "go") { const d = path.posix.dirname(file); return ["go", "test", "-count=1", "-v", d === "." ? "." : "./" + d]; }
   if (fw === "cargo") return ["cargo", "test", "--test", path.posix.basename(file).replace(/\.rs$/, "")];
   return fw === "vitest" ? ["npx", "--no-install", "vitest", "run", "--reporter=tap-flat", file] : ["npx", "--no-install", "jest", "--verbose", "--runTestsByPath", file];
 }
@@ -227,6 +257,10 @@ export function readTestOutput(output: string, errored: boolean): { passed: numb
     // node:test spec reporter without the summary (cut off): count the result lines.
     passed = (plain.match(/^\s*✔\s/gm) ?? []).length;
     failed = (plain.match(/^\s*✖\s/gm) ?? []).length;
+  }
+  if (!passed && !failed && /^\s*--- (?:PASS|FAIL): /m.test(plain)) {
+    // go test -v: one "--- PASS: TestX (0.00s)" or "--- FAIL: TestX" per top-level test (subtests are indented and counted with them).
+    for (const m of plain.matchAll(/^--- (PASS|FAIL): (\S+)/gm)) { if (m[1] === "PASS") passed++; else { failed++; names.push(m[2]!); } }
   }
   if (!passed && !failed && /^test result: /m.test(plain)) {
     // cargo test (libtest): "test result: FAILED. 2 passed; 1 failed; ..." once per test binary.

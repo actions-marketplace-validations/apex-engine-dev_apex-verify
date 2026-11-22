@@ -16,4 +16,8 @@ Judging each failing check separately instead of together (so an over-strict che
 
 
 ## Fresh inputs and two same-company checkers (2026-11-22): tried, not recommended
-Telling the checker to avoid the task's own example values caught 27 of 43 wrong changes (28 without) with 4 of 65 false alarms (2 without). Requiring two Gemini checkers to both object caught 23 of 43 with 3 of 65 false alarms and 26 `unknown` verdicts. Neither is on by default. Data and method: [`benchmark/results/fresh-inputs`](../benchmark/results/fresh-inputs), [`benchmark/results/two-checkers-same-vendor`](../benchmark/results/two-checkers-same-vendor). The cross-company pair from the earlier test stays the only evidence for two checkers.
+Telling the checker to avoid the task's own example values caught 27 of 43 wrong changes (28 without) with 4 of 65 false alarms (2 without). Requiring two Gemini checkers to both object caught 23 of 43 with 3 of 65 false alarms and 26 `unknown` verdicts. Neither is on by default. Data and method: [`benchmark/results/fresh-inputs`](../benchmark/results/fresh-inputs), [`benchmark/results/two-checkers-same-vendor`](../benchmark/results/two-checkers-same-vendor). 
+
+
+## Claude as the checker, full pipeline (2026-11-22)
+Claude-written checks through the whole pipeline on 101 changes: 22 of 40 wrong changes blocked (Gemini 25 of 40), 1 of 61 false alarms. Both must object: 17 of 40. Either objects: 30 of 40 at 2 of 61 false alarms. The earlier "60% / 2% when both object" result did not survive the full pipeline and is withdrawn. Data: [`benchmark/results/cross-vendor-full-set`](../benchmark/results/cross-vendor-full-set).

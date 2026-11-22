@@ -91,3 +91,20 @@ test("node:test spec reporter (Node 22 default when not TAP) is counted, not rea
   const tap = "TAP version 13\nok 1 - main\n1..84\n# tests 84\n# pass 84\n# fail 0\n";
   assert.equal(readTestOutput(tap, false).passed, 84);
 });
+
+test("go test -v output: counted, and a failure becomes TAP with got and want", async () => {
+  const { readTestOutput, goToTap } = await import("./test-runner.js");
+  const out = "=== RUN   TestSpaces\n    apex_task_check_test.go:9: got hello_world, want hello-world\n--- FAIL: TestSpaces (0.00s)\n=== RUN   TestLower\n--- PASS: TestLower (0.00s)\nFAIL\nFAIL\tdemo\t0.004s\n";
+  assert.deepEqual({ ...readTestOutput(out, true), failedNames: undefined }, { passed: 1, failed: 1, failedNames: undefined });
+  const tap = goToTap(out);
+  assert.match(tap, /not ok 1 - TestSpaces/);
+  assert.match(tap, /actual: hello_world/);
+  assert.match(tap, /expected: hello-world/);
+  assert.match(tap, /ok 2 - TestLower/);
+});
+
+test("go: the check file goes beside the code, in its package", async () => {
+  const { goPackageOf } = await import("./test-runner.js");
+  assert.deepEqual(goPackageOf(["main.go", "util/a.go", "util/b.go", "go.mod"], () => "package main\n"), { dir: "", pkg: "main" });
+  assert.deepEqual(goPackageOf(["util/a.go", "util/b.go", "util/b_test.go", "other/c.go"], () => "package util\n"), { dir: "util", pkg: "util" });
+});

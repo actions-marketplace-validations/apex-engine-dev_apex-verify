@@ -118,9 +118,15 @@ On each push to `main` it writes `apex-verify-badge.json` to the `apex-badge` br
 
 It shows `ready`, `not ready` or `unknown` for the latest push. Without a model key it is at most `unknown`. In any other CI, `apex verify "<task>" --badge-out badge.json` writes the same file.
 
+## Locked tests and signed reports
+
+`--lock-tests` runs your tests with the **base** version of every test file the change edited or deleted (new test files are kept). An agent that deletes or weakens a failing test, or edits a test to match broken code, gets no benefit: the original test comes back before anything runs, and the report lists the restored files (`lockedTests`). Your project folder is never touched.
+
+`--sign-key <file>` signs the report with Ed25519 (the signature covers the verdict, the task and the proof hash of the changed files, checks and test results). Make a key with `apex verify --gen-key key.pem` (it prints the public key to share), then check a saved report with `apex verify --check-report report.json --pub-key <base64>`; any edit to the report afterwards makes it `NOT VALID`. Keep the private key where the agent cannot read it (a CI secret), and run `apex verify` in CI from the base branch's workflow, so the agent cannot change the verifier either. This is a signature on the evidence, not a sandbox: it does not stop code you run from reading the key if the key is on that machine.
+
 ## Two checkers
 
-> Measured limits: two checkers from the **same** company did not help (53% caught, 5% false alarms, [details](../benchmark/results/two-checkers-same-vendor)); the 60% / 2% result below is from a smaller test with checkers from different companies. `--fresh-inputs` (checker avoids the task's own example values) also did not help ([details](../benchmark/results/fresh-inputs)); it is off by default.
+> Measured limits: requiring both checkers to object did **not** help, with two companies (43% caught on 101 changes, [details](../benchmark/results/cross-vendor-full-set)) or one (53%, [details](../benchmark/results/two-checkers-same-vendor)). The 60% / 2% result quoted below is from a smaller, earlier test that did not use the full pipeline. `--fresh-inputs` (checker avoids the task's own example values) also did not help ([details](../benchmark/results/fresh-inputs)); it is off by default.
 
 `--second-model <id> [--second-provider gemini|openai|anthropic|openrouter]` adds a second, independent checker. The change is `not ready` only when **both** checkers find a problem; if only one does, the verdict is `unknown` ("the checkers disagree") and you review that objection by hand. In our first test two checkers from different companies that had to agree kept 60% of wrong changes blocked and cut false alarms to 2% (`benchmark/results/second-vendor`). Use two different companies' models if you can.
 

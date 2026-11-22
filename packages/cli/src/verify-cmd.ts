@@ -3,6 +3,7 @@ import path from "node:path";
 import { openAiClient } from "./openai-client.js";
 import { PRESETS } from "./providers.js";
 import { exitCode, renderBadge, renderMarkdown, renderSarif, renderText } from "./report.js";
+import { signReport } from "./sign.js";
 import { verify, type VerifyReport } from "./verify.js";
 import type { ModelClient } from "apex-verify-engine";
 
@@ -14,6 +15,8 @@ export const VERIFY_USAGE = `apex verify "<what the change should do>" [--dir <p
   --standard-cases   also ask for unstated standard-practice checks (CRLF, empty input); measured no gain, off by default
   --second-model <id> [--second-provider p]   a second, independent checker: NOT READY only when both object; one objection alone is UNKNOWN
   --fresh-inputs   ask the checker to use inputs other than the task's own examples (off by default; see benchmark/results)
+  --lock-tests     run your tests with the base versions of any test files the change edited or deleted (an agent cannot edit its way to green)
+  --sign-key <file>   sign the report (Ed25519; make a key with --gen-key <file>); check one with --check-report <file> [--pub-key <base64>]
   --badge-out <file>   write a shields.io endpoint badge (JSON) with the verdict
   --no-model   only the deterministic parts: the project's tests and the cheating scan (needs no key)
   --markdown-out / --sarif-out / --json-out <file>   also write those formats to a file (one run)
@@ -25,7 +28,7 @@ Keys: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY (
 
 export interface VerifyCliArgs {
   task: string; dir: string; base?: string; diffFile?: string; model?: string; baseUrl: string; apiKey?: string; noModel: boolean;
-  format: "text" | "json" | "markdown" | "sarif"; out?: string; markdownOut?: string; sarifOut?: string; jsonOut?: string; testCommand?: string[]; timeoutSec: number; quiet: boolean; standardCases: boolean; freshInputs: boolean; badgeOut?: string;
+  format: "text" | "json" | "markdown" | "sarif"; out?: string; markdownOut?: string; sarifOut?: string; jsonOut?: string; testCommand?: string[]; timeoutSec: number; quiet: boolean; standardCases: boolean; freshInputs: boolean; badgeOut?: string; lockTests: boolean; signKey?: string;
   secondModel?: string; secondBaseUrl?: string; secondApiKey?: string;
 }
 
@@ -37,7 +40,7 @@ export function parseVerifyArgs(argv: string[], env: NodeJS.ProcessEnv = process
     if (a.startsWith("--")) {
       const [k, v] = a.slice(2).split("=", 2);
       if (v !== undefined) flags.set(k!, v);
-      else if (["no-model", "quiet", "json", "standard-cases", "fresh-inputs"].includes(k!)) flags.set(k!, true);
+      else if (["no-model", "quiet", "json", "standard-cases", "fresh-inputs", "lock-tests"].includes(k!)) flags.set(k!, true);
       else flags.set(k!, argv[++i] ?? "");
     } else rest.push(a);
   }
@@ -81,7 +84,7 @@ export function parseVerifyArgs(argv: string[], env: NodeJS.ProcessEnv = process
     ...(flags.get("sarif-out") ? { sarifOut: String(flags.get("sarif-out")) } : {}),
     ...(flags.get("json-out") ? { jsonOut: String(flags.get("json-out")) } : {}),
     ...(typeof test === "string" && test ? { testCommand: test.split(/\s+/) } : {}),
-    ...(secondModel && !noModel ? { secondModel, secondBaseUrl, secondApiKey } : {}), ...(flags.get("badge-out") ? { badgeOut: String(flags.get("badge-out")) } : {}), freshInputs: flags.get("fresh-inputs") === true, timeoutSec: Number(flags.get("timeout")) || 90, quiet: flags.get("quiet") === true || fmt !== "text", standardCases: flags.get("standard-cases") === true,
+    ...(secondModel && !noModel ? { secondModel, secondBaseUrl, secondApiKey } : {}), lockTests: flags.get("lock-tests") === true, ...(flags.get("sign-key") ? { signKey: String(flags.get("sign-key")) } : {}), ...(flags.get("badge-out") ? { badgeOut: String(flags.get("badge-out")) } : {}), freshInputs: flags.get("fresh-inputs") === true, timeoutSec: Number(flags.get("timeout")) || 90, quiet: flags.get("quiet") === true || fmt !== "text", standardCases: flags.get("standard-cases") === true,
   };
 }
 
@@ -100,7 +103,8 @@ export function checkersFrom(a: VerifyCliArgs, client?: ModelClient): { checker:
 export async function runVerify(a: VerifyCliArgs, out: (s: string) => void = console.log, err: (s: string) => void = console.error, client?: ModelClient): Promise<number> {
   if (!fs.existsSync(a.dir) || !fs.statSync(a.dir).isDirectory()) throw new Error(`directory not found: ${a.dir}`);
   const { checker, secondChecker } = checkersFrom(a, client);
-  const report = await verify({ dir: a.dir, task: a.task, base: a.base, diffFile: a.diffFile, checker, secondChecker, testCommand: a.testCommand, timeoutSec: a.timeoutSec, standardCases: a.standardCases, freshInputs: a.freshInputs, onProgress: a.quiet ? undefined : (l) => err(l) });
+  const report = await verify({ dir: a.dir, task: a.task, base: a.base, diffFile: a.diffFile, checker, secondChecker, testCommand: a.testCommand, timeoutSec: a.timeoutSec, standardCases: a.standardCases, freshInputs: a.freshInputs, lockTests: a.lockTests, onProgress: a.quiet ? undefined : (l) => err(l) });
+  if (a.signKey) report.signature = signReport(report, a.signKey);
   if (a.markdownOut) fs.writeFileSync(a.markdownOut, renderMarkdown(report) + "\n");
   if (a.sarifOut) fs.writeFileSync(a.sarifOut, renderSarif(report) + "\n");
   if (a.badgeOut) fs.writeFileSync(a.badgeOut, renderBadge(report) + "\n");

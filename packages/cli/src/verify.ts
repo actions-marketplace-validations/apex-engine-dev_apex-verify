@@ -27,6 +27,10 @@ async function typecheckCommand(dir: string): Promise<{ file: string; args: stri
   const tsc = path.join(dir, "node_modules", ".bin", "tsc");
   try { await fs.access(path.join(dir, "tsconfig.json")); await fs.access(tsc); return { file: tsc, args: ["--noEmit", "-p", "."], label: "tsc --noEmit" }; } catch { return null; }
 }
+/** Whether a path is one of the project's own test files (tests/ or test/ folders, *.test.* / *.spec.*, test_*.py, *_test.go / .py, __tests__). */
+export function isTestPath(p: string): boolean {
+  return /(^|\/)(tests?|__tests__|spec)\//.test(p) || /\.(test|spec)\.[cm]?[jt]sx?$/.test(p) || /(^|\/)test_[^/]*\.py$/.test(p) || /_test\.(py|go)$/.test(p);
+}
 export interface Reason { kind: "regression" | "cheat" | "check_failed" | "checks_suspect" | "checkers_disagree" | "no_checks" | "checks_unproven" | "no_change" | "no_tests"; summary: string; evidence?: string; hint?: string }
 
 export interface VerifyReport {
@@ -45,9 +49,15 @@ export interface VerifyReport {
   sandbox: string;
   usage: { modelCalls: number; seconds: number };
   proof: string;
+  /** With --lock-tests: the project's own test files that the change edited or deleted, restored from the base before the tests ran. */
+  lockedTests?: string[];
+  /** With --sign-key: an Ed25519 signature over verdict, task and proof (see sign.ts). */
+  signature?: { alg: "ed25519"; publicKey: string; value: string };
 }
 
 export interface VerifyOptions {
+  /** Run the project's tests with the base versions of the test files the change edited or deleted (an agent cannot edit its way to green). New test files are kept. */
+  lockTests?: boolean;
   dir: string;
   task: string;
   /** Compare the working copy with this git ref (default HEAD). */
@@ -182,10 +192,23 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     }
     say(`change: ${files.length} file${files.length === 1 ? "" : "s"} (${files.map((f) => f.path).slice(0, 4).join(", ")}${files.length > 4 ? ", ..." : ""})`);
 
+    // 0. locked tests: put the base's version of every edited or deleted test file back before anything runs
+    const locked = new Set<string>();
+    if (o.lockTests) {
+      for (const x of c.changes) {
+        if (x.before === null || !isTestPath(x.path)) continue;
+        await fs.mkdir(path.dirname(path.join(c.next, x.path)), { recursive: true });
+        await fs.writeFile(path.join(c.next, x.path), x.before);
+        locked.add(x.path);
+      }
+      if (locked.size) { report.lockedTests = [...locked].sort(); say(`locked tests: restored ${locked.size} file${locked.size === 1 ? "" : "s"} from ${c.base}`); }
+    }
+
     // 1. cheating: deterministic
     report.cheats = detectCheats(c.changes, o.task);
     for (const ch of report.cheats) {
-      if (ch.severity === "high") reasons.push({ kind: "cheat", summary: `${ch.file}: ${ch.detail}`, hint: "Do not delete, skip or weaken tests to make a change pass. Restore them and fix the code instead." });
+      if (locked.has(ch.file)) warnings.push(`${ch.file}: ${ch.detail} (restored from ${c.base} by --lock-tests, so it does not count)`);
+      else if (ch.severity === "high") reasons.push({ kind: "cheat", summary: `${ch.file}: ${ch.detail}`, hint: "Do not delete, skip or weaken tests to make a change pass. Restore them and fix the code instead." });
       else warnings.push(`${ch.file}: ${ch.detail}`);
     }
 

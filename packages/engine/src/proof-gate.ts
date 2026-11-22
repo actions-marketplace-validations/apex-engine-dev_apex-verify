@@ -13,6 +13,7 @@
 import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import fsSync from "node:fs";
 import { randomUUID } from "node:crypto";
 import type { ModelClient, ModelMessage } from "./model.js";
 import type { EngineOptions } from "./options.js";
@@ -22,7 +23,7 @@ import { compileContext, copyProject, examplesBlock, failures, hasFencedBlock, r
 import { selfExcludingChecks, SELF_EXCLUSION_HINT } from "./check-screen.js";
 import { checksLoadError } from "./check-results.js";
 import { namedExports, requestOnly } from "./mechanical.js";
-import { checkCommand, detectFramework, frameworkCheckCommand, cargoCrateName, cargoToTap, jestToTap, usesTypeScript, type Framework } from "./test-runner.js";
+import { checkCommand, detectFramework, frameworkCheckCommand, cargoCrateName, cargoToTap, goPackageOf, goToTap, jestToTap, usesTypeScript, type Framework } from "./test-runner.js";
 
 /** The model the proof gate asks: any `ModelClient` (only `stream` is used). */
 export type ProofGateway = Pick<ModelClient, "stream">;
@@ -47,7 +48,8 @@ export interface AcceptanceRun { passed: number; failed: number; loadError: stri
 const msg = (role: ModelMessage["role"], content: string): ModelMessage => ({ id: randomUUID(), role, content, createdAt: new Date().toISOString() });
 
 /** Where the checks file goes: beside the project's tests. */
-export function checkFilePath(files: string[], py: boolean, ts = false, rust = false): string {
+export function checkFilePath(files: string[], py: boolean, ts = false, rust = false, go: { dir: string } | null = null): string {
+  if (go) return `${go.dir ? go.dir + "/" : ""}apex_task_check_test.go`;
   if (rust) return "tests/apex_task_check.rs";
   const testDir = files.map((f) => /^(.*\/)?tests?\//.exec(f)?.[0]).find(Boolean) ?? (py ? "tests/" : "test/");
   return py ? `${testDir}test_apex_task_check.py` : `${testDir}apex-task-check.test.${ts ? "ts" : "js"}`;
@@ -59,9 +61,9 @@ export const STANDARD_CASES_HINT = "\n\nYou are the independent checker: the cha
 /** For an independent checker: use inputs other than the task's own examples, so a change that special-cases the examples fails. */
 export const FRESH_INPUTS_HINT = "\n\nWhere the task gives example inputs and outputs, do not use those same literal values as your test inputs. Test the same rule with different values (other numbers, other strings, another order, another size), so a change that only special-cases the task's examples fails your tests. You may keep at most one test that uses the task's own example.";
 
-export function acceptancePrompt(task: string, checkPath: string, py: boolean, standardCases = false, freshInputs = false, framework: Framework | null = null, crate = ""): string {
+export function acceptancePrompt(task: string, checkPath: string, py: boolean, standardCases = false, freshInputs = false, framework: Framework | null = null, crate = "", goPkg = ""): string {
   const testDir = path.posix.dirname(checkPath) + "/";
-  return `<task>\n${task}\n</task>\n\nDo not solve the task. Write one new test file, ${checkPath}, with ${py ? "pytest (plain assert; import the project's modules the way its code is laid out, adding the project folder to sys.path from the test file's location when needed)" : framework === "vitest" ? "vitest (import { test, expect } from \"vitest\"; import the project's modules the way its existing tests do, without a file extension for TypeScript)" : framework === "cargo" ? `Rust's built-in test framework (an integration test: #[test] functions, assert_eq!; import the crate with \`use ${crate || "the_crate"}::...;\` and only its public items; no external crates)` : framework === "jest" ? "jest (use the global test and expect; import the project's modules the way its existing tests do)" : "node:test and node:assert"}, that a correct change must pass. Import with paths relative to ${testDir}.\n` +
+  return `<task>\n${task}\n</task>\n\nDo not solve the task. Write one new test file, ${checkPath}, with ${py ? "pytest (plain assert; import the project's modules the way its code is laid out, adding the project folder to sys.path from the test file's location when needed)" : framework === "vitest" ? "vitest (import { test, expect } from \"vitest\"; import the project's modules the way its existing tests do, without a file extension for TypeScript)" : framework === "go" ? `Go's testing package (package ${goPkg || "main"}, the same package as the code under test so it needs no import; func TestXxx(t *testing.T) with t.Errorf("got %v, want %v", got, want); only the standard library)` : framework === "cargo" ? `Rust's built-in test framework (an integration test: #[test] functions, assert_eq!; import the crate with \`use ${crate || "the_crate"}::...;\` and only its public items; no external crates)` : framework === "jest" ? "jest (use the global test and expect; import the project's modules the way its existing tests do)" : "node:test and node:assert"}, that a correct change must pass. Import with paths relative to ${testDir}.\n` +
     "1. One test for each behaviour the task states (each rule, condition, value, order, format, error).\n" +
     "2. One test for each edge case those rules decide: empty or missing input, boundaries, invalid values, repeated or mixed cases, exact output format where the task states it.\n" +
     "3. One or two tests that pin nearby behaviour that works today and that the task does not change.\n" +
@@ -87,7 +89,7 @@ export async function runAcceptance(root: string, a: Pick<Acceptance, "path" | "
     await fs.writeFile(path.join(dir, a.path), a.framework ? a.code : selfExcludingChecks(a.code, a.py));
     const t = await runTests(dir, a.run, signal, timeoutSec);
     const loadError = checksLoadError(t.output) ?? (t.passed + t.failed === 0 ? (t.output.trim().split("\n").find((l) => /Error|error/.test(l)) ?? "no test ran").slice(0, 300) : null);
-    const out = a.framework === "jest" ? jestToTap(t.output) : a.framework === "cargo" ? cargoToTap(t.output) : t.output;
+    const out = a.framework === "jest" ? jestToTap(t.output) : a.framework === "cargo" ? cargoToTap(t.output) : a.framework === "go" ? goToTap(t.output) : t.output;
     return { passed: t.passed, failed: t.failed, loadError, failures: t.failed || loadError ? failures(out, 3000) : "", output: out.slice(0, 60_000) };
   } finally {
     await fs.rm(scratch, { recursive: true, force: true }).catch(() => undefined);
@@ -106,7 +108,8 @@ export async function draftAcceptance(o: { gateway: ProofGateway; model: string;
   const files = (await (o.workspace ? o.workspace.list() : listFiles(o.root))).filter((f) => !hidden(f));
   const py = /\bpytest\b|python/.test(o.testCommand.join(" "));
   const fw = py ? null : await detectFramework(o.root);
-  const checkPath = checkFilePath(files, py, fw && fw !== "cargo" ? await usesTypeScript(o.root) : false, fw === "cargo");
+  const goPkg = fw === "go" ? goPackageOf(files, (rel) => fsSync.readFileSync(path.join(o.root, rel), "utf8")) : null;
+  const checkPath = checkFilePath(files, py, fw && fw !== "cargo" && fw !== "go" ? await usesTypeScript(o.root) : false, fw === "cargo", goPkg);
   const crate = fw === "cargo" ? await cargoCrateName(o.root) : "";
   const cmd = fw ? { run: frameworkCheckCommand(fw, checkPath), py: false, native: false } : checkCommand(o.testCommand, checkPath);
   if (!cmd) return null;
@@ -114,8 +117,8 @@ export async function draftAcceptance(o: { gateway: ProofGateway; model: string;
   let calls = 0;
   const context = await compileContext(o.root, o.task, o.budgetChars ?? 24_000, { hidden, workspace: o.workspace, taskPack: o.taskPack, engine: o.engine });
   const examples = await testExamples(o.root, files, o.task, cmd.py, 2, o.workspace);
-  const system = msg("system", `You write tests; you never change the project's code. Answer with one \`\`\`${cmd.py ? "python" : fw === "cargo" ? "rust" : "js"} code block holding the whole new test file, and nothing else.`);
-  const user = msg("user", `${context}\n\n${acceptancePrompt(o.task, checkPath, cmd.py, o.standardCases, o.freshInputs, fw, crate)}${examplesBlock(examples, cmd.py)}`);
+  const system = msg("system", `You write tests; you never change the project's code. Answer with one \`\`\`${cmd.py ? "python" : fw === "cargo" ? "rust" : fw === "go" ? "go" : "js"} code block holding the whole new test file, and nothing else.`);
+  const user = msg("user", `${context}\n\n${acceptancePrompt(o.task, checkPath, cmd.py, o.standardCases, o.freshInputs, fw, crate, goPkg?.pkg)}${examplesBlock(examples, cmd.py)}`);
   const own = requestOnly(o.task);
   const expected = expectedLoadError(namedExports(own), [...new Set(own.match(/[\w-]+(?:\/[\w.-]+)+\.(?:m?[jt]sx?|cjs|py)\b/g) ?? [])].filter((f) => !files.includes(f)));
   let code = "";
@@ -126,8 +129,8 @@ export async function draftAcceptance(o: { gateway: ProofGateway; model: string;
     const prompt = attempt === 0 ? [system, user] : [system, user, msg("assistant", "```\n" + code + "\n```"), msg("user", `That file does not load on the project as it is now:\n${run?.loadError}\n\n${(run?.failures ?? "").slice(0, 1500)}\n\nWrite the whole file again so it loads (fix imports, paths and syntax); keep the same tests.`)];
     const text = await ask(o.gateway, o.model, o.root, prompt, o.signal, tokens).catch(() => "");
     const next = checkCode(text);
-    const tests = (next.match(cmd.py ? /^\s*def test_/gm : fw === "cargo" ? /#\[test\]/g : /(?:^|[^\w.])(?:test|it|t)\s*\(\s*["'`]/gm) ?? []).length;
-    if (!next || !tests || (!cmd.py && !(fw === "cargo" ? /#\[test\]/.test(next) : fw ? /\b(?:test|it)\(/.test(next) : /node:test/.test(next)))) { if (attempt === 0) { code = next; run = { passed: 0, failed: 0, loadError: "no tests in the answer", failures: "" }; continue; } return null; }
+    const tests = (next.match(cmd.py ? /^\s*def test_/gm : fw === "cargo" ? /#\[test\]/g : fw === "go" ? /^func Test\w+\(/gm : /(?:^|[^\w.])(?:test|it|t)\s*\(\s*["'`]/gm) ?? []).length;
+    if (!next || !tests || (!cmd.py && !(fw === "cargo" ? /#\[test\]/.test(next) : fw === "go" ? /^func Test\w+\(/m.test(next) : fw ? /\b(?:test|it)\(/.test(next) : /node:test/.test(next)))) { if (attempt === 0) { code = next; run = { passed: 0, failed: 0, loadError: "no tests in the answer", failures: "" }; continue; } return null; }
     code = next.endsWith("\n") ? next : next + "\n";
     run = await runAcceptance(o.root, { path: checkPath, code, run: cmd.run, py: cmd.py, ...(fw ? { framework: fw } : {}) }, o.signal, o.timeoutSec);
     if (!run.loadError || expected(run.loadError)) break;

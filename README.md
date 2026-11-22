@@ -49,7 +49,8 @@ We collected AI-written changes to small projects and knew for sure which ones w
 - **Apex verify stops about 65** across all 17 projects (28 of 43 wrong changes), and **52** on the 12 public projects that you can rerun yourself (16 of 31).
 - **It wrongly stops about 3 of every 100 good changes** (2 of 65; 1 of 48 on the public projects).
 - **It still misses about a third** of the wrong changes. It is not a proof of correctness.
-- **Two checkers from different companies that must both object** stopped 60 of every 100 wrong changes while wrongly stopping only 2 of every 100 good ones (a smaller test, 16 tasks). It is available as `--second-model`. Two checkers from the *same* company did **not** help (53% caught on the full set), and neither did telling the checker to avoid the task's own examples: both are written up in [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md).
+- **A checker from another company works about as well**: Claude as the checker stopped 55 of every 100 wrong changes (Gemini 63 on the same changes) with 2 or fewer in 100 false alarms ([details](benchmark/results/cross-vendor-full-set)).
+- **Two checkers that must both object did not help** (43%), and neither did two checkers from the same company or telling the checker to avoid the task's own examples ([docs/EXPERIMENTS.md](docs/EXPERIMENTS.md)). An earlier 60% figure for two checkers came from a smaller test and was wrong for the full pipeline. Blocking when *either* objects caught 75% at the same false-alarm rate in one test; that is not a mode yet.
 
 Honest limits: these are small projects, the changes were written by Gemini models, the numbers come from one run each, and the exact percentages could move a lot with more data. Rerun it yourself with `node benchmark/run-gate.mjs`; the data, the method and the caveats are in [benchmark/](benchmark). **Please try to break it**: a `ready` that is wrong, or a `not ready` that is right, is the most useful bug report we can get.
 
@@ -81,7 +82,7 @@ Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what i
 - **It does not replace review or CI.** It runs next to them and gives a short, evidence-backed verdict.
 - **It sends your task and the relevant source files** (about 24 KB at most) to the checker model you configure, and nothing else. No telemetry.
 - **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort) and Linux bubblewrap, both tested in CI, with no network except localhost. **Windows runs (tested in CI) but has no sandbox yet**: use WSL2 or the [container recipe](docs/SANDBOX.md) for code you do not trust.
-- **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`).** For other stacks (Go and others) it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
+- **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`), and for Go (`go test`, written but never run by us: Go is not installed on the maintainer's machine).** For other stacks it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
 
 ## What's left
 
@@ -89,12 +90,10 @@ Honest list of what is not done yet, each with an issue you can pick up:
 
 | Not done yet | Issue |
 |---|---|
-| Checks for **Go** projects (Rust, Jest and Vitest are done) | [#2](https://github.com/apex-engine-dev/apex-verify/issues/2) |
+| **Run the Go checks** on a real Go project (the code is written, never run) | [#2](https://github.com/apex-engine-dev/apex-verify/issues/2) |
 | A **sandbox on Windows** (it runs there, unsandboxed) | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
 | Try the **Claude Code plugin** in a live session | [#12](https://github.com/apex-engine-dev/apex-verify/issues/12) (good first issue) |
 | Test the **Codex and Cursor** hooks (Gemini CLI is done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
-| **Two checkers from different companies**: re-measure on the full set (same-company pairs did not help) | [#6](https://github.com/apex-engine-dev/apex-verify/issues/6) |
-| Measure with a **checker from another company** | [#5](https://github.com/apex-engine-dev/apex-verify/issues/5) |
 | Measure on **bigger, real projects** | [#13](https://github.com/apex-engine-dev/apex-verify/issues/13) |
 | Locked tests and **signed evidence** (so an agent cannot tamper with its own verdict) | [#7](https://github.com/apex-engine-dev/apex-verify/issues/7) |
 

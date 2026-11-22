@@ -1,5 +1,7 @@
 # Second vendor: does a checker from a different company work as well?
 
+> **Correction (2026-11-22):** the "both object: 60% / 2%" row below counted failing checks without the rest of the pipeline. On the full pipeline and 101 changes, requiring both to object caught 43%: see [`../cross-vendor-full-set`](../cross-vendor-full-set). Kept here for the record.
+
 The first measurement used a Gemini model to judge changes written by Gemini models. Here the checks are written by **Claude** (Anthropic), the same way, and compared with Gemini under an identical protocol.
 
 **Protocol.** For each of 16 tasks, one check file is written from exactly the prompt `apex verify` builds (`draftAcceptance`), by `gemini-3.1-pro-preview` and by Claude (four Claude subagents, each given only the prompt files and told to read nothing else). One call each: no repair step, no second look, no caching tricks. Each check file is first run on the old code (to see that it can fail), then on all 191 labelled changes (129 right, 62 wrong; `results.json`), alone, with no other signal. The raw check files are in `checks/`.

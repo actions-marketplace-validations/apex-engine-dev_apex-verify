@@ -231,3 +231,28 @@ test("the MCP server lists and calls verify_change", async () => {
   assert.equal(call.result.isError, false);
   assert.equal(call.result.structuredContent.verdict, "unknown");
 });
+
+test("--lock-tests: an agent that deletes a failing test and breaks the code cannot get past the tests", async () => {
+  const d = repo();
+  fs.unlinkSync(path.join(d, "test/slug.test.js"));
+  write(d, "src/slug.js", "export function slugify(s) { return 42; }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null, lockTests: true });
+  assert.deepEqual(r.lockedTests, ["test/slug.test.js"]);
+  assert.equal(r.verdict, "not_ready");
+  assert.ok(r.reasons.some((x) => x.kind === "regression"), JSON.stringify(r.reasons));
+  assert.ok(fs.existsSync(path.join(d, "test/slug.test.js")) === false, "the project itself is never touched");
+});
+
+test("signed reports: valid, changed after signing, and signed by another key", async () => {
+  const { generateKey, signReport, checkReport } = await import("./sign.js");
+  const d = repo();
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  const key = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "apex-key-")), "k.pem");
+  const pub = generateKey(key);
+  const signed = { ...r, signature: signReport(r, key) };
+  assert.equal(checkReport(signed, pub).ok, true);
+  assert.equal(checkReport({ ...signed, verdict: "ready" }, pub).ok, false, "the verdict was edited");
+  assert.equal(checkReport(signed, generateKey(key + "2")).ok, false, "a different key than expected");
+  assert.equal(checkReport(r).ok, false, "unsigned");
+});
