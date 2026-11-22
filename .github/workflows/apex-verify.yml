@@ -1,8 +1,11 @@
-# Apex verify verifies Apex verify's own pull requests. Without the GEMINI_API_KEY secret it runs the tests and the cheating scan only.
+# Apex verify checks this repository's own pull requests and keeps its badge up to date. Without the GEMINI_API_KEY secret it runs the tests and the cheating scan only.
 name: Apex verify
-on: pull_request
+on:
+  pull_request:
+  push:
+    branches: [main]
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 jobs:
   verify:
@@ -15,3 +18,4 @@ jobs:
         with:
           api-key: ${{ secrets.GEMINI_API_KEY }}
           fail-on: never
+          badge: true

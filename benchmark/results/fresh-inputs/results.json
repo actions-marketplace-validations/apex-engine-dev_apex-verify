@@ -1,0 +1,1050 @@
+[
+ {
+  "id": "csv:2cb1453487",
+  "task": "csv",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "csv:6c4965c556",
+  "task": "csv",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "csv:9d70807f75",
+  "task": "csv",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "csv:f7b4b75e29",
+  "task": "csv",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "csv:e784eb9529",
+  "task": "csv",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "regression",
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "csv:8b1d7b781e",
+  "task": "csv",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "csv:441a1363ff",
+  "task": "csv",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "csv:fc16163c8c",
+  "task": "csv",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "regression"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "currency:22e02f6ec1",
+  "task": "currency",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "currency:2acba6d5f2",
+  "task": "currency",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "currency:ac3e8a6537",
+  "task": "currency",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "currency:99291616cb",
+  "task": "currency",
+  "correct": true,
+  "verdict": "not_ready",
+  "reasons": [
+   "regression"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "currency:09c17b6b35",
+  "task": "currency",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "currency:2e31b63876",
+  "task": "currency",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "currency:b507c87ffb",
+  "task": "currency",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "currency:01e3860f0a",
+  "task": "currency",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "days-between:12724689ce",
+  "task": "days-between",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "days-between:0a272b3b6d",
+  "task": "days-between",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "days-between:7cbf6ded0b",
+  "task": "days-between",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "days-between:79f51dec88",
+  "task": "days-between",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "days-between:b265aa98eb",
+  "task": "days-between",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "duration:d20c7e02e6",
+  "task": "duration",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "duration:1335c4e5ea",
+  "task": "duration",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "duration:645bad49d4",
+  "task": "duration",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "duration:8a5e70c531",
+  "task": "duration",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "duration:0d71c1ee23",
+  "task": "duration",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "duration:c3005aac62",
+  "task": "duration",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "duration:790bd33d44",
+  "task": "duration",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "duration:8ded289bb2",
+  "task": "duration",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "emitter:fef053247b",
+  "task": "emitter",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "emitter:9bed4e479c",
+  "task": "emitter",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "emitter:2d93863de2",
+  "task": "emitter",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "emitter:d586328561",
+  "task": "emitter",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "emitter:f7f4c4ea12",
+  "task": "emitter",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "emitter:fc5e21afa4",
+  "task": "emitter",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "emitter:5e2ff4cf4e",
+  "task": "emitter",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "emitter:0393882900",
+  "task": "emitter",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "lru:c2a6abffd8",
+  "task": "lru",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "lru:18ac881f66",
+  "task": "lru",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "lru:4104ac5ec0",
+  "task": "lru",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "lru:14bdda2dbe",
+  "task": "lru",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "merge-config:ade5521cdf",
+  "task": "merge-config",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "merge-config:c133e0b89d",
+  "task": "merge-config",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "merge-config:307b2efad6",
+  "task": "merge-config",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "merge-config:db8e30747e",
+  "task": "merge-config",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "merge-config:7d1c7fead2",
+  "task": "merge-config",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "merge-config:2ea8b474d3",
+  "task": "merge-config",
+  "correct": false,
+  "verdict": "unknown",
+  "reasons": [
+   "checks_suspect"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "merge-config:8da46ead73",
+  "task": "merge-config",
+  "correct": false,
+  "verdict": "unknown",
+  "reasons": [
+   "checks_suspect"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "merge-config:0abe95679b",
+  "task": "merge-config",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "ms-negative-decimals:764aa2ca7c",
+  "task": "ms-negative-decimals",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "ms-negative-decimals:aeabf6cc41",
+  "task": "ms-negative-decimals",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "ms-negative-decimals:9d22021450",
+  "task": "ms-negative-decimals",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "ms-negative-decimals:174f13e587",
+  "task": "ms-negative-decimals",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "paginate:dd44861b92",
+  "task": "paginate",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "paginate:07ab76465f",
+  "task": "paginate",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "paginate:92360697bf",
+  "task": "paginate",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "paginate:4d828f05fb",
+  "task": "paginate",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "rename-fetch:12d75504a9",
+  "task": "rename-fetch",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "rename-fetch:3161ee3679",
+  "task": "rename-fetch",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "rename-fetch:de48a5c87e",
+  "task": "rename-fetch",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "rename-fetch:2b99d6dd43",
+  "task": "rename-fetch",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "rename-fetch:0224a589bb",
+  "task": "rename-fetch",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "retry:0fa467fbc1",
+  "task": "retry",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "retry:94b27a4ec5",
+  "task": "retry",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "retry:bc8412fabc",
+  "task": "retry",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "retry:13e1962f40",
+  "task": "retry",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "retry:764b12fd99",
+  "task": "retry",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-stopwords-separator:0971a492b5",
+  "task": "slug-stopwords-separator",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-stopwords-separator:4c80da831e",
+  "task": "slug-stopwords-separator",
+  "correct": true,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-stopwords-separator:63934c80ec",
+  "task": "slug-stopwords-separator",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-stopwords-separator:619a5dd66f",
+  "task": "slug-stopwords-separator",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-stopwords-separator:9255daa40d",
+  "task": "slug-stopwords-separator",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-stopwords-separator:db3db1c3af",
+  "task": "slug-stopwords-separator",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-stopwords-separator:6f63e95fc9",
+  "task": "slug-stopwords-separator",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-uppercase-atomic:cdc3019c9a",
+  "task": "slug-uppercase-atomic",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-uppercase-atomic:95b05a63f4",
+  "task": "slug-uppercase-atomic",
+  "correct": true,
+  "verdict": "not_ready",
+  "reasons": [
+   "regression",
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-uppercase-atomic:5625d66195",
+  "task": "slug-uppercase-atomic",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-uppercase-atomic:afc85423d6",
+  "task": "slug-uppercase-atomic",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slug-uppercase-atomic:bff268927b",
+  "task": "slug-uppercase-atomic",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slugify:1e0e59a0ff",
+  "task": "slugify",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slugify:b0e842783b",
+  "task": "slugify",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slugify:75876e5617",
+  "task": "slugify",
+  "correct": true,
+  "verdict": "unknown",
+  "reasons": [
+   "checks_suspect"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slugify:dd603bbc6d",
+  "task": "slugify",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slugify:d25b123767",
+  "task": "slugify",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slugify:dd618f2e8b",
+  "task": "slugify",
+  "correct": false,
+  "verdict": "unknown",
+  "reasons": [
+   "checks_suspect"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slugify:bf13f61f30",
+  "task": "slugify",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "slugify:00705abdc7",
+  "task": "slugify",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-empty-maxheader:5b1a918803",
+  "task": "tab-empty-maxheader",
+  "correct": true,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-empty-maxheader:acf4b5a3e0",
+  "task": "tab-empty-maxheader",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "cheat",
+   "regression",
+   "check_failed"
+  ],
+  "cheats": 1,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-empty-maxheader:6dce181ed2",
+  "task": "tab-empty-maxheader",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-empty-maxheader:37f62d2c3f",
+  "task": "tab-empty-maxheader",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-empty-maxheader:42995f697e",
+  "task": "tab-empty-maxheader",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-wide-char-hang:5db13f4539",
+  "task": "tab-wide-char-hang",
+  "correct": true,
+  "verdict": "unknown",
+  "reasons": [
+   "checks_suspect"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-wide-char-hang:58a4c9260a",
+  "task": "tab-wide-char-hang",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-wide-char-hang:7503d755e3",
+  "task": "tab-wide-char-hang",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-wide-char-hang:796a71731d",
+  "task": "tab-wide-char-hang",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-wide-char-hang:a92aa271c8",
+  "task": "tab-wide-char-hang",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-wide-char-hang:45642cc05a",
+  "task": "tab-wide-char-hang",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-wide-char-hang:caaee95845",
+  "task": "tab-wide-char-hang",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "tab-wide-char-hang:949330c899",
+  "task": "tab-wide-char-hang",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "todo-persist:cdfac50a01",
+  "task": "todo-persist",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "todo-persist:b4bcb0bbb8",
+  "task": "todo-persist",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "todo-persist:ce0e4618bf",
+  "task": "todo-persist",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "todo-persist:d856c4e70d",
+  "task": "todo-persist",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "todo-persist:5c581967a7",
+  "task": "todo-persist",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "todo-persist:74b22cc119",
+  "task": "todo-persist",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "todo-persist:017d584c08",
+  "task": "todo-persist",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ },
+ {
+  "id": "todo-persist:b3614774a5",
+  "task": "todo-persist",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": [],
+  "cheats": 0,
+  "checksWritten": true
+ }
+]

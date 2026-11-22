@@ -1,5 +1,5 @@
 import readline from "node:readline";
-import { parseVerifyArgs } from "./verify-cmd.js";
+import { checkersFrom, parseVerifyArgs } from "./verify-cmd.js";
 import { verify } from "./verify.js";
 import { openAiClient } from "./openai-client.js";
 import { renderMarkdown } from "./report.js";
@@ -35,8 +35,8 @@ export async function handle(msg: any, env: NodeJS.ProcessEnv = process.env): Pr
       const args = msg.params.arguments ?? {};
       try {
         const a = parseVerifyArgs([String(args.task ?? ""), "--dir", String(args.dir ?? process.cwd()), "--quiet", ...(args.base ? ["--base", String(args.base)] : []), ...(env.APEX_NO_MODEL === "1" ? ["--no-model"] : [])], env);
-        const checker = a.noModel ? null : { client: openAiClient({ baseUrl: a.baseUrl, apiKey: a.apiKey }), model: a.model! };
-        const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, timeoutSec: a.timeoutSec });
+        const { checker, secondChecker } = checkersFrom(a);
+        const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, secondChecker, freshInputs: a.freshInputs, timeoutSec: a.timeoutSec });
         return ok({ content: [{ type: "text", text: renderMarkdown(report) }], structuredContent: report, isError: false });
       } catch (e) { return ok({ content: [{ type: "text", text: `apex verify could not run: ${e instanceof Error ? e.message : String(e)}` }], isError: true }); }
     }

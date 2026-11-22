@@ -9,3 +9,11 @@
 199 labelled AI-written changes, three conditions (tests + cheating scan only; plus an independent checker; plus a prompt for unstated standard-practice cases). The independent checker moved the share of wrong changes blocked from 8% to 65% at a 3% false-alarm rate; the unstated-cases prompt did not help (60%, 5%). Method, numbers and limits: [`benchmark/results/verify-gate-round1`](../benchmark/results/verify-gate-round1/README.md).
 
 **What went wrong on the way (kept for honesty).** The first prototype run said the checker caught 70% and the weak model's own checks 89% with 56% false alarms; it drew one set of checks per task, so results clustered, and the check-writing call was cut off at about 400 characters because the model's reasoning used the output limit, which made checks fail to write for 41% of tasks. After fixing the limit and re-measuring with independent checks per change, the real product caught 65%.
+
+
+## Second look per check (2026-11-22): tried, not adopted
+Judging each failing check separately instead of together (so an over-strict check cannot soften a right one) gave the same catch rate (28 of 43) and more false alarms (5 of 65 against 2 of 65) on the 108-change benchmark. It was not shipped. Data and method: [`benchmark/results/second-look-per-check`](../benchmark/results/second-look-per-check/README.md).
+
+
+## Fresh inputs and two same-company checkers (2026-11-22): tried, not recommended
+Telling the checker to avoid the task's own example values caught 27 of 43 wrong changes (28 without) with 4 of 65 false alarms (2 without). Requiring two Gemini checkers to both object caught 23 of 43 with 3 of 65 false alarms and 26 `unknown` verdicts. Neither is on by default. Data and method: [`benchmark/results/fresh-inputs`](../benchmark/results/fresh-inputs), [`benchmark/results/two-checkers-same-vendor`](../benchmark/results/two-checkers-same-vendor). The cross-company pair from the earlier test stays the only evidence for two checkers.

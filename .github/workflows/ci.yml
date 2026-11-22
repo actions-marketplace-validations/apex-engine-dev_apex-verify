@@ -28,6 +28,28 @@ jobs:
           node-version: 22
       - run: npm install
       - run: npm test
+  # Windows: the same tests. No sandbox there yet (docs/SANDBOX.md); this checks paths, git and the test runners work.
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm test
+  # Real Jest and Vitest projects (npm install, then a verify run). Slow, so it has its own job.
+  frameworks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: node --test packages/cli/dist/frameworks.test.js
+        env:
+          APEX_FRAMEWORK_TESTS: "1"
   # The built-in Linux sandbox (bubblewrap) must actually isolate: write outside the copy denied, external network denied, localhost allowed.
   linux-sandbox:
     runs-on: ubuntu-latest

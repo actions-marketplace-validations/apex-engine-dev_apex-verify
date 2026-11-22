@@ -7,7 +7,7 @@ Apex verify does not replace your agent. It checks what the agent changed. Pick 
 | **Any terminal** | `npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify "what the change should do"` | You read the verdict. Exit code 0 ready, 1 not ready, 3 unknown. |
 | **Claude Code** | the Apex verify plugin (below): a Stop hook, a skill and an MCP tool | **Yes.** The hook hands the reasons back and Claude keeps working. |
 | **Codex CLI** | a Stop hook and/or the MCP tool (below) | **Yes**, same mechanism. |
-| **Gemini CLI** | an `AfterAgent` hook and/or the MCP tool | Yes (retry on the verdict). |
+| **Gemini CLI** | an `AfterAgent` hook and/or the MCP tool | **Yes**, tested in a real session (below). |
 | **Cursor** | the MCP tool, plus a `stop` hook in `.cursor/hooks.json` | Partly: the hook can send a follow-up message. |
 | **Aider** | `test-cmd: apex verify "<task>" --no-model` in `.aider.conf.yml` | Informs only: Aider tries a fix when the command fails. |
 | **GitHub pull requests (any agent: Copilot, Cursor cloud, Codex cloud, a person)** | the Apex verify Action (below) | **Yes**, as a required check. |
@@ -51,6 +51,17 @@ Codex supports the same Stop hook contract. In `~/.codex/hooks.json` (or `.codex
 
 MCP tool: `codex mcp add apex -- npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --mcp`
 
+## Gemini CLI
+
+In `.gemini/settings.json` (project) or `~/.gemini/settings.json`:
+
+```json
+{ "hooksConfig": { "enabled": true },
+  "hooks": { "AfterAgent": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --hook", "timeout": 300000 } ] } ] } }
+```
+
+Gemini sends the request as `prompt` and treats `decision: "block"` as a retry, so it works like the Claude Code hook. Tested with Gemini CLI 0.32.1: a wrong `slugify` was blocked with the failing check, the agent fixed it and finished; a correct change got `READY`. (Gemini asks you to trust project-level hooks the first time.)
+
 ## Any MCP client (Cursor, Gemini CLI, Claude Desktop, ...)
 
 ```json
@@ -81,6 +92,37 @@ It posts one comment that it updates in place, writes the job summary, and fails
 **Fork pull requests.** GitHub withholds secrets from forks, so there Apex verify runs without a model: your tests and the cheating scan only, verdict at most `unknown`. Do **not** switch the trigger to `pull_request_target` to get secrets: that runs untrusted code with your secrets. If you want model checks on forks, run a separate privileged job that only posts the result and never executes the pull request's code.
 
 Open-source maintainers: this is aimed at you. A PR that arrives with deleted or skipped tests, or whose behaviour does not match its description, is flagged before you spend review time.
+
+## A "checked by Apex verify" badge
+
+The Action can keep a badge up to date for your default branch. Give the workflow `contents: write`, run it on `push` as well as `pull_request`, and set `badge: true`:
+
+```yaml
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+  pull-requests: write
+# ...
+      - uses: apex-engine-dev/apex-verify@v1
+        with: { api-key: ${{ secrets.GEMINI_API_KEY }}, badge: true }
+```
+
+On each push to `main` it writes `apex-verify-badge.json` to the `apex-badge` branch. Then paste this into your README (public repositories; replace apex-engine-dev/apex-verify):
+
+```md
+[![Apex verify](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/apex-engine-dev/apex-verify/apex-badge/apex-verify-badge.json)](https://github.com/apex-engine-dev/apex-verify)
+```
+
+It shows `ready`, `not ready` or `unknown` for the latest push. Without a model key it is at most `unknown`. In any other CI, `apex verify "<task>" --badge-out badge.json` writes the same file.
+
+## Two checkers
+
+> Measured limits: two checkers from the **same** company did not help (53% caught, 5% false alarms, [details](../benchmark/results/two-checkers-same-vendor)); the 60% / 2% result below is from a smaller test with checkers from different companies. `--fresh-inputs` (checker avoids the task's own example values) also did not help ([details](../benchmark/results/fresh-inputs)); it is off by default.
+
+`--second-model <id> [--second-provider gemini|openai|anthropic|openrouter]` adds a second, independent checker. The change is `not ready` only when **both** checkers find a problem; if only one does, the verdict is `unknown` ("the checkers disagree") and you review that objection by hand. In our first test two checkers from different companies that had to agree kept 60% of wrong changes blocked and cut false alarms to 2% (`benchmark/results/second-vendor`). Use two different companies' models if you can.
 
 ## What can go wrong, and what Apex verify does
 

@@ -15,10 +15,12 @@ Every use case the README claims, how it is tested, and its honest status. If a 
 | Claude Code stop hook (blocks "done", at most 3 times, silent when nothing changed, warn mode) | Hook protocol **tested in CI**; plugin manifests validated with `claude plugin validate`; **not yet run inside a live Claude Code session** | `e2e.test.ts` (real hook input on stdin, block JSON out) |
 | MCP server (`verify_change`) | Protocol **tested in CI**; **not tested with a real MCP client** | `e2e.test.ts` (initialize, tools/list, tools/call over stdio) |
 | GitHub Action: comment updated in place, job summary, fail-on policy, fork PRs without a model | **Tested on real pull requests** (and runs on every PR to this repository) | the `Apex verify` workflow; two throwaway PRs found and fixed one bug |
-| Codex CLI, Gemini CLI, Cursor hooks and MCP | **Documented, not tested** | `docs/INTEGRATIONS.md` has the configuration; please try one and tell us |
+| Gemini CLI `AfterAgent` hook | **Run in a real Gemini CLI session (v0.32.1)**: a wrong change was blocked, the agent fixed it; a right one got `READY` | the hook reads Gemini's `prompt` field; manual run, not in CI |
+| Codex CLI, Cursor hooks and MCP | **Documented, not tested** | `docs/INTEGRATIONS.md` has the configuration; please try one and tell us |
 | Install with `npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz` | **Tested by hand** from a clean folder; the bundled file is used by CI | run the commands in the README |
-| Languages: your tests run for what is detected (npm/node, pytest, go, cargo, make) or `--test "<cmd>"` | Node and Python **tested**; Go, Rust, others **detected but not tested by us** | `engine/src/runner-detect.test.ts`, `test-runner.test.ts` |
-| Checks *written* by the model | **node:test and pytest only**; other stacks give `unknown`, never a wrong `ready` | `proof-gate.ts`; Jest/Vitest, Go, Rust are open issues |
+| Languages: your tests run for what is detected (npm/node, pytest, go, cargo, make) or `--test "<cmd>"` | Node, Python and Rust **tested**; Go, others **detected but not tested by us** | `engine/src/runner-detect.test.ts`, `test-runner.test.ts` |
+| Checks *written* by the model | **node:test, pytest, Jest, Vitest (TypeScript too) and Rust (`cargo test`)**; other stacks give `unknown`, never a wrong `ready` | `frameworks.test.ts` (real npm projects; the `frameworks` CI job) and `rust.test.ts`; Go is an open issue |
+| A "checked by Apex verify" badge | **Tested in CI** | `--badge-out`, the Action's `badge: true` input |
 | Sandbox: macOS Seatbelt | **Tested in CI** (macOS job) | `engine` tests |
 | Sandbox: Linux bubblewrap | **Tested in CI** (the `linux-sandbox` job must pass, it is not skipped) | `sandbox-linux.test.ts`: write outside the copy denied, external network denied, localhost allowed |
 | Sandbox: container recipe | **Tested in CI** | the `container` job |

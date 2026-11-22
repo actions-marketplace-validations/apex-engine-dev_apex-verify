@@ -1,6 +1,8 @@
 # Changelog
 
 ## 0.2.0 (unreleased)
+- **Checks for Jest, Vitest (TypeScript too) and Rust** (`cargo test`), run by the project's own framework. Windows added to CI. Gemini CLI `AfterAgent` hook tested in a real session.
+- **`--second-model`** (two checkers must both object), **`--fresh-inputs`**, and a **badge** (`--badge-out`, Action input `badge`). Measured: same-company second checker and fresh inputs did not improve results, so neither is default (`docs/EXPERIMENTS.md`).
 - **Name: Apex verify** (`apex verify`). It was briefly called ReallyDone while we looked for a name; the repository is `apex-verify`.
 - **Focus.** The repository is now `apex verify` and what measures it. Removed: the agent runner (`apex-agent`), model calibration and shared profiles, the uplift leaderboard scripts and the benchmark harness (`apex-bench`). The research results are kept in `docs/research/`.
 - **Linux sandbox**: bubblewrap, tested in CI (write outside the copy denied, external network denied, localhost allowed). The verdict says which sandbox ran.

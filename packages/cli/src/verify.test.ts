@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import type { ModelClient, ModelEvent } from "apex-verify-engine";
 import { verify } from "./verify.js";
 import { parseVerifyArgs } from "./verify-cmd.js";
-import { renderMarkdown, renderSarif, renderText, exitCode } from "./report.js";
+import { renderBadge, renderMarkdown, renderSarif, renderText, exitCode } from "./report.js";
 import { lastUserPrompt } from "./hook.js";
 import { handle } from "./mcp.js";
 
@@ -69,6 +69,61 @@ test("a wrong change is NOT READY and names the failing check", async () => {
   assert.match(r.reasons[0]!.evidence ?? "", /dash|hello/i);
   assert.equal(exitCode(r.verdict), 1);
   assert.match(renderMarkdown(r), /apex/);
+});
+
+// ---- #6 two checkers, #4 fresh inputs, #14 badge ----
+const CHECKS_B = "```js\nimport { test } from \"node:test\";\nimport assert from \"node:assert/strict\";\nimport { slugify } from \"../src/slug.js\";\ntest(\"spaces become one dash\", () => { assert.equal(slugify(\"One Two\"), \"one-two\"); });\ntest(\"already lower\", () => { assert.equal(slugify(\"abc\"), \"abc\"); });\n```";
+const CHECKS_LENIENT = "```js\nimport { test } from \"node:test\";\nimport assert from \"node:assert/strict\";\nimport { slugify } from \"../src/slug.js\";\ntest(\"lower-cases\", () => { assert.equal(slugify(\"ABC\"), \"abc\"); });\n```";
+const WRONG = "export function slugify(s) { return String(s).toLowerCase().replace(/ /g, \"_\"); }\n";
+const GOODCODE = "export function slugify(s) { return String(s).toLowerCase().trim().replace(/\\s+/g, \"-\"); }\n";
+const asChecker = (text: string): ModelClient => fake(text);
+
+test("two checkers: both object -> NOT READY, with evidence from both", async () => {
+  const d = repo(); write(d, "src/slug.js", WRONG);
+  const r = await verify({ dir: d, task: TASK, checker: { client: asChecker(CHECKS), model: "a" }, secondChecker: { client: asChecker(CHECKS_B), model: "b" }, secondLook: false, cache: false });
+  assert.equal(r.verdict, "not_ready", JSON.stringify(r.reasons));
+  assert.match(r.reasons[0]!.summary, /both checkers/);
+  assert.equal(r.secondChecks?.written, true);
+  assert.ok(r.secondChecks!.failed >= 1);
+});
+
+test("two checkers: only one objects -> UNKNOWN (they disagree), never ready and never a block", async () => {
+  const d = repo(); write(d, "src/slug.js", WRONG);
+  const r = await verify({ dir: d, task: TASK, checker: { client: asChecker(CHECKS), model: "a" }, secondChecker: { client: asChecker(CHECKS_LENIENT), model: "b" }, secondLook: false, cache: false });
+  assert.equal(r.verdict, "unknown", JSON.stringify(r.reasons));
+  assert.equal(r.reasons[0]!.kind, "checkers_disagree");
+  assert.match(r.reasons[0]!.summary, /a found a problem, b found none/);
+});
+
+test("two checkers: neither objects -> READY", async () => {
+  const d = repo(); write(d, "src/slug.js", GOODCODE);
+  const r = await verify({ dir: d, task: TASK, checker: { client: asChecker(CHECKS), model: "a" }, secondChecker: { client: asChecker(CHECKS_B), model: "b" }, secondLook: false, cache: false });
+  assert.equal(r.verdict, "ready", JSON.stringify(r.reasons));
+});
+
+test("two checkers: a second checker that cannot write checks is reported and the first one decides", async () => {
+  const d = repo(); write(d, "src/slug.js", WRONG);
+  const r = await verify({ dir: d, task: TASK, checker: { client: asChecker(CHECKS), model: "a" }, secondChecker: { client: asChecker("I cannot write tests."), model: "b" }, secondLook: false, cache: false });
+  assert.equal(r.verdict, "not_ready", JSON.stringify(r.reasons));
+  assert.ok(r.warnings.some((w) => /second checker \(b\) could not write usable checks/.test(w)), r.warnings.join("|"));
+});
+
+test("fresh inputs: the instruction is sent only when asked for", async () => {
+  const seen: string[] = [];
+  const spy: ModelClient = { async *stream(req: any): AsyncIterable<ModelEvent> { seen.push(String(req.messages?.[1]?.content ?? "")); yield { type: "text-delta", text: CHECKS } as ModelEvent; yield { type: "done" } as ModelEvent; } };
+  const d = repo(); write(d, "src/slug.js", GOODCODE);
+  await verify({ dir: d, task: TASK, checker: { client: spy, model: "m" }, freshInputs: true, cache: false });
+  assert.ok(seen.some((x) => /do not use those same literal values/.test(x)));
+  seen.length = 0;
+  await verify({ dir: d, task: TASK, checker: { client: spy, model: "m" }, cache: false });
+  assert.ok(seen.length > 0 && !seen.some((x) => /do not use those same literal values/.test(x)));
+});
+
+test("badge: a shields.io endpoint JSON for each verdict", () => {
+  const b = (verdict: string) => JSON.parse(renderBadge({ verdict } as any));
+  assert.deepEqual(b("ready"), { schemaVersion: 1, label: "apex verify", message: "ready", color: "brightgreen" });
+  assert.equal(b("not_ready").color, "red");
+  assert.equal(b("unknown").message, "unknown");
 });
 
 test("deleting a test to make the change pass is NOT READY, with no model needed", async () => {
@@ -139,6 +194,13 @@ test("argument parsing: key and model are required unless --no-model", () => {
   assert.equal(a.noModel, true);
   assert.equal(a.format, "json");
   assert.equal(parseVerifyArgs(["do it", "--provider", "openai", "--model", "m"], { OPENAI_API_KEY: "k" }).model, "m");
+});
+
+test("argument parsing: second checker, fresh inputs, badge file", () => {
+  const a = parseVerifyArgs(["do it", "--model", "m1", "--second-model", "m2", "--fresh-inputs", "--badge-out", "b.json"], { GEMINI_API_KEY: "k" });
+  assert.equal(a.secondModel, "m2"); assert.equal(a.freshInputs, true); assert.equal(a.badgeOut, "b.json");
+  assert.throws(() => parseVerifyArgs(["do it", "--model", "m1", "--second-model", "m2", "--second-provider", "openai"], { GEMINI_API_KEY: "k" }), /OPENAI_API_KEY/);
+  assert.equal(parseVerifyArgs(["do it", "--model", "m1"], { GEMINI_API_KEY: "k" }).secondModel, undefined);
 });
 
 test("SARIF and exit codes", () => {

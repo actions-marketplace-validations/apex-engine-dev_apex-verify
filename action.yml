@@ -41,6 +41,10 @@ inputs:
     description: Post (and update) one comment on the pull request.
     required: false
     default: "true"
+  badge:
+    description: On pushes (not pull requests), publish a badge file with the verdict to the apex-badge branch, for a shields.io endpoint badge (see docs/INTEGRATIONS.md). Needs "contents write" permission and a public repository.
+    required: false
+    default: "false"
 outputs:
   verdict:
     description: ready, not_ready or unknown.
@@ -73,6 +77,8 @@ runs:
         INPUT_TEST: ${{ inputs.test-command }}
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
         INPUT_COMMENT: ${{ inputs.comment }}
+        INPUT_BADGE: ${{ inputs.badge }}
+        COMMIT_MSG: ${{ github.event.head_commit.message }}
         PR_TITLE: ${{ github.event.pull_request.title }}
         PR_BODY: ${{ github.event.pull_request.body }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
@@ -85,10 +91,10 @@ runs:
         # Everything from the pull request reaches the script through environment variables, never through the shell text.
         TASK="${INPUT_TASK}"
         if [ -z "$TASK" ]; then TASK="${PR_TITLE:-}"; [ -n "${PR_BODY:-}" ] && TASK="$TASK"$'\n\n'"$PR_BODY"; fi
-        if [ -z "$TASK" ]; then TASK="the change in this commit"; fi
+        if [ -z "$TASK" ]; then TASK="${COMMIT_MSG:-the change in this commit}"; fi
         BASE="${INPUT_BASE:-${PR_BASE_SHA:-HEAD~1}}"
         OUT="$RUNNER_TEMP/apex"; mkdir -p "$OUT"
-        ARGS=(verify "$TASK" --dir "$GITHUB_WORKSPACE" --base "$BASE" --quiet --format text --markdown-out "$OUT/report.md" --sarif-out "$OUT/report.sarif" --json-out "$OUT/report.json")
+        ARGS=(verify "$TASK" --dir "$GITHUB_WORKSPACE" --base "$BASE" --quiet --format text --markdown-out "$OUT/report.md" --sarif-out "$OUT/report.sarif" --json-out "$OUT/report.json" --badge-out "$OUT/badge.json")
         [ -n "$INPUT_TEST" ] && ARGS+=(--test "$INPUT_TEST")
         if [ -n "$INPUT_BASE_URL" ]; then ARGS+=(--base-url "$INPUT_BASE_URL" --model "$INPUT_MODEL" --api-key-env APEX_CHECKER_KEY)
         else ARGS+=(--provider "$INPUT_PROVIDER" --model "$INPUT_MODEL" --api-key-env APEX_CHECKER_KEY); fi
@@ -105,6 +111,16 @@ runs:
           ID=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '[.[] | select(.body | contains("<!-- apex-verify -->"))][0].id // empty' 2>/dev/null || true)
           if [ -n "$ID" ]; then gh api -X PATCH "repos/$REPO/issues/comments/$ID" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not update the Apex verify comment (read-only token on a fork pull request?). The report is in the job summary."
           else gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not post the Apex verify comment (read-only token on a fork pull request?). The report is in the job summary."; fi
+        fi
+        if [ "$INPUT_BADGE" = "true" ] && [ "${GITHUB_EVENT_NAME:-}" = "push" ] && [ -f "$OUT/badge.json" ]; then
+          B=$(mktemp -d); URL="https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git"
+          if git ls-remote --exit-code --heads "$URL" apex-badge >/dev/null 2>&1; then git clone -q --depth 1 --branch apex-badge "$URL" "$B"
+          else git init -q "$B"; git -C "$B" checkout -q -b apex-badge; git -C "$B" remote add origin "$URL"; fi
+          cp "$OUT/badge.json" "$B/apex-verify-badge.json"
+          GIT_ID=(-c user.name=github-actions -c user.email=41898282+github-actions[bot]@users.noreply.github.com)
+          git -C "$B" "${GIT_ID[@]}" add -A
+          git -C "$B" "${GIT_ID[@]}" commit -q -m "Apex verify badge: $VERDICT" 2>/dev/null || true
+          git -C "$B" push -q origin apex-badge 2>/dev/null || echo "::warning::Could not publish the badge (the workflow needs permissions: contents: write)."
         fi
         case "$INPUT_FAIL_ON" in
           never) exit 0 ;;

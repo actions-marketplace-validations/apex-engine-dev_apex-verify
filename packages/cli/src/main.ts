@@ -1,11 +1,12 @@
 #!/usr/bin/env node
+import { fileURLToPath } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
 import { parseVerifyArgs, runVerify, VERIFY_USAGE } from "./verify-cmd.js";
 import { runHook } from "./hook.js";
 import { runMcp } from "./mcp.js";
 
-const VERSION = JSON.parse(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), "..", "package.json"), "utf8")).version as string;
+const VERSION = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "package.json"), "utf8")).version as string;
 
 const USAGE = VERIFY_USAGE.replace(/^apex verify /, "apex [verify] ");
 

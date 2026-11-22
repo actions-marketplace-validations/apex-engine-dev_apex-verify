@@ -49,7 +49,7 @@ We collected AI-written changes to small projects and knew for sure which ones w
 - **Apex verify stops about 65** across all 17 projects (28 of 43 wrong changes), and **52** on the 12 public projects that you can rerun yourself (16 of 31).
 - **It wrongly stops about 3 of every 100 good changes** (2 of 65; 1 of 48 on the public projects).
 - **It still misses about a third** of the wrong changes. It is not a proof of correctness.
-- **Two checkers from different companies that must both object** stopped 60 of every 100 wrong changes while wrongly stopping only 2 of every 100 good ones. That is the next thing we are building ([issue #6](https://github.com/apex-engine-dev/apex-verify/issues/6)).
+- **Two checkers from different companies that must both object** stopped 60 of every 100 wrong changes while wrongly stopping only 2 of every 100 good ones (a smaller test, 16 tasks). It is available as `--second-model`. Two checkers from the *same* company did **not** help (53% caught on the full set), and neither did telling the checker to avoid the task's own examples: both are written up in [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md).
 
 Honest limits: these are small projects, the changes were written by Gemini models, the numbers come from one run each, and the exact percentages could move a lot with more data. Rerun it yourself with `node benchmark/run-gate.mjs`; the data, the method and the caveats are in [benchmark/](benchmark). **Please try to break it**: a `ready` that is wrong, or a `not ready` that is right, is the most useful bug report we can get.
 
@@ -61,7 +61,8 @@ Honest limits: these are small projects, the changes were written by Gemini mode
 | **Pull requests (any agent, or people)** | the GitHub Action: `uses: apex-engine-dev/apex-verify@v1` | **Yes**, as a required check | **Tested on real PRs**; runs on this repo's own PRs |
 | **Claude Code** | `/plugin marketplace add apex-engine-dev/apex-verify` then `/plugin install apex-verify@apex` | **Yes**: the Stop hook hands the failing check back and Claude keeps working | Hook protocol tested in CI, plugin validated; **not yet run in a live session** ([#12](https://github.com/apex-engine-dev/apex-verify/issues/12)) |
 | **Any MCP client** | the `verify_change` tool | The agent asks | Protocol tested in CI; not with a real client |
-| **Codex CLI, Gemini CLI, Cursor** | a Stop hook and/or the MCP tool | Yes / partly | **Documented, not tested** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)) |
+| **Gemini CLI** | an `AfterAgent` hook | **Yes**: it blocked a wrong change, the agent fixed it | **Run in a real Gemini CLI session** (v0.32) |
+| **Codex CLI, Cursor** | a Stop hook and/or the MCP tool | Yes / partly | **Documented, not tested** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)) |
 
 Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what is and is not tested: [docs/USE-CASES.md](docs/USE-CASES.md).
 
@@ -80,7 +81,7 @@ Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what i
 - **It does not replace review or CI.** It runs next to them and gives a short, evidence-backed verdict.
 - **It sends your task and the relevant source files** (about 24 KB at most) to the checker model you configure, and nothing else. No telemetry.
 - **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort) and Linux bubblewrap, both tested in CI, with no network except localhost. **Windows is not supported natively** (use WSL2 or the [container recipe](docs/SANDBOX.md)). The sandbox is a safety net, not a security boundary.
-- **It writes checks for node:test and pytest today.** For other stacks it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#1](https://github.com/apex-engine-dev/apex-verify/issues/1), [#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
+- **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`).** For other stacks (Go and others) it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
 
 ## What's left
 
@@ -88,18 +89,14 @@ Honest list of what is not done yet, each with an issue you can pick up:
 
 | Not done yet | Issue |
 |---|---|
-| Checks for **Jest / Vitest** projects | [#1](https://github.com/apex-engine-dev/apex-verify/issues/1) (good first issue) |
-| Checks for **Go and Rust** | [#2](https://github.com/apex-engine-dev/apex-verify/issues/2) |
+| Checks for **Go** projects (Rust, Jest and Vitest are done) | [#2](https://github.com/apex-engine-dev/apex-verify/issues/2) |
 | **Windows** support | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
 | Try the **Claude Code plugin** in a live session | [#12](https://github.com/apex-engine-dev/apex-verify/issues/12) (good first issue) |
-| Test the **Codex, Cursor, Gemini CLI** hooks | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
-| **Two checkers that must agree** (60% caught, 2% false alarms) | [#6](https://github.com/apex-engine-dev/apex-verify/issues/6) |
+| Test the **Codex and Cursor** hooks (Gemini CLI is done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
+| **Two checkers from different companies**: re-measure on the full set (same-company pairs did not help) | [#6](https://github.com/apex-engine-dev/apex-verify/issues/6) |
 | Measure with a **checker from another company** | [#5](https://github.com/apex-engine-dev/apex-verify/issues/5) |
 | Measure on **bigger, real projects** | [#13](https://github.com/apex-engine-dev/apex-verify/issues/13) |
 | Locked tests and **signed evidence** (so an agent cannot tamper with its own verdict) | [#7](https://github.com/apex-engine-dev/apex-verify/issues/7) |
-| A **"checked by Apex verify" badge** for READMEs | [#14](https://github.com/apex-engine-dev/apex-verify/issues/14) |
-| **Second look judges each failing check separately** (today one over-strict check can soften a clearly right one into `unknown`) | [#15](https://github.com/apex-engine-dev/apex-verify/issues/15) |
-| Does telling the checker to avoid the task's own examples help? | [#4](https://github.com/apex-engine-dev/apex-verify/issues/4) |
 
 ## Questions you will have
 

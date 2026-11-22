@@ -1,0 +1,1655 @@
+{
+ "before_combined_second_look": [
+  {
+   "task": "csv",
+   "change": "2cb1453487",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "6c4965c556",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "9d70807f75",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "f7b4b75e29",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "e784eb9529",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "regression",
+    "check_failed"
+   ]
+  },
+  {
+   "task": "csv",
+   "change": "8b1d7b781e",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "441a1363ff",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "fc16163c8c",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "regression"
+   ]
+  },
+  {
+   "task": "currency",
+   "change": "22e02f6ec1",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "2acba6d5f2",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "ac3e8a6537",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "99291616cb",
+   "correct": true,
+   "verdict": "not_ready",
+   "reasons": [
+    "regression"
+   ]
+  },
+  {
+   "task": "currency",
+   "change": "09c17b6b35",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "2e31b63876",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "b507c87ffb",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "01e3860f0a",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "12724689ce",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "0a272b3b6d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "7cbf6ded0b",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "79f51dec88",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "b265aa98eb",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "duration",
+   "change": "d20c7e02e6",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "1335c4e5ea",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "645bad49d4",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "8a5e70c531",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "0d71c1ee23",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "c3005aac62",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "duration",
+   "change": "790bd33d44",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "duration",
+   "change": "8ded289bb2",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "emitter",
+   "change": "fef053247b",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "9bed4e479c",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "2d93863de2",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "d586328561",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "f7f4c4ea12",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "fc5e21afa4",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "5e2ff4cf4e",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "0393882900",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "lru",
+   "change": "c2a6abffd8",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "lru",
+   "change": "18ac881f66",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "lru",
+   "change": "4104ac5ec0",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "lru",
+   "change": "14bdda2dbe",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "ade5521cdf",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "c133e0b89d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "307b2efad6",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "db8e30747e",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "7d1c7fead2",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "merge-config",
+   "change": "2ea8b474d3",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "merge-config",
+   "change": "8da46ead73",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "merge-config",
+   "change": "0abe95679b",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "ms-negative-decimals",
+   "change": "764aa2ca7c",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "ms-negative-decimals",
+   "change": "aeabf6cc41",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "ms-negative-decimals",
+   "change": "9d22021450",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "ms-negative-decimals",
+   "change": "174f13e587",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "paginate",
+   "change": "dd44861b92",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "paginate",
+   "change": "07ab76465f",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "paginate",
+   "change": "92360697bf",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "paginate",
+   "change": "4d828f05fb",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "12d75504a9",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "3161ee3679",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "de48a5c87e",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "2b99d6dd43",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "0224a589bb",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "retry",
+   "change": "0fa467fbc1",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "retry",
+   "change": "94b27a4ec5",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "retry",
+   "change": "bc8412fabc",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "retry",
+   "change": "13e1962f40",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "retry",
+   "change": "764b12fd99",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "0971a492b5",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "4c80da831e",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "63934c80ec",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "619a5dd66f",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "9255daa40d",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "db3db1c3af",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "6f63e95fc9",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "cdc3019c9a",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "95b05a63f4",
+   "correct": true,
+   "verdict": "not_ready",
+   "reasons": [
+    "regression",
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "5625d66195",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "afc85423d6",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "bff268927b",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slugify",
+   "change": "1e0e59a0ff",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "b0e842783b",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "75876e5617",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "dd603bbc6d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "d25b123767",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "dd618f2e8b",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slugify",
+   "change": "bf13f61f30",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slugify",
+   "change": "00705abdc7",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "5b1a918803",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "acf4b5a3e0",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "cheat",
+    "regression",
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "6dce181ed2",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "37f62d2c3f",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "42995f697e",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "5db13f4539",
+   "correct": true,
+   "verdict": "unknown",
+   "reasons": [
+    "checks_suspect"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "58a4c9260a",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "7503d755e3",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "796a71731d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "a92aa271c8",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "45642cc05a",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "caaee95845",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "949330c899",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "todo-persist",
+   "change": "cdfac50a01",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "b4bcb0bbb8",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "ce0e4618bf",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "d856c4e70d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "5c581967a7",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "todo-persist",
+   "change": "74b22cc119",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "017d584c08",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "b3614774a5",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  }
+ ],
+ "after_per_check_second_look": [
+  {
+   "task": "csv",
+   "change": "2cb1453487",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "6c4965c556",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "9d70807f75",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "f7b4b75e29",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "e784eb9529",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "regression",
+    "checks_suspect"
+   ]
+  },
+  {
+   "task": "csv",
+   "change": "8b1d7b781e",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "441a1363ff",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "csv",
+   "change": "fc16163c8c",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "regression"
+   ]
+  },
+  {
+   "task": "currency",
+   "change": "22e02f6ec1",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "2acba6d5f2",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "ac3e8a6537",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "99291616cb",
+   "correct": true,
+   "verdict": "not_ready",
+   "reasons": [
+    "regression"
+   ]
+  },
+  {
+   "task": "currency",
+   "change": "09c17b6b35",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "2e31b63876",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "b507c87ffb",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "currency",
+   "change": "01e3860f0a",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "12724689ce",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "0a272b3b6d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "7cbf6ded0b",
+   "correct": true,
+   "verdict": "unknown",
+   "reasons": [
+    "checks_unproven"
+   ]
+  },
+  {
+   "task": "days-between",
+   "change": "79f51dec88",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "days-between",
+   "change": "b265aa98eb",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "duration",
+   "change": "d20c7e02e6",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "1335c4e5ea",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "645bad49d4",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "8a5e70c531",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "0d71c1ee23",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "duration",
+   "change": "c3005aac62",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "duration",
+   "change": "790bd33d44",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "duration",
+   "change": "8ded289bb2",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "emitter",
+   "change": "fef053247b",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "9bed4e479c",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "2d93863de2",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "d586328561",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "f7f4c4ea12",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "fc5e21afa4",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "5e2ff4cf4e",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "emitter",
+   "change": "0393882900",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "lru",
+   "change": "c2a6abffd8",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "lru",
+   "change": "18ac881f66",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "lru",
+   "change": "4104ac5ec0",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "lru",
+   "change": "14bdda2dbe",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "ade5521cdf",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "c133e0b89d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "307b2efad6",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "db8e30747e",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "merge-config",
+   "change": "7d1c7fead2",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "merge-config",
+   "change": "2ea8b474d3",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "merge-config",
+   "change": "8da46ead73",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "merge-config",
+   "change": "0abe95679b",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "ms-negative-decimals",
+   "change": "764aa2ca7c",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "ms-negative-decimals",
+   "change": "aeabf6cc41",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "ms-negative-decimals",
+   "change": "9d22021450",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "ms-negative-decimals",
+   "change": "174f13e587",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "paginate",
+   "change": "dd44861b92",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "paginate",
+   "change": "07ab76465f",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "paginate",
+   "change": "92360697bf",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "paginate",
+   "change": "4d828f05fb",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "12d75504a9",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "3161ee3679",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "de48a5c87e",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "2b99d6dd43",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "rename-fetch",
+   "change": "0224a589bb",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "retry",
+   "change": "0fa467fbc1",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "retry",
+   "change": "94b27a4ec5",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "retry",
+   "change": "bc8412fabc",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "retry",
+   "change": "13e1962f40",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "retry",
+   "change": "764b12fd99",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "0971a492b5",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "4c80da831e",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "63934c80ec",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "619a5dd66f",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "9255daa40d",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "db3db1c3af",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-stopwords-separator",
+   "change": "6f63e95fc9",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "cdc3019c9a",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "95b05a63f4",
+   "correct": true,
+   "verdict": "not_ready",
+   "reasons": [
+    "regression"
+   ]
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "5625d66195",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "afc85423d6",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slug-uppercase-atomic",
+   "change": "bff268927b",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slugify",
+   "change": "1e0e59a0ff",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "b0e842783b",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "75876e5617",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "dd603bbc6d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "slugify",
+   "change": "d25b123767",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slugify",
+   "change": "dd618f2e8b",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slugify",
+   "change": "bf13f61f30",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "slugify",
+   "change": "00705abdc7",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "5b1a918803",
+   "correct": true,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "acf4b5a3e0",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "cheat",
+    "regression",
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "6dce181ed2",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "37f62d2c3f",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-empty-maxheader",
+   "change": "42995f697e",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "5db13f4539",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "58a4c9260a",
+   "correct": true,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "7503d755e3",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "796a71731d",
+   "correct": true,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "a92aa271c8",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "45642cc05a",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "caaee95845",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "tab-wide-char-hang",
+   "change": "949330c899",
+   "correct": false,
+   "verdict": "not_ready",
+   "reasons": [
+    "check_failed"
+   ]
+  },
+  {
+   "task": "todo-persist",
+   "change": "cdfac50a01",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "b4bcb0bbb8",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "ce0e4618bf",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "d856c4e70d",
+   "correct": true,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "5c581967a7",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "74b22cc119",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "017d584c08",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  },
+  {
+   "task": "todo-persist",
+   "change": "b3614774a5",
+   "correct": false,
+   "verdict": "ready",
+   "reasons": []
+  }
+ ]
+}

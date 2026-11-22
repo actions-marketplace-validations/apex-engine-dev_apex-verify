@@ -100,6 +100,13 @@ test("formats: json, markdown (with the comment marker), sarif, and files writte
   assert.equal(JSON.parse(fs.readFileSync(path.join(out, "r.json"), "utf8")).schema, 1);
 });
 
+test("--badge-out writes a shields.io endpoint badge with the verdict", async () => {
+  const d = repo("good"); const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "apex-e2e-b-")), "badge.json");
+  const r = await cli([TASK, "--badge-out", f], d);
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.deepEqual(JSON.parse(fs.readFileSync(f, "utf8")), { schemaVersion: 1, label: "apex verify", message: "ready", color: "brightgreen" });
+});
+
 test("a diff file is judged without a git repository, on a copy", async () => {
   const d = repo(); const diff = path.join(d, "..", `apex-e2e-${process.pid}.diff`);
   fs.writeFileSync(diff, "--- a/src/slug.js\n+++ b/src/slug.js\n@@ -1 +1 @@\n-export function slugify(s) { return String(s).toLowerCase(); }\n+export function slugify(s) { return String(s).toLowerCase().trim().replace(/\\s+/g, \"-\"); }\n");

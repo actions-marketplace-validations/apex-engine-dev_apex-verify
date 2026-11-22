@@ -27,7 +27,7 @@ async function typecheckCommand(dir: string): Promise<{ file: string; args: stri
   const tsc = path.join(dir, "node_modules", ".bin", "tsc");
   try { await fs.access(path.join(dir, "tsconfig.json")); await fs.access(tsc); return { file: tsc, args: ["--noEmit", "-p", "."], label: "tsc --noEmit" }; } catch { return null; }
 }
-export interface Reason { kind: "regression" | "cheat" | "check_failed" | "checks_suspect" | "no_checks" | "checks_unproven" | "no_change" | "no_tests"; summary: string; evidence?: string; hint?: string }
+export interface Reason { kind: "regression" | "cheat" | "check_failed" | "checks_suspect" | "checkers_disagree" | "no_checks" | "checks_unproven" | "no_change" | "no_tests"; summary: string; evidence?: string; hint?: string }
 
 export interface VerifyReport {
   schema: 1;
@@ -37,6 +37,8 @@ export interface VerifyReport {
   task: string;
   change: { mode: "git" | "patch"; base: string; files: Array<{ path: string; status: "added" | "modified" | "deleted" }> };
   tests: { command: string | null; before: { passed: number; failed: number } | null; after: { passed: number; failed: number } | null; newlyFailing: string[] };
+  /** The second checker's own result, when two checkers were used. */
+  secondChecks?: { writtenBy: string | null; written: boolean; passed: number; failed: number; failedOnOldCode: boolean; failures: string; failedChecks: Array<{ name: string; expected?: string; actual?: string; message?: string }> };
   checks: { writtenBy: string | null; written: boolean; passed: number; failed: number; failedOnOldCode: boolean; failures: string; failedChecks: Array<{ name: string; expected?: string; actual?: string; message?: string }> };
   cheats: Cheat[];
   /** What isolated the tests and generated checks on this machine. */
@@ -54,6 +56,10 @@ export interface VerifyOptions {
   diffFile?: string;
   /** The independent model that writes the checks. Without it only the deterministic parts run. */
   checker?: { client: ModelClient; model: string } | null;
+  /** A second, independent checker. A change is NOT READY only when both checkers object; if only one does the verdict is UNKNOWN (they disagree). */
+  secondChecker?: { client: ModelClient; model: string } | null;
+  /** Ask the checker to use inputs other than the task's own examples (default false). */
+  freshInputs?: boolean;
   testCommand?: string[];
   timeoutSec?: number;
   /** How many times to try writing the checks when a try gives none. Default 2. */
@@ -221,47 +227,75 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       }
     }
 
-    // 3. independent checks written from the task, proven on the old code, run on the new
-    let checksCode = "";
-    if (o.checker) {
+    // 3. independent checks written from the task, proven on the old code, run on the new (once per checker)
+    type Checker = { client: ModelClient; model: string };
+    type ChecksRec = VerifyReport["checks"];
+    const checkWith = async (ck: Checker, T: ChecksRec, push: (r: Reason) => void): Promise<string> => {
+      let code = "";
       const cr: TestRunner | null = runner ?? (await checksOnlyRunner(c.next).catch(() => null));
       if (!cr) warnings.push("the project has no language Apex verify can write checks for (node:test and pytest are supported)");
       else {
-        say(`checks: ${o.checker.model} writes them from the task (never from the agent's own tests)`);
+        say(`checks: ${ck.model} writes them from the task (never from the agent's own tests)`);
         let draft: Awaited<ReturnType<typeof draftAcceptance>> = null;
-        const key = sha(JSON.stringify([o.task, o.checker.model, o.standardCases === true, [...(await readTree(c.orig)).entries()].map(([p, t]) => [p, sha(t)])]));
+        const key = sha(JSON.stringify([o.task, ck.model, o.standardCases === true, o.freshInputs === true, [...(await readTree(c.orig)).entries()].map(([p, t]) => [p, sha(t)])]));
         if (o.cache !== false) { draft = await readDraft(key); if (draft) say("checks: reused from an earlier run on the same task and code"); }
         for (let i = 0; i < (o.attempts ?? 2) && !draft; i++) {
-          draft = await draftAcceptance({ gateway: o.checker.client, model: o.checker.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true }).catch(() => null);
+          draft = await draftAcceptance({ gateway: ck.client, model: ck.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true, freshInputs: o.freshInputs === true }).catch(() => null);
           report.usage.modelCalls += draft?.calls ?? 1;
           if (draft && o.cache !== false) await writeDraft(key, draft);
         }
         if (!draft) warnings.push("no usable checks could be written for this task");
         else {
-          report.checks.written = true;
-          checksCode = draft.code;
-          report.checks.failedOnOldCode = draft.original.failed > 0 || !!draft.original.loadError;
-          const run = await runAcceptance(c.next, { path: draft.path, code: draft.code, run: draft.run, py: draft.py }, o.signal, timeout);
-          report.checks.passed = run.passed;
-          report.checks.failed = run.failed + (run.loadError && run.passed + run.failed === 0 ? 1 : 0);
-          report.checks.failedChecks = parseTestOutcomes(run.output ?? "").filter((x) => !x.ok && !x.skipped && x.top !== false).slice(0, 8).map((x) => ({ name: x.name.replace(/^\[c\d+\]\s*/, "").replace(/^task:\s*/i, ""), ...(x.failure?.expected ? { expected: trim(String(x.failure.expected), 160) } : {}), ...(x.failure?.actual !== undefined ? { actual: trim(String(x.failure.actual), 160) } : {}), ...(x.failure?.message && !x.failure.expected ? { message: trim(x.failure.message.split("\n").find((l) => l.trim()) ?? "", 200) } : {}) }));
-          report.checks.failures = report.checks.failedChecks.length
-            ? report.checks.failedChecks.map((x) => `check: ${x.name}${x.expected !== undefined ? `\n  expected: ${x.expected}\n  actual:   ${x.actual ?? "?"}` : `${x.message ? `\n  ${x.message}` : ""}${x.actual !== undefined ? `\n  actual:   ${x.actual}` : ""}`}`).join("\n")
+          T.written = true;
+          code = draft.code;
+          T.failedOnOldCode = draft.original.failed > 0 || !!draft.original.loadError;
+          const run = await runAcceptance(c.next, { path: draft.path, code: draft.code, run: draft.run, py: draft.py, ...(draft.framework ? { framework: draft.framework } : {}) }, o.signal, timeout);
+          T.passed = run.passed;
+          T.failed = run.failed + (run.loadError && run.passed + run.failed === 0 ? 1 : 0);
+          T.failedChecks = parseTestOutcomes(run.output ?? "").filter((x) => !x.ok && !x.skipped && x.top !== false).slice(0, 8).map((x) => ({ name: x.name.replace(/^\[c\d+\]\s*/, "").replace(/^task:\s*/i, ""), ...(x.failure?.expected ? { expected: trim(String(x.failure.expected), 160) } : {}), ...(x.failure?.actual !== undefined ? { actual: trim(String(x.failure.actual), 160) } : {}), ...(x.failure?.message && !x.failure.expected ? { message: trim(x.failure.message.split("\n").find((l) => l.trim()) ?? "", 200) } : {}) }));
+          T.failures = T.failedChecks.length
+            ? T.failedChecks.map((x) => `check: ${x.name}${x.expected !== undefined ? `\n  expected: ${x.expected}\n  actual:   ${x.actual ?? "?"}` : `${x.message ? `\n  ${x.message}` : ""}${x.actual !== undefined ? `\n  actual:   ${x.actual}` : ""}`}`).join("\n")
             : trim(run.failures || (run.loadError ?? ""), 2000);
-          say(`checks: ${run.passed} passed, ${report.checks.failed} failed (${report.checks.failedOnOldCode ? "they fail on the old code, so they can tell the difference" : "they also pass on the old code"})`);
-          if (report.checks.failed > 0) {
+          say(`checks: ${run.passed} passed, ${T.failed} failed (${T.failedOnOldCode ? "they fail on the old code, so they can tell the difference" : "they also pass on the old code"})`);
+          if (T.failed > 0) {
             let blame: "test" | "code" | "unknown" = "unknown", why = "";
             if (o.secondLook !== false) {
-              const j = await judgeFailingChecks({ gateway: o.checker.client, model: o.checker.model, task: o.task, changes: c.changes.map((x) => ({ path: x.path, before: x.before, after: x.after ?? "" })), checksFile: draft.code, failureOutput: report.checks.failures, passed: run.passed, failed: report.checks.failed, signal: o.signal }).catch(() => null);
+              const j = await judgeFailingChecks({ gateway: ck.client, model: ck.model, task: o.task, changes: c.changes.map((x) => ({ path: x.path, before: x.before, after: x.after ?? "" })), checksFile: draft.code, failureOutput: T.failures, passed: run.passed, failed: T.failed, signal: o.signal }).catch(() => null);
               if (j) { blame = j.verdict; why = j.reason; report.usage.modelCalls++; }
             }
-            if (blame === "test") reasons.push({ kind: "checks_suspect", summary: "a check written from the task fails, but on a second look the check itself looks wrong", evidence: trim(`${why}\n${report.checks.failures}`, 1800), hint: "Review the failing check: it may over-reach. If the change is right, this is a false alarm." });
-            else reasons.push({ kind: "check_failed", summary: `${report.checks.failed} check${report.checks.failed === 1 ? "" : "s"} written from the task ${report.checks.failed === 1 ? "fails" : "fail"} on the new code`, evidence: trim(report.checks.failures, 1800), hint: "Make the change satisfy the behaviour in the task; the failing check output shows what is expected." });
-          } else if (!report.checks.failedOnOldCode) {
-            reasons.push({ kind: "checks_unproven", summary: "the checks pass, but they also pass on the old code, so they cannot show the change did anything", hint: "Describe the behaviour that should differ, or review the change by hand." });
+            if (blame === "test") push({ kind: "checks_suspect", summary: "a check written from the task fails, but on a second look the check itself looks wrong", evidence: trim(`${why}\n${T.failures}`, 1800), hint: "Review the failing check: it may over-reach. If the change is right, this is a false alarm." });
+            else push({ kind: "check_failed", summary: `${T.failed} check${T.failed === 1 ? "" : "s"} written from the task ${T.failed === 1 ? "fails" : "fail"} on the new code`, evidence: trim(T.failures, 1800), hint: "Make the change satisfy the behaviour in the task; the failing check output shows what is expected." });
+          } else if (!T.failedOnOldCode) {
+            push({ kind: "checks_unproven", summary: "the checks pass, but they also pass on the old code, so they cannot show the change did anything", hint: "Describe the behaviour that should differ, or review the change by hand." });
           }
         }
       }
+      return code;
+    };
+    const blank = (m: string | null): ChecksRec => ({ writtenBy: m, written: false, passed: 0, failed: 0, failedOnOldCode: false, failures: "", failedChecks: [] });
+    const firstReasons: Reason[] = [], secondReasons: Reason[] = [];
+    let checksCode = "";
+    if (o.checker) checksCode = await checkWith(o.checker, report.checks, (r) => firstReasons.push(r));
+    if (o.checker && o.secondChecker) {
+      report.secondChecks = blank(o.secondChecker.model);
+      await checkWith(o.secondChecker, report.secondChecks, (r) => secondReasons.push(r));
+    }
+    const objects = (rs: Reason[]) => rs.some((r) => r.kind === "check_failed");
+    const second = report.secondChecks;
+    if (second && report.checks.written && second.written) {
+      const a1 = objects(firstReasons), a2 = objects(secondReasons);
+      if (a1 && a2) {
+        const f = firstReasons.find((r) => r.kind === "check_failed")!, g = secondReasons.find((r) => r.kind === "check_failed")!;
+        reasons.push({ kind: "check_failed", summary: `both checkers found a problem: ${f.summary} (${report.checks.writtenBy}); ${g.summary} (${second.writtenBy})`, evidence: trim(`${report.checks.writtenBy}:\n${f.evidence ?? ""}\n\n${second.writtenBy}:\n${g.evidence ?? ""}`, 1900), hint: f.hint });
+      } else if (a1 !== a2) {
+        const objector = a1 ? report.checks.writtenBy : second.writtenBy, other = a1 ? second.writtenBy : report.checks.writtenBy;
+        const r = (a1 ? firstReasons : secondReasons).find((x) => x.kind === "check_failed")!;
+        reasons.push({ kind: "checkers_disagree", summary: `the two checkers disagree: ${objector} found a problem, ${other} found none`, evidence: r.evidence, hint: "Review the objection by hand: with two checkers a single objection is not enough to block the change, and not enough to call it ready." });
+      } else reasons.push(...firstReasons.filter((r) => r.kind !== "check_failed"), ...secondReasons.filter((r) => r.kind === "checks_unproven" && !firstReasons.some((x) => x.kind === "checks_unproven")));
+    } else {
+      if (second && !second.written) warnings.push(`the second checker (${second.writtenBy}) could not write usable checks, so only ${report.checks.writtenBy} judged the change`);
+      else if (second && !report.checks.written) { Object.assign(report.checks, second); report.secondChecks = undefined; warnings.push("only the second checker could write usable checks"); }
+      reasons.push(...(report.checks.written || !second ? firstReasons : secondReasons));
     }
 
     // 4. the verdict

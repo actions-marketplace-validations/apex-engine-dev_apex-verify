@@ -61,6 +61,68 @@ export function checkCommand(testCommand: string[], file: string): { run: string
   return null;
 }
 
+export type Framework = "vitest" | "jest" | "cargo";
+/** The project's own JavaScript test framework when it is Vitest or Jest (from package.json), else null: node:test and pytest need no help. */
+export async function detectFramework(root: string): Promise<Framework | null> {
+  try {
+    const pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8"));
+    const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+    const script = String(pkg.scripts?.test ?? "");
+    if (deps.vitest || /\bvitest\b/.test(script)) return "vitest";
+    if (deps.jest || /\bjest\b/.test(script)) return "jest";
+  } catch { /* no package.json */ }
+  if (await fs.access(path.join(root, "Cargo.toml")).then(() => true, () => false)) return "cargo";
+  return null;
+}
+/** The Rust crate's name (for `use <name>::...` in an integration test), from Cargo.toml. */
+export async function cargoCrateName(root: string): Promise<string> {
+  try { const m = /^\s*name\s*=\s*"([^"]+)"/m.exec(await fs.readFile(path.join(root, "Cargo.toml"), "utf8")); if (m) return m[1]!.replace(/-/g, "_"); } catch { /* none */ }
+  return "crate_name";
+}
+/** Whether a JavaScript project's source is TypeScript (a tsconfig, or .ts files under src), which plain node cannot import. */
+export async function usesTypeScript(root: string): Promise<boolean> {
+  if (await fs.access(path.join(root, "tsconfig.json")).then(() => true, () => false)) return true;
+  return findFile(root, (n) => /\.tsx?$/.test(n) && !/\.d\.ts$/.test(n), 2);
+}
+/** How one check file runs under the project's own framework (the local binary: nothing is downloaded). */
+export function frameworkCheckCommand(fw: Framework, file: string): string[] {
+  if (fw === "cargo") return ["cargo", "test", "--test", path.posix.basename(file).replace(/\.rs$/, "")];
+  return fw === "vitest" ? ["npx", "--no-install", "vitest", "run", "--reporter=tap-flat", file] : ["npx", "--no-install", "jest", "--verbose", "--runTestsByPath", file];
+}
+/** libtest ("test name ... FAILED", panic text with left/right) as TAP lines, so check results are read the same way for every runner. */
+export function cargoToTap(output: string): string {
+  const plain = output.replace(/\x1b\[[0-9;]*m/g, "");
+  const lines: string[] = []; let n = 0;
+  for (const m of plain.matchAll(/^test (\S+) \.\.\. (ok|FAILED)\s*$/gm)) {
+    n++; const name = m[1]!;
+    if (m[2] === "ok") { lines.push(`ok ${n} - ${name}`); continue; }
+    const block = plain.split(`---- ${name} stdout ----`)[1]?.split(/^---- |^failures:/m)[0] ?? "";
+    const left = /^\s*left:\s*(.+)$/m.exec(block)?.[1]?.trim(), right = /^\s*right:\s*(.+)$/m.exec(block)?.[1]?.trim();
+    const msg = block.split("\n").map((l) => l.trim()).find((l) => l && !/^thread '/.test(l)) ?? "failed";
+    lines.push(`not ok ${n} - ${name}`, "  ---", `  error: ${msg}`, ...(left !== undefined ? [`  actual: ${left}`] : []), ...(right !== undefined ? [`  expected: ${right}`] : []), "  ...");
+  }
+  return lines.length ? `${output}\n${lines.join("\n")}\n` : output;
+}
+/** Jest prints no TAP; add TAP lines (name, expected, actual) so check results are read the same way for every runner. */
+export function jestToTap(output: string): string {
+  const plain = output.replace(/\x1b\[[0-9;]*m/g, "");
+  if (!/^\s*Tests:\s/m.test(plain) || !/^\s*[✓✕√×]\s/m.test(plain)) return output;
+  const lines: string[] = []; let n = 0;
+  const detail = new Map<string, { expected?: string; actual?: string; message?: string }>();
+  for (const block of plain.split(/^\s*●\s+/m).slice(1)) {
+    const title = block.split("\n")[0]!.trim().split(/\s+›\s+/).pop()!.trim();
+    const exp = /Expected[^:\n]*:\s*(.+)/.exec(block)?.[1]?.trim(), act = /Received[^:\n]*:\s*(.+)/.exec(block)?.[1]?.trim();
+    const msg = block.split("\n").map((l) => l.trim()).find((l, i) => i > 0 && l && !/^expect\(/.test(l));
+    detail.set(title, { expected: exp, actual: act, message: msg });
+  }
+  for (const m of plain.matchAll(/^\s*([✓✕√×])\s+(.+?)(?:\s+\(\d+\s*ms\))?\s*$/gm)) {
+    n++; const ok = m[1] === "✓" || m[1] === "√", name = m[2]!.trim();
+    lines.push(`${ok ? "ok" : "not ok"} ${n} - ${name}`);
+    if (!ok) { const d = detail.get(name); lines.push("  ---", `  error: ${d?.message ?? "failed"}`, ...(d?.expected ? [`  expected: ${d.expected}`] : []), ...(d?.actual ? [`  actual: ${d.actual}`] : []), "  ..."); }
+  }
+  return `${output}\n${lines.join("\n")}\n`;
+}
+
 const exists = (p: string) => fs.access(p).then(() => true, () => false);
 
 /** The first executable called `name` on PATH, as a full path (not resolved through symlinks: a venv's python must stay the venv's). */
@@ -165,6 +227,11 @@ export function readTestOutput(output: string, errored: boolean): { passed: numb
     // node:test spec reporter without the summary (cut off): count the result lines.
     passed = (plain.match(/^\s*✔\s/gm) ?? []).length;
     failed = (plain.match(/^\s*✖\s/gm) ?? []).length;
+  }
+  if (!passed && !failed && /^test result: /m.test(plain)) {
+    // cargo test (libtest): "test result: FAILED. 2 passed; 1 failed; ..." once per test binary.
+    for (const m of plain.matchAll(/^test result: \w+\. (\d+) passed; (\d+) failed/gm)) { passed += Number(m[1]); failed += Number(m[2]); }
+    for (const m of plain.matchAll(/^test (\S+) \.\.\. FAILED\s*$/gm)) names.push(m[1]!);
   }
   if (!passed && !failed) {
     // jest: "Tests:       1 failed, 5 passed, 6 total"; vitest: "Tests  1 failed | 5 passed (6)".

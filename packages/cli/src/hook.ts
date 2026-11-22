@@ -3,13 +3,13 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { parseVerifyArgs, runVerify } from "./verify-cmd.js";
+import { checkersFrom, parseVerifyArgs, runVerify } from "./verify-cmd.js";
 import { verify } from "./verify.js";
 import { openAiClient } from "./openai-client.js";
 import { renderText } from "./report.js";
 
 /**
- * The agent's stop hook (Claude Code, Codex). The agent says "done"; this runs `apex verify` on what it changed and, when
+ * The agent's stop hook (Claude Code, Codex; Gemini CLI's AfterAgent hook uses the same JSON: it sends `prompt` instead of a transcript and treats decision "block" as a retry). The agent says "done"; this runs `apex verify` on what it changed and, when
  * the change is not ready, hands the reasons back so the agent keeps working instead of stopping.
  *
  * Input (stdin, JSON): { cwd, transcript_path, session_id, stop_hook_active }. Output (stdout, JSON): { decision: "block",
@@ -19,7 +19,7 @@ import { renderText } from "./report.js";
  * trap an agent), APEX_MODE=warn never blocks, nothing runs when nothing changed, and an unchanged change is not
  * verified twice.
  */
-export interface HookInput { cwd?: string; transcript_path?: string; session_id?: string; stop_hook_active?: boolean }
+export interface HookInput { cwd?: string; transcript_path?: string; session_id?: string; stop_hook_active?: boolean; /** Gemini CLI's AfterAgent hook: the user's request (it sends no transcript). */ prompt?: string }
 
 /** The last thing the person asked for, from the agent's transcript (JSON lines). */
 export function lastUserPrompt(transcript: string): string {
@@ -69,12 +69,12 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
     if (st.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks && st.message) { st.blocks = (st.blocks ?? 0) + 1; save(); out(JSON.stringify({ decision: "block", reason: st.message })); }
     return 0;
   }
-  const task = (input.transcript_path && fs.existsSync(input.transcript_path) ? lastUserPrompt(fs.readFileSync(input.transcript_path, "utf8")) : "") || env.APEX_TASK || "";
+  const task = (input.transcript_path && fs.existsSync(input.transcript_path) ? lastUserPrompt(fs.readFileSync(input.transcript_path, "utf8")) : "") || (typeof input.prompt === "string" ? input.prompt.trim() : "") || env.APEX_TASK || "";
   if (!task) return 0;
   try {
     const a = parseVerifyArgs([task, "--dir", cwd, "--quiet", ...(env.APEX_NO_MODEL === "1" ? ["--no-model"] : []), ...(env.APEX_BASE ? ["--base", env.APEX_BASE] : [])], env);
-    const checker = a.noModel ? null : { client: openAiClient({ baseUrl: a.baseUrl, apiKey: a.apiKey }), model: a.model! };
-    const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, timeoutSec: a.timeoutSec });
+    const { checker, secondChecker } = checkersFrom(a);
+    const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, secondChecker, freshInputs: a.freshInputs, timeoutSec: a.timeoutSec });
     const text = renderText(report);
     const message = `Apex verify says this change is ${report.verdict === "not_ready" ? "NOT READY" : report.verdict.toUpperCase()}. Do not stop yet.\n\n${text}`;
     st = { fp, verdict: report.verdict, message, blocks: st.fp === fp ? st.blocks ?? 0 : 0 };

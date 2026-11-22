@@ -13,7 +13,8 @@ function testsLine(r: VerifyReport): string {
 function checksLine(r: VerifyReport): string {
   const c = r.checks;
   if (!c.written) return `checks: none written${c.writtenBy ? "" : " (no checker model)"}`;
-  return `checks: ${c.passed} passed, ${c.failed} failed; written from the task by ${c.writtenBy}; ${c.failedOnOldCode ? "they fail on the old code" : "they do NOT fail on the old code"}`;
+  const second = r.secondChecks?.written ? `; second checker ${r.secondChecks.writtenBy}: ${r.secondChecks.passed} passed, ${r.secondChecks.failed} failed` : "";
+  return `checks: ${c.passed} passed, ${c.failed} failed; written from the task by ${c.writtenBy}; ${c.failedOnOldCode ? "they fail on the old code" : "they do NOT fail on the old code"}${second}`;
 }
 
 /** What a person (and an agent that reads the output) sees. */
@@ -58,6 +59,13 @@ export function renderSarif(r: VerifyReport): string {
   }));
   const rules = [...new Set(r.reasons.map((x) => x.kind))].map((k) => ({ id: `apex/${k}`, shortDescription: { text: k.replace(/_/g, " ") } }));
   return JSON.stringify({ $schema: "https://json.schemastore.org/sarif-2.1.0.json", version: "2.1.0", runs: [{ tool: { driver: { name: "apex verify", informationUri: "https://github.com/apex-engine-dev/apex-verify", rules } }, results }] }, null, 2);
+}
+
+/** A shields.io endpoint badge: https://img.shields.io/endpoint?url=<raw URL of this file>. */
+export function renderBadge(r: VerifyReport): string {
+  const message = r.verdict === "ready" ? "ready" : r.verdict === "not_ready" ? "not ready" : "unknown";
+  const color = r.verdict === "ready" ? "brightgreen" : r.verdict === "not_ready" ? "red" : "lightgrey";
+  return JSON.stringify({ schemaVersion: 1, label: "apex verify", message, color });
 }
 
 /** The exit codes: 0 ready, 1 not ready, 3 unknown (2 is a usage or setup error). */
