@@ -1,5 +1,5 @@
 import { execFile, spawn } from "node:child_process";
-import { constants as fsConstants, existsSync, promises as fs, realpathSync } from "node:fs";
+import { constants as fsConstants, existsSync, mkdirSync, promises as fs, realpathSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -423,6 +423,8 @@ function linuxSandboxSpec(o: { writable: string[]; readable?: string[]; home?: s
   const home = real(o.home ?? env.HOME ?? os.homedir());
   const inHome = (...rel: string[]) => rel.map((r) => path.join(home, r));
   const temp = [...new Set([real(os.tmpdir()), "/tmp", "/var/tmp"])].filter((p) => existsSync(p));
+  // A fresh machine (a CI runner) has no ~/.cache: without one Go, pip and others cannot create their caches inside the sandbox.
+  try { mkdirSync(path.join(home, ".cache"), { recursive: true }); } catch { /* read-only home: tools fall back to their own errors */ }
   const caches = [...inHome(".npm", ".cache", ".yarn", ".pnpm-store", "go/pkg", ".cargo/registry", ".cargo/git"), ...[env.GOCACHE, env.GOMODCACHE, env.UV_CACHE_DIR, env.XDG_CACHE_HOME, env.npm_config_cache].filter((v): v is string => Boolean(v && path.isAbsolute(v)))].filter((p) => existsSync(p)).map(real);
   const hideDirs = inHome(".ssh", ".aws", ".gnupg", ".azure", ".kube", ".docker", ".config/gcloud", ".config/gh", ".config/op").filter((p) => existsSync(p));
   const hideFiles = inHome(".netrc", ".npmrc", ".pypirc", ".git-credentials", ".yarnrc.yml").filter((p) => existsSync(p));
