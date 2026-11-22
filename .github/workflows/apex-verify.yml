@@ -1,5 +1,5 @@
-# ReallyDone verifies ReallyDone's own pull requests. Without the GEMINI_API_KEY secret it runs the tests and the cheating scan only.
-name: ReallyDone verify
+# Apex verify verifies Apex verify's own pull requests. Without the GEMINI_API_KEY secret it runs the tests and the cheating scan only.
+name: Apex verify
 on: pull_request
 permissions:
   contents: read

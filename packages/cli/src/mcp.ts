@@ -27,7 +27,7 @@ export async function handle(msg: any, env: NodeJS.ProcessEnv = process.env): Pr
   const ok = (result: unknown) => ({ jsonrpc: "2.0", id, result });
   const fail = (code: number, message: string) => ({ jsonrpc: "2.0", id, error: { code, message } });
   switch (msg.method) {
-    case "initialize": return ok({ protocolVersion: msg.params?.protocolVersion ?? "2025-06-18", capabilities: { tools: {} }, serverInfo: { name: "reallydone", version: "0.2.0" } });
+    case "initialize": return ok({ protocolVersion: msg.params?.protocolVersion ?? "2025-06-18", capabilities: { tools: {} }, serverInfo: { name: "apex", version: "0.2.0" } });
     case "ping": return ok({});
     case "tools/list": return ok({ tools: [TOOL] });
     case "tools/call": {
@@ -38,7 +38,7 @@ export async function handle(msg: any, env: NodeJS.ProcessEnv = process.env): Pr
         const checker = a.noModel ? null : { client: openAiClient({ baseUrl: a.baseUrl, apiKey: a.apiKey }), model: a.model! };
         const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, timeoutSec: a.timeoutSec });
         return ok({ content: [{ type: "text", text: renderMarkdown(report) }], structuredContent: report, isError: false });
-      } catch (e) { return ok({ content: [{ type: "text", text: `reallydone verify could not run: ${e instanceof Error ? e.message : String(e)}` }], isError: true }); }
+      } catch (e) { return ok({ content: [{ type: "text", text: `apex verify could not run: ${e instanceof Error ? e.message : String(e)}` }], isError: true }); }
     }
     default: return id === undefined ? null : fail(-32601, `method not found: ${msg.method}`);
   }

@@ -58,7 +58,7 @@ test("a correct change is READY (exit 0), and the project is untouched", async (
   const d = repo("good"); const before = fs.readFileSync(path.join(d, "src/slug.js"), "utf8");
   const r = await cli([TASK], d);
   assert.equal(r.code, 0, r.out + r.err);
-  assert.match(r.out, /reallydone verify: READY/);
+  assert.match(r.out, /apex verify: READY/);
   assert.equal(fs.readFileSync(path.join(d, "src/slug.js"), "utf8"), before);
 });
 
@@ -95,7 +95,7 @@ test("formats: json, markdown (with the comment marker), sarif, and files writte
   assert.equal(JSON.parse(j.out).verdict, "ready");
   const md = await cli([TASK, "--markdown-out", path.join(out, "r.md"), "--sarif-out", path.join(out, "r.sarif"), "--json-out", path.join(out, "r.json")], d);
   assert.equal(md.code, 0, md.out + md.err);
-  assert.match(fs.readFileSync(path.join(out, "r.md"), "utf8"), /<!-- reallydone -->/);
+  assert.match(fs.readFileSync(path.join(out, "r.md"), "utf8"), /<!-- apex-verify -->/);
   assert.equal(JSON.parse(fs.readFileSync(path.join(out, "r.sarif"), "utf8")).version, "2.1.0");
   assert.equal(JSON.parse(fs.readFileSync(path.join(out, "r.json"), "utf8")).schema, 1);
 });
@@ -109,13 +109,6 @@ test("a diff file is judged without a git repository, on a copy", async () => {
   assert.match(fs.readFileSync(path.join(plain, "src/slug.js"), "utf8"), /toLowerCase\(\); \}/, "the project itself is not changed");
 });
 
-test("the documented REALLYDONE_* environment names work", async () => {
-  const d = repo("good");
-  const r = await cli([TASK], d, { APEX_BASE_URL: "", APEX_API_KEY_ENV: "", APEX_CHECKER_MODEL: "", REALLYDONE_BASE_URL: base, REALLYDONE_API_KEY_ENV: "FAKE_KEY", REALLYDONE_CHECKER_MODEL: "fake", APEX_CACHE_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "apex-e2e-c5-")) });
-  assert.equal(r.code, 0, r.out + r.err);
-  assert.match(r.out, /reallydone verify: READY/);
-});
-
 test("errors are clear: not a git repository, no key, no task", async () => {
   const plain = fs.mkdtempSync(path.join(os.tmpdir(), "apex-e2e-nogit-"));
   const a = await cli([TASK, "--no-model"], plain);
@@ -123,7 +116,7 @@ test("errors are clear: not a git repository, no key, no task", async () => {
   const b = await cli([TASK, "--provider", "gemini", "--dir", repo("good")], os.tmpdir(), { APEX_BASE_URL: "", APEX_API_KEY_ENV: "", GEMINI_API_KEY: "" });
   assert.equal(b.code, 2); assert.match(b.err, /GEMINI_API_KEY/);
   const c = await cli([], plain);
-  assert.equal(c.code, 0); assert.match(c.out, /reallydone/);
+  assert.equal(c.code, 0); assert.match(c.out, /apex/);
 });
 
 test("the stop hook blocks 'done' for a wrong change (with the reason), at most 3 times, and stays silent when nothing changed", async () => {
@@ -159,7 +152,7 @@ test("the MCP server answers initialize, lists verify_change and verifies a chan
     p.stdin.end(msgs.map((m) => JSON.stringify(m)).join("\n") + "\n");
   });
   const lines = out.trim().split("\n").map((l) => JSON.parse(l));
-  assert.equal(lines.find((l) => l.id === 1).result.serverInfo.name, "reallydone");
+  assert.equal(lines.find((l) => l.id === 1).result.serverInfo.name, "apex");
   assert.equal(lines.find((l) => l.id === 2).result.tools[0].name, "verify_change");
   const call = lines.find((l) => l.id === 3).result;
   assert.equal(call.isError, false);

@@ -1,12 +1,12 @@
 # Benchmark: how often is the gate right?
 
-`benchmark/changes/` holds **154 AI-written changes** (diffs) to the 12 public projects in `benchmark/tasks/`. Each is labelled **right or wrong by hidden tests** (`tasks/<id>/hidden`) that `reallydone verify` never sees: 106 right, 48 wrong. The changes were written earlier by Gemini models (gemini-2.5-flash-lite, gemini-3.8-flash, gemini-3.1-pro-preview).
+`benchmark/changes/` holds **154 AI-written changes** (diffs) to the 12 public projects in `benchmark/tasks/`. Each is labelled **right or wrong by hidden tests** (`tasks/<id>/hidden`) that `apex verify` never sees: 106 right, 48 wrong. The changes were written earlier by Gemini models (gemini-2.5-flash-lite, gemini-3.8-flash, gemini-3.1-pro-preview).
 
 ```sh
-npm install                                   # builds dist/reallydone.mjs
+npm install                                   # builds dist/apex.mjs
 node benchmark/run-gate.mjs --no-model        # tests + cheating scan only: free, no key
 GEMINI_API_KEY=... node benchmark/run-gate.mjs --model gemini-3.1-pro-preview --limit 40
-# other flags: --task <id>  --concurrency 3  --out results.json  -- <extra reallydone verify flags>
+# other flags: --task <id>  --concurrency 3  --out results.json  -- <extra apex verify flags>
 ```
 
 It prints: wrong changes blocked, right changes wrongly blocked (each with a 95% interval), READY verdicts that were right, and unknown counts. A fresh set of checks is written for every change.

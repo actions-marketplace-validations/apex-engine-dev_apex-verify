@@ -1,4 +1,4 @@
-// reallydone-engine: the public API. Each module is re-exported whole; ai-runtime re-exports what it exported before.
+// apex-verify-engine: the public API. Each module is re-exported whole; ai-runtime re-exports what it exported before.
 export * from "./graph.js";
 export * from "./symbols.js";
 export * from "./scoped-context.js";

@@ -1,4 +1,4 @@
-import type { ModelClient, ModelEvent, ModelRequest } from "reallydone-engine";
+import type { ModelClient, ModelEvent, ModelRequest } from "apex-verify-engine";
 
 export interface OpenAiClientOptions {
   /** Base URL of an OpenAI-compatible API, e.g. https://api.openai.com/v1. */

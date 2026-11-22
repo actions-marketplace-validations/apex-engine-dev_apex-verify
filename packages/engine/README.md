@@ -1,4 +1,4 @@
-# reallydone-engine
+# apex-verify-engine
 
 The verification engine behind `apex verify`: it writes and runs checks in a scratch copy of a project, runs the project's own tests, and decides what counts as proof. See the [repository README](../../README.md) and [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md).
 

@@ -8,7 +8,7 @@ body:
         Do not paste real session logs, prompts, file paths or project names. Synthetic examples only. Privacy leaks: use the private security report instead.
   - type: input
     id: version
-    attributes: { label: version, description: Output of `reallydone --version` }
+    attributes: { label: version, description: Output of `apex --version` }
     validations: { required: true }
   - type: input
     id: env

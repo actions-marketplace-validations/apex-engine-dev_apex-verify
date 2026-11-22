@@ -4,7 +4,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-import type { ModelClient, ModelEvent } from "reallydone-engine";
+import type { ModelClient, ModelEvent } from "apex-verify-engine";
 import { verify } from "./verify.js";
 import { parseVerifyArgs } from "./verify-cmd.js";
 import { renderMarkdown, renderSarif, renderText, exitCode } from "./report.js";
@@ -68,7 +68,7 @@ test("a wrong change is NOT READY and names the failing check", async () => {
   assert.equal(r.reasons[0]!.kind, "check_failed");
   assert.match(r.reasons[0]!.evidence ?? "", /dash|hello/i);
   assert.equal(exitCode(r.verdict), 1);
-  assert.match(renderMarkdown(r), /reallydone/);
+  assert.match(renderMarkdown(r), /apex/);
 });
 
 test("deleting a test to make the change pass is NOT READY, with no model needed", async () => {
@@ -163,7 +163,7 @@ test("the MCP server lists and calls verify_change", async () => {
   const list = await handle({ jsonrpc: "2.0", id: 1, method: "tools/list" });
   assert.equal(list.result.tools[0].name, "verify_change");
   const init = await handle({ jsonrpc: "2.0", id: 0, method: "initialize", params: { protocolVersion: "2025-06-18" } });
-  assert.equal(init.result.serverInfo.name, "reallydone");
+  assert.equal(init.result.serverInfo.name, "apex");
   const d = repo();
   const call = await handle({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "verify_change", arguments: { task: TASK, dir: d } } }, { APEX_NO_MODEL: "1" });
   assert.equal(call.result.isError, false);

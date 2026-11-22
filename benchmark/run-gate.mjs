@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Re-measure the gate: run `reallydone verify` on every labelled AI-written change in benchmark/changes and report how many wrong
+// Re-measure the gate: run `apex verify` on every labelled AI-written change in benchmark/changes and report how many wrong
 // changes it blocks and how many right ones it wrongly blocks.
 //
 //   node benchmark/run-gate.mjs --no-model                                   # tests + cheating scan only (free, no key)
 //   GEMINI_API_KEY=... node benchmark/run-gate.mjs --model gemini-3.1-pro-preview [--limit 40] [--task slugify] [--concurrency 3]
 //
-// Extra flags after "--" go to `reallydone verify` (for example: -- --provider openai --model gpt-...).
+// Extra flags after "--" go to `apex verify` (for example: -- --provider openai --model gpt-...).
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import fs from "node:fs";
@@ -15,8 +15,8 @@ import crypto from "node:crypto";
 
 const run = promisify(execFile);
 const HERE = path.dirname(new URL(import.meta.url).pathname);
-const CLI = [path.join(HERE, "..", "dist", "reallydone.mjs"), path.join(HERE, "..", "packages", "cli", "dist", "main.js")].find((p) => fs.existsSync(p));
-if (!CLI) { console.error("build first: npm install (the prepare step builds dist/reallydone.mjs)"); process.exit(2); }
+const CLI = [path.join(HERE, "..", "dist", "apex.mjs"), path.join(HERE, "..", "packages", "cli", "dist", "main.js")].find((p) => fs.existsSync(p));
+if (!CLI) { console.error("build first: npm install (the prepare step builds dist/apex.mjs)"); process.exit(2); }
 
 const argv = process.argv.slice(2);
 const dd = argv.indexOf("--");
@@ -45,7 +45,7 @@ await Promise.all(Array.from({ length: conc }, async () => {
     const key = crypto.createHash("sha1").update(it.task + it.change).digest("hex").slice(0, 8);
     let verdict = "error";
     try {
-      const r = await run(process.execPath, [CLI, prompt(it.task), "--dir", path.join(HERE, "tasks", it.task, "project"), "--diff", path.join(HERE, "changes", it.task, `${it.change}.diff`), "--format", "json", ...verifyArgs, ...pass], { env: { ...process.env, REALLYDONE_CACHE_DIR: path.join(cache, key) }, maxBuffer: 32 << 20 });
+      const r = await run(process.execPath, [CLI, prompt(it.task), "--dir", path.join(HERE, "tasks", it.task, "project"), "--diff", path.join(HERE, "changes", it.task, `${it.change}.diff`), "--format", "json", ...verifyArgs, ...pass], { env: { ...process.env, APEX_CACHE_DIR: path.join(cache, key) }, maxBuffer: 32 << 20 });
       verdict = JSON.parse(r.stdout).verdict;
     } catch (e) { try { verdict = JSON.parse(e.stdout).verdict; } catch { verdict = "error"; } }
     results.push({ ...it, verdict });

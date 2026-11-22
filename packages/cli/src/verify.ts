@@ -3,11 +3,11 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
-import { testSandboxAvailable, checksOnlyRunner, copyProject, parseTestOutcomes, runCommand, detectTestRunner, draftAcceptance, judgeFailingChecks, readTestOutput, runAcceptance, runTests, type ModelClient, type TestRunner } from "reallydone-engine";
+import { testSandboxAvailable, checksOnlyRunner, copyProject, parseTestOutcomes, runCommand, detectTestRunner, draftAcceptance, judgeFailingChecks, readTestOutput, runAcceptance, runTests, type ModelClient, type TestRunner } from "apex-verify-engine";
 import { detectCheats, type Cheat, type FileChange } from "./cheats.js";
 
 /**
- * reallydone verify: given a change somebody (usually an AI agent) already made, decide whether it is really done.
+ * apex verify: given a change somebody (usually an AI agent) already made, decide whether it is really done.
  *
  * ready      the tests still pass, nothing was weakened, and checks written from the task by an independent model fail on
  *            the old code and pass on the new.
@@ -95,7 +95,7 @@ const git = (dir: string, args: string[]) => execFileSync("git", ["-C", dir, ...
 
 /** Two trees (before, after) in scratch folders; the project itself is never touched. */
 export async function collectChange(o: { dir: string; base?: string; diffFile?: string }): Promise<Collected> {
-  const scratch = await fs.mkdtemp(path.join(os.tmpdir(), "reallydone-"));
+  const scratch = await fs.mkdtemp(path.join(os.tmpdir(), "apex-"));
   const orig = path.join(scratch, "before"), next = path.join(scratch, "after");
   const cleanup = () => fs.rm(scratch, { recursive: true, force: true });
   try {
@@ -136,7 +136,7 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
 type Draft = NonNullable<Awaited<ReturnType<typeof draftAcceptance>>>;
-const cacheDir = () => path.join(process.env.APEX_CACHE_DIR || path.join(os.homedir(), ".cache", "reallydone"), "checks");
+const cacheDir = () => path.join(process.env.APEX_CACHE_DIR || path.join(os.homedir(), ".cache", "apex-verify"), "checks");
 /** The same task on the same starting code with the same model gets the same checks: stable while an agent retries, and one model call, not one per attempt. */
 async function readDraft(key: string): Promise<Draft | null> {
   try { return JSON.parse(await fs.readFile(path.join(cacheDir(), key + ".json"), "utf8")) as Draft; } catch { return null; }
@@ -225,7 +225,7 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     let checksCode = "";
     if (o.checker) {
       const cr: TestRunner | null = runner ?? (await checksOnlyRunner(c.next).catch(() => null));
-      if (!cr) warnings.push("the project has no language ReallyDone can write checks for (node:test and pytest are supported)");
+      if (!cr) warnings.push("the project has no language Apex verify can write checks for (node:test and pytest are supported)");
       else {
         say(`checks: ${o.checker.model} writes them from the task (never from the agent's own tests)`);
         let draft: Awaited<ReturnType<typeof draftAcceptance>> = null;

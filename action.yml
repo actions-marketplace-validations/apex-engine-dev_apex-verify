@@ -1,6 +1,6 @@
-name: ReallyDone verify
+name: Apex verify
 description: Is this AI-written change really done? An independent model writes checks from the task, proves they can fail, and gates the pull request with a ready / not ready verdict.
-author: ReallyDone
+author: Apex verify
 branding:
   icon: check-circle
   color: green
@@ -54,12 +54,12 @@ runs:
     - uses: actions/setup-node@v4
       with:
         node-version: "20"
-    - name: Install ReallyDone
+    - name: Install Apex verify
       shell: bash
       run: |
         cd "$GITHUB_ACTION_PATH"
-        npm install --no-audit --no-fund --loglevel=error   # the "prepare" script builds and bundles dist/reallydone.mjs
-        test -f dist/reallydone.mjs
+        npm install --no-audit --no-fund --loglevel=error   # the "prepare" script builds and bundles dist/apex.mjs
+        test -f dist/apex.mjs
     - name: Verify
       id: run
       shell: bash
@@ -87,24 +87,24 @@ runs:
         if [ -z "$TASK" ]; then TASK="${PR_TITLE:-}"; [ -n "${PR_BODY:-}" ] && TASK="$TASK"$'\n\n'"$PR_BODY"; fi
         if [ -z "$TASK" ]; then TASK="the change in this commit"; fi
         BASE="${INPUT_BASE:-${PR_BASE_SHA:-HEAD~1}}"
-        OUT="$RUNNER_TEMP/reallydone"; mkdir -p "$OUT"
+        OUT="$RUNNER_TEMP/apex"; mkdir -p "$OUT"
         ARGS=(verify "$TASK" --dir "$GITHUB_WORKSPACE" --base "$BASE" --quiet --format text --markdown-out "$OUT/report.md" --sarif-out "$OUT/report.sarif" --json-out "$OUT/report.json")
         [ -n "$INPUT_TEST" ] && ARGS+=(--test "$INPUT_TEST")
         if [ -n "$INPUT_BASE_URL" ]; then ARGS+=(--base-url "$INPUT_BASE_URL" --model "$INPUT_MODEL" --api-key-env APEX_CHECKER_KEY)
         else ARGS+=(--provider "$INPUT_PROVIDER" --model "$INPUT_MODEL" --api-key-env APEX_CHECKER_KEY); fi
         if [ -z "$INPUT_KEY" ]; then
           ARGS+=(--no-model)
-          echo "::notice title=ReallyDone verify::No API key (or a fork pull request): running the tests and the cheating scan only, so the verdict is at most unknown."
+          echo "::notice title=Apex verify::No API key (or a fork pull request): running the tests and the cheating scan only, so the verdict is at most unknown."
         else export APEX_CHECKER_KEY="$INPUT_KEY"; fi
-        node "$GITHUB_ACTION_PATH/dist/reallydone.mjs" "${ARGS[@]}" | tee "$OUT/report.txt"
+        node "$GITHUB_ACTION_PATH/dist/apex.mjs" "${ARGS[@]}" | tee "$OUT/report.txt"
         CODE=${PIPESTATUS[0]}
         VERDICT=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).verdict)}catch{console.log("error")}' "$OUT/report.json")
         echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"; echo "report=$OUT/report.json" >> "$GITHUB_OUTPUT"
         [ -f "$OUT/report.md" ] && cat "$OUT/report.md" >> "$GITHUB_STEP_SUMMARY"
         if [ "$INPUT_COMMENT" = "true" ] && [ -n "${PR_NUMBER:-}" ] && [ -f "$OUT/report.md" ]; then
-          ID=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '[.[] | select(.body | contains("<!-- reallydone -->"))][0].id // empty' 2>/dev/null || true)
-          if [ -n "$ID" ]; then gh api -X PATCH "repos/$REPO/issues/comments/$ID" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not update the ReallyDone comment (read-only token on a fork pull request?). The report is in the job summary."
-          else gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not post the ReallyDone comment (read-only token on a fork pull request?). The report is in the job summary."; fi
+          ID=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '[.[] | select(.body | contains("<!-- apex-verify -->"))][0].id // empty' 2>/dev/null || true)
+          if [ -n "$ID" ]; then gh api -X PATCH "repos/$REPO/issues/comments/$ID" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not update the Apex verify comment (read-only token on a fork pull request?). The report is in the job summary."
+          else gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not post the Apex verify comment (read-only token on a fork pull request?). The report is in the job summary."; fi
         fi
         case "$INPUT_FAIL_ON" in
           never) exit 0 ;;

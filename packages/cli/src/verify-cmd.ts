@@ -4,9 +4,9 @@ import { openAiClient } from "./openai-client.js";
 import { PRESETS } from "./providers.js";
 import { exitCode, renderMarkdown, renderSarif, renderText } from "./report.js";
 import { verify, type VerifyReport } from "./verify.js";
-import type { ModelClient } from "reallydone-engine";
+import type { ModelClient } from "apex-verify-engine";
 
-export const VERIFY_USAGE = `reallydone verify "<what the change should do>" [--dir <project>] [--base <git ref> | --diff <file>] [--model <checker model>] [--provider gemini|openai|anthropic|openrouter | --base-url <url>] [--no-model] [--format text|json|markdown|sarif] [--out <file>] [--test "<command>"]
+export const VERIFY_USAGE = `apex verify "<what the change should do>" [--dir <project>] [--base <git ref> | --diff <file>] [--model <checker model>] [--provider gemini|openai|anthropic|openrouter | --base-url <url>] [--no-model] [--format text|json|markdown|sarif] [--out <file>] [--test "<command>"]
   Checks whether a change an AI agent (or a person) already made is really done. Nothing in your project is changed.
   --base       compare your working copy with this git ref (default HEAD; in a pull request: the base commit)
   --diff       or judge a unified diff instead of a git change
@@ -18,7 +18,7 @@ export const VERIFY_USAGE = `reallydone verify "<what the change should do>" [--
   --hook       run as an agent's stop hook (Claude Code, Codex): reads the hook JSON on stdin, blocks "done" while the change is not ready
   --mcp        run as an MCP server exposing the verify_change tool
 Exit codes: 0 ready, 1 not ready, 3 unknown (not enough to say), 2 usage or setup error.
-Keys: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY (or --api-key-env NAME). Environment equivalents of the flags, for hooks and CI: REALLYDONE_CHECKER_MODEL, REALLYDONE_PROVIDER, REALLYDONE_BASE_URL, REALLYDONE_API_KEY_ENV.`;
+Keys: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY (or --api-key-env NAME). Environment equivalents of the flags, for hooks and CI: APEX_CHECKER_MODEL, APEX_PROVIDER, APEX_BASE_URL, APEX_API_KEY_ENV.`;
 
 export interface VerifyCliArgs {
   task: string; dir: string; base?: string; diffFile?: string; model?: string; baseUrl: string; apiKey?: string; noModel: boolean;
@@ -38,7 +38,7 @@ export function parseVerifyArgs(argv: string[], env: NodeJS.ProcessEnv = process
     } else rest.push(a);
   }
   const task = (typeof flags.get("task") === "string" ? String(flags.get("task")) : rest.join(" ")).trim() || env.APEX_TASK?.trim() || "";
-  if (!task) throw new Error('say what the change should do: reallydone verify "<task>"');
+  if (!task) throw new Error('say what the change should do: apex verify "<task>"');
   const noModel = flags.get("no-model") === true;
   const envBase = env.APEX_BASE_URL?.trim();
   const provider = String(flags.get("provider") || env.APEX_PROVIDER || (flags.get("base-url") || envBase ? "" : "gemini"));

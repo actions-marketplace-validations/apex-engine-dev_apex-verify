@@ -1,9 +1,16 @@
 {
-  "name": "reallydone",
+  "name": "apex-verify",
   "version": "0.1.0",
-  "description": "Claude Code cannot say done until ReallyDone proves the change: checks written from your request by an independent model, shown to fail on the old code, run with your tests.",
-  "author": { "name": "ReallyDone" },
+  "description": "Claude Code cannot say done until Apex verify proves the change: checks written from your request by an independent model, shown to fail on the old code, run with your tests.",
+  "author": {
+    "name": "Apex"
+  },
   "homepage": "https://github.com/apex-engine-dev/apex-verify",
   "repository": "https://github.com/apex-engine-dev/apex-verify",
-  "keywords": ["verification", "testing", "quality", "stop-hook"]
+  "keywords": [
+    "verification",
+    "testing",
+    "quality",
+    "stop-hook"
+  ]
 }

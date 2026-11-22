@@ -28,7 +28,7 @@
   description: Commercial licence requests and licence questions
 - name: verifier
   color: "1d76db"
-  description: reallydone verify (the gate): misses, false alarms, checks
+  description: apex verify (the gate): misses, false alarms, checks
 - name: integration
   color: "5319e7"
   description: Claude Code, Codex, Cursor, MCP, GitHub Action

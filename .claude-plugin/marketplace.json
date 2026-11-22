@@ -1,12 +1,16 @@
 {
-  "name": "reallydone",
-  "owner": { "name": "ReallyDone" },
-  "metadata": { "description": "ReallyDone: proof that an AI's change is really done." },
+  "name": "apex",
+  "owner": {
+    "name": "Apex"
+  },
+  "metadata": {
+    "description": "Apex verify: proof that an AI's change is really done."
+  },
   "plugins": [
     {
-      "name": "reallydone",
+      "name": "apex-verify",
       "source": "./integrations/claude-code",
-      "description": "Blocks Claude Code from saying done until ReallyDone verifies the change: an independent model writes checks from your request, proves they can fail, and runs them with your tests.",
+      "description": "Blocks Claude Code from saying done until Apex verify verifies the change: an independent model writes checks from your request, proves they can fail, and runs them with your tests.",
       "version": "0.1.0",
       "category": "quality"
     }

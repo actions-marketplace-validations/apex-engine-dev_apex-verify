@@ -1,6 +1,6 @@
-# Research track (written when the project was still called Apex): can proof lift a weaker model? (not part of `reallydone verify`)
+# Research track: can proof lift a weaker model? (not part of `apex verify`)
 
-> **Status.** This was the project's first goal. The agent runner and the benchmark harness that served it were removed from this repository when the project focused on `reallydone verify`; the engine's code-writing loop still exists inside the shared engine and the commercial product. The measurements are kept in `docs/research/results/` and summarised in `docs/EXPERIMENTS.md`: the first uplift results were positive but not statistically significant.
+> **Status.** This was the project's first goal. The agent runner and the benchmark harness that served it were removed from this repository when the project focused on `apex verify`; the engine's code-writing loop still exists inside the shared engine and the commercial product. The measurements are kept in `docs/research/results/` and summarised in `docs/EXPERIMENTS.md`: the first uplift results were positive but not statistically significant.
 
 # The goal, and how the code serves it
 
@@ -8,8 +8,8 @@
 
 That is a claim about capability, so it is measured as **uplift** and **gap closed**, not as a feeling:
 
-- *uplift* = pass rate of (model + ReallyDone) minus pass rate of the model alone, on tasks with hidden tests;
-- *gap closed* = uplift divided by (frontier model alone minus the model alone), when the frontier model is better. 100% means the small model with ReallyDone matches the frontier model; 0% means Apex added nothing.
+- *uplift* = pass rate of (model + Apex verify) minus pass rate of the model alone, on tasks with hidden tests;
+- *gap closed* = uplift divided by (frontier model alone minus the model alone), when the frontier model is better. 100% means the small model with Apex verify matches the frontier model; 0% means Apex added nothing.
 
 Run it: `node leaderboard/run.mjs --weak=<weaker model> --frontier=<frontier model>` (see `leaderboard/README.md`).
 
@@ -30,6 +30,6 @@ Run it: `node leaderboard/run.mjs --weak=<weaker model> --frontier=<frontier mod
 
 Proven (see `leaderboard/`, `docs/EXPERIMENTS.md`): the engine uses far fewer tokens and less time for the same pass rate on easy tasks; nothing is written unless the proof holds.
 
-**First uplift result (one run per task, not yet significant):** weak model `gemini-2.5-flash-lite` 6/17 alone, 9/17 with ReallyDone when a stronger model writes the checks and the weak one gets six versions, frontier model 16/17: about 30% of the gap closed. A weak model checking itself scored 1/17. So the lever that matters most is *independent checks*, then *several versions*. See the README.
+**First uplift result (one run per task, not yet significant):** weak model `gemini-2.5-flash-lite` 6/17 alone, 9/17 with Apex verify when a stronger model writes the checks and the weak one gets six versions, frontier model 16/17: about 30% of the gap closed. A weak model checking itself scored 1/17. So the lever that matters most is *independent checks*, then *several versions*. See the README.
 
 **Still not proven: uplift on hard tasks at scale.** An early private result (the same model going from 13/22 to 22/22) did not reproduce on the public tasks, because those were too easy for that model. The uplift study above is how we find out, and every contribution should be judged by it: does it raise gap closed for weak models, or cut cost for the same result? If it does neither, it needs a reason.

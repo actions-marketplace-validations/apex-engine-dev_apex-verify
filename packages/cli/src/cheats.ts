@@ -13,7 +13,7 @@ const TEST_PATH = [/(^|\/)(tests?|__tests__|specs?)\//i, /\.(test|spec)\.[cm]?[j
 export const isTestFile = (p: string) => TEST_PATH.some((r) => r.test(p));
 
 const TEST_CONFIG = [/(^|\/)(jest|vitest|playwright|karma)\.config\.[cm]?[jt]s$/i, /(^|\/)\.mocharc(\.\w+)?$/i, /(^|\/)(pytest\.ini|tox\.ini|setup\.cfg|conftest\.py)$/i, /(^|\/)\.github\/workflows\//];
-const AGENT_CONFIG = [/^\.(claude|cursor|codex|gemini|aider|opencode|windsurf)\//i, /(^|\/)(AGENTS|CLAUDE|GEMINI)\.md$/i, /(^|\/)\.reallydone(\.\w+)?$/i];
+const AGENT_CONFIG = [/^\.(claude|cursor|codex|gemini|aider|opencode|windsurf)\//i, /(^|\/)(AGENTS|CLAUDE|GEMINI)\.md$/i, /(^|\/)\.apex(\.\w+)?$/i];
 
 const count = (s: string | null, re: RegExp) => (s ? (s.match(re) ?? []).length : 0);
 const TESTS = /\b(?:test|it)(?:\.\w+)?\s*\(|^\s*(?:async\s+)?def\s+test_|^\s*func\s+Test\w+\(|#\[test\]/gm;

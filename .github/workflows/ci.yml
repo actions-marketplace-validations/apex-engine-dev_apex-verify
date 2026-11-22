@@ -43,7 +43,7 @@ jobs:
       - run: npm install
       - name: Sandbox tests (a missing or unusable sandbox fails here, it is not skipped)
         env:
-          REALLYDONE_REQUIRE_SANDBOX: "1"
+          APEX_REQUIRE_SANDBOX: "1"
         run: node --test packages/engine/dist/sandbox-linux.test.js
       - name: A real verify run through the sandbox
         run: |
@@ -51,7 +51,7 @@ jobs:
           cd examples/said-done
           git init -q project && cd project && git add -A && git -c user.name=ci -c user.email=ci@example.com commit -qm base && cd ..
           cp agent-change.diff /tmp/agent-change.diff
-          node ../../dist/reallydone.mjs "$(cat task.txt)" --dir project --diff /tmp/agent-change.diff --no-model | tee /tmp/out.txt
+          node ../../dist/apex.mjs "$(cat task.txt)" --dir project --diff /tmp/agent-change.diff --no-model | tee /tmp/out.txt
           grep -q "sandbox: Linux bubblewrap" /tmp/out.txt
   # The benchmark runs end to end (no model, no key): the gate on the labelled changes.
   benchmark-smoke:
@@ -76,9 +76,9 @@ jobs:
       - name: Run the packed file from a clean folder
         run: |
           mkdir /tmp/clean && cd /tmp/clean
-          TGZ=$(ls "$GITHUB_WORKSPACE"/reallydone-*.tgz)
-          npx --yes --package="$TGZ" -- reallydone --version
-          npx --yes --package="$TGZ" -- reallydone --help | head -2
+          TGZ=$(ls "$GITHUB_WORKSPACE"/apex-verify-*.tgz)
+          npx --yes --package="$TGZ" -- apex --version
+          npx --yes --package="$TGZ" -- apex --help | head -2
   dco:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -98,12 +98,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build the sandbox recipe
-        run: docker build -f docker/Dockerfile -t reallydone .
+        run: docker build -f docker/Dockerfile -t apex-verify .
       - name: Run it on the example, no network, project mounted read-only
         run: |
           set +e
           cd examples/said-done
           git init -q project && cd project && git add -A && git -c user.name=ci -c user.email=ci@example.com commit -qm base && cd ..
-          docker run --rm --network none -v "$PWD/project":/work:ro reallydone "slugify" --no-model --format json > out.json
+          docker run --rm --network none -v "$PWD/project":/work:ro apex-verify "slugify" --no-model --format json > out.json
           echo "exit=$?"; head -c 400 out.json
           grep -q '"verdict": "unknown"' out.json

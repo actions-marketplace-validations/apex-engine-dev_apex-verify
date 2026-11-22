@@ -1,5 +1,5 @@
 # Attaches the installable file to every release, so
-#   npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/reallydone.tgz verify "<task>"
+#   npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify "<task>"
 # always works (a 48 KB file, no build on the user's machine, no npm account needed).
 name: Release asset
 on:
@@ -23,5 +23,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           npm pack
-          cp reallydone-*.tgz reallydone.tgz
-          gh release upload "${{ github.event.release.tag_name }}" reallydone-*.tgz reallydone.tgz --clobber
+          cp apex-verify-*.tgz apex-verify.tgz
+          gh release upload "${{ github.event.release.tag_name }}" apex-verify-*.tgz apex-verify.tgz --clobber

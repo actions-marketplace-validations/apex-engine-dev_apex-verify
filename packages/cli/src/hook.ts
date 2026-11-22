@@ -9,14 +9,14 @@ import { openAiClient } from "./openai-client.js";
 import { renderText } from "./report.js";
 
 /**
- * The agent's stop hook (Claude Code, Codex). The agent says "done"; this runs `reallydone verify` on what it changed and, when
+ * The agent's stop hook (Claude Code, Codex). The agent says "done"; this runs `apex verify` on what it changed and, when
  * the change is not ready, hands the reasons back so the agent keeps working instead of stopping.
  *
  * Input (stdin, JSON): { cwd, transcript_path, session_id, stop_hook_active }. Output (stdout, JSON): { decision: "block",
  * reason } to keep the agent working, or { systemMessage } to just tell the user. Exit code 0 either way.
  *
- * Safety valves: it never blocks more than REALLYDONE_HOOK_MAX_BLOCKS times per session (default 3, so a wrong checker cannot
- * trap an agent), REALLYDONE_MODE=warn never blocks, nothing runs when nothing changed, and an unchanged change is not
+ * Safety valves: it never blocks more than APEX_HOOK_MAX_BLOCKS times per session (default 3, so a wrong checker cannot
+ * trap an agent), APEX_MODE=warn never blocks, nothing runs when nothing changed, and an unchanged change is not
  * verified twice.
  */
 export interface HookInput { cwd?: string; transcript_path?: string; session_id?: string; stop_hook_active?: boolean }
@@ -76,13 +76,13 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
     const checker = a.noModel ? null : { client: openAiClient({ baseUrl: a.baseUrl, apiKey: a.apiKey }), model: a.model! };
     const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, timeoutSec: a.timeoutSec });
     const text = renderText(report);
-    const message = `ReallyDone verify says this change is ${report.verdict === "not_ready" ? "NOT READY" : report.verdict.toUpperCase()}. Do not stop yet.\n\n${text}`;
+    const message = `Apex verify says this change is ${report.verdict === "not_ready" ? "NOT READY" : report.verdict.toUpperCase()}. Do not stop yet.\n\n${text}`;
     st = { fp, verdict: report.verdict, message, blocks: st.fp === fp ? st.blocks ?? 0 : 0 };
     if (report.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks) { st.blocks = (st.blocks ?? 0) + 1; save(); out(JSON.stringify({ decision: "block", reason: message })); return 0; }
     save();
-    out(JSON.stringify({ systemMessage: report.verdict === "ready" ? `ReallyDone: READY (${report.checks.passed} checks, ${report.tests.after?.passed ?? 0} tests pass)` : `ReallyDone: ${report.verdict === "not_ready" ? "NOT READY (not blocking: " + (warnOnly ? "warn mode" : "block limit reached") + ")" : "UNKNOWN"}: ${report.reasons[0]?.summary ?? report.warnings[0] ?? ""}` }));
+    out(JSON.stringify({ systemMessage: report.verdict === "ready" ? `Apex verify: READY (${report.checks.passed} checks, ${report.tests.after?.passed ?? 0} tests pass)` : `Apex verify: ${report.verdict === "not_ready" ? "NOT READY (not blocking: " + (warnOnly ? "warn mode" : "block limit reached") + ")" : "UNKNOWN"}: ${report.reasons[0]?.summary ?? report.warnings[0] ?? ""}` }));
   } catch (e) {
-    out(JSON.stringify({ systemMessage: `ReallyDone could not verify: ${e instanceof Error ? e.message : String(e)}` }));
+    out(JSON.stringify({ systemMessage: `Apex verify could not verify: ${e instanceof Error ? e.message : String(e)}` }));
   }
   return 0;
 }

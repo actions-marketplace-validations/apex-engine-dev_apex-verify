@@ -7,7 +7,7 @@ task + the change (git working copy, a branch, or a diff file)
 cheating scan        deleted / skipped / focused tests, a test script that cannot fail, agent config edits (deterministic)
    |
    v
-your tests + type check   run before and after; only what the change broke counts (sandboxed where ReallyDone can: macOS Seatbelt, Linux bubblewrap)
+your tests + type check   run before and after; only what the change broke counts (sandboxed where Apex verify can: macOS Seatbelt, Linux bubblewrap)
    |
    v
 independent checks   a different model writes a test file from the task text only (never the agent's own tests);
@@ -21,7 +21,7 @@ verdict              ready | not_ready | unknown, with the failing check (expect
 Where the code is:
 - `packages/cli/src/verify.ts` the gate; `cheats.ts` the scan; `report.ts` the output formats; `verify-cmd.ts` the command line; `hook.ts` the agent stop hook; `mcp.ts` the MCP server.
 - `packages/engine/src/proof-gate.ts` writes and runs the checks (`draftAcceptance`, `runAcceptance`); `test-runner.ts` detects and runs your tests and holds the sandbox; `check-results.ts` and `check-screen.ts` read test output and decide which check results count; `surgical.ts` holds helpers the gate uses (context, running tests, copying a project).
-- The engine is shared with a separate commercial product (an IDE with an agent loop), so it contains more than `verify` uses: the code-writing loop in `surgical.ts` and `verified.ts` is not used by `reallydone verify`.
+- The engine is shared with a separate commercial product (an IDE with an agent loop), so it contains more than `verify` uses: the code-writing loop in `surgical.ts` and `verified.ts` is not used by `apex verify`.
 
 Rules worth knowing:
 - A check that also passes on the unchanged project proves nothing: the verdict is at most `unknown`.

@@ -1,11 +1,11 @@
 {
-  "name": "reallydone-cli",
+  "name": "apex-verify-cli",
   "version": "0.2.0",
-  "description": "ReallyDone: proof that an AI's change is really done. Any agent's change in, ready / not ready out, with proof.",
+  "description": "Apex verify: proof that an AI's change is really done. Any agent's change in, ready / not ready out, with proof.",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "reallydone": "./dist/main.js"
+    "apex": "./dist/main.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,7 +14,7 @@
     "test": "tsc -p tsconfig.json && node --test dist/*.test.js"
   },
   "dependencies": {
-    "reallydone-engine": "^0.1.0"
+    "apex-verify-engine": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
@@ -50,6 +50,6 @@
   "bugs": {
     "url": "https://github.com/apex-engine-dev/apex-verify/issues"
   },
-  "author": "ReallyDone contributors",
+  "author": "Apex verify contributors",
   "private": true
 }

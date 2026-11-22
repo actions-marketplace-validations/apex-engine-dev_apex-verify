@@ -1,5 +1,5 @@
 name: Break it (said ready, but wrong)
-description: "`reallydone verify` said READY but the change is wrong. The most valuable bug report."
+description: "`apex verify` said READY but the change is wrong. The most valuable bug report."
 labels: [bug, verifier]
 body:
   - type: markdown
@@ -13,7 +13,7 @@ body:
     attributes: { label: What was wrong with the change, description: What the change did and what it should have done (the failing case) }
     validations: { required: true }
   - type: textarea
-    attributes: { label: "`reallydone verify --json` output (or the report.json from the Action)", description: Which checks were written and what they covered; this shows what was missed }
+    attributes: { label: "`apex verify --json` output (or the report.json from the Action)", description: Which checks were written and what they covered; this shows what was missed }
     validations: { required: true }
   - type: input
     attributes: { label: Checker model, description: "e.g. gemini-3.1-pro-preview" }

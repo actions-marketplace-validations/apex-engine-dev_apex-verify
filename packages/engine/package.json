@@ -1,5 +1,5 @@
 {
-  "name": "reallydone-engine",
+  "name": "apex-verify-engine",
   "version": "0.1.0",
   "description": "Let any AI model edit your code safely: tries the change on a copy, runs your tests, says ready only when it holds up.",
   "license": "Apache-2.0",

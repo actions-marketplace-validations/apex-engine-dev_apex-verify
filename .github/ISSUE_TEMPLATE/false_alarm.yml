@@ -1,5 +1,5 @@
 name: False alarm (said not ready, but it is right)
-description: "`reallydone verify` said NOT READY but the change is correct."
+description: "`apex verify` said NOT READY but the change is correct."
 labels: [bug, verifier]
 body:
   - type: markdown
@@ -10,7 +10,7 @@ body:
     attributes: { label: The task you gave, description: The exact task text }
     validations: { required: true }
   - type: textarea
-    attributes: { label: "`reallydone verify` output (the failing check, expected and actual)", description: Paste the text output or `--json` }
+    attributes: { label: "`apex verify` output (the failing check, expected and actual)", description: Paste the text output or `--json` }
     validations: { required: true }
   - type: textarea
     attributes: { label: Why the change is correct and the check is wrong }

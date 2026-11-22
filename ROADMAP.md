@@ -1,6 +1,6 @@
 # Roadmap
 
-No dates and no promises. Open an issue before starting. Everything here serves one claim: **ReallyDone tells you, with proof, whether an AI's change is really done**, and we publish how often it is right.
+No dates and no promises. Open an issue before starting. Everything here serves one claim: **Apex verify tells you, with proof, whether an AI's change is really done**, and we publish how often it is right.
 
 ## Now
 - **Measure the gate** on far more tasks: how many wrong changes it catches, how many correct ones it wrongly blocks, per language, with significance. (Today's number is in the README and is preliminary: tens of tasks, one model family.)
