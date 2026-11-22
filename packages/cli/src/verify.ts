@@ -112,7 +112,8 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
       const diff = path.resolve(o.diffFile);
       let applied = false;
       for (const p of ["-p1", "-p0"]) {
-        try { execFileSync("patch", [p, "--quiet", "-i", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try the other strip level */ }
+        try { execFileSync("patch", [p, "--quiet", "-i", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try git apply (no `patch` on Windows), then the other strip level */ }
+        try { execFileSync("git", ["apply", p, "--unsafe-paths", "--whitespace=nowarn", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try the other strip level */ }
       }
       if (!applied) throw new Error(`could not apply ${o.diffFile} to ${o.dir} (tried -p1 and -p0)`);
     } else {

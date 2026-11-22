@@ -281,7 +281,10 @@ export function runCommand(file: string, args: string[], o: { cwd: string; env?:
     const max = o.maxBuffer ?? 8 << 20;
     const group = process.platform !== "win32";
     let child: import("node:child_process").ChildProcess;
-    try { child = spawn(file, args, { cwd: o.cwd, env: o.env, detached: group, stdio: ["ignore", "pipe", "pipe"], windowsHide: true }); }
+    // On Windows npm, npx, yarn and pnpm are .cmd files, which spawn cannot start without a shell.
+    const cmdShim = process.platform === "win32" && /^(?:npm|npx|yarn|pnpm)$/i.test(file);
+    const q = (a: string) => (/[\s"&|<>^]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a);
+    try { child = cmdShim ? spawn(file, args.map(q), { cwd: o.cwd, env: o.env, shell: true, stdio: ["ignore", "pipe", "pipe"], windowsHide: true }) : spawn(file, args, { cwd: o.cwd, env: o.env, detached: group, stdio: ["ignore", "pipe", "pipe"], windowsHide: true }); }
     catch (err) { resolve({ stdout: "", stderr: `${file}: ${err instanceof Error ? err.message : String(err)}`, exitCode: null, failed: true, timedOut: false, aborted: false }); return; }
     let stdout = "", stderr = "", size = 0;
     let timedOut = false, aborted = false, overflow = false, done = false;
