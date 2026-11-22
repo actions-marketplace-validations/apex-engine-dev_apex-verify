@@ -90,21 +90,29 @@ export function goPackageOf(files: string[], read: (rel: string) => string): { d
   if (first) { try { pkg = /^\s*package\s+(\w+)/m.exec(read(first))?.[1] ?? "main"; } catch { /* unreadable */ } }
   return { dir: best, pkg };
 }
-/** go test -v output ("--- FAIL: TestX", then the t.Errorf lines) as TAP, so check results are read the same way for every runner. */
+/** go test -v output as TAP, so check results are read the same way for every runner. Subtests are reported by their full name; a parent that only failed because a subtest did is left out. The t.Errorf lines stream right after "=== RUN   name". */
 export function goToTap(output: string): string {
   const plain = output.replace(/\x1b\[[0-9;]*m/g, "").split("\n");
+  const msgs = new Map<string, string[]>();
+  let cur = "";
+  for (const l of plain) {
+    const run = /^=== RUN\s+(\S+)/.exec(l);
+    if (run) { cur = run[1]!; continue; }
+    if (/^\s*--- /.test(l) || /^(FAIL|ok|PASS)\b/.test(l)) { cur = ""; continue; }
+    if (cur && /^\s+\S/.test(l)) msgs.set(cur, [...(msgs.get(cur) ?? []), l.trim()]);
+  }
+  const results = [...plain.join("\n").matchAll(/^\s*--- (PASS|FAIL): (\S+)/gm)].map((m) => ({ ok: m[1] === "PASS", name: m[2]! }));
   const lines: string[] = []; let n = 0;
-  for (let i = 0; i < plain.length; i++) {
-    const m = /^\s*--- (PASS|FAIL): (\S+)/.exec(plain[i]!);
-    if (!m || m[2]!.includes("/")) continue;
+  for (const r of results) {
+    if (!r.ok && results.some((o) => !o.ok && o.name.startsWith(r.name + "/"))) continue;
     n++;
-    if (m[1] === "PASS") { lines.push(`ok ${n} - ${m[2]}`); continue; }
-    const body: string[] = [];
-    // The t.Errorf lines come before the "--- FAIL" line, after "=== RUN   Name".
-    for (let j = i - 1; j >= 0 && !/^=== (?:RUN|PAUSE|CONT)/.test(plain[j]!) && /^\s{4}\S/.test(plain[j]!); j--) body.unshift(plain[j]!.trim());
+    if (r.ok) { lines.push(`ok ${n} - ${r.name}`); continue; }
+    const body = msgs.get(r.name) ?? [];
     const text = body.join(" ");
-    const got = /\b(?:got|actual)[:=]?\s*([^,;]+?)(?:,\s*|;\s*|\s+)(?:want|expected)[:=]?\s*(.+)$/i.exec(text);
-    lines.push(`not ok ${n} - ${m[2]}`, "  ---", `  error: ${(body[0] ?? "failed").replace(/^\S+\.go:\d+:\s*/, "")}`, ...(got ? [`  actual: ${got[1]!.trim()}`, `  expected: ${got[2]!.trim()}`] : []), "  ...");
+    const m = /(?:^|\s)\S+\.go:\d+:\s*(.*)$/.exec(body[0] ?? "");
+    const detail = (m?.[1] ?? body[0] ?? "failed").trim();
+    const g = /(?:got|actual)\W{0,3}\s*(.+?)[,;]?\s+(?:want|expected)\W{0,3}\s*(.+)$/i.exec(text) ?? /=\s*(.+?),\s*want\s+(.+)$/.exec(text);
+    lines.push(`not ok ${n} - ${r.name}`, "  ---", `  error: ${detail}`, ...(g ? [`  actual: ${g[1]!.trim()}`, `  expected: ${g[2]!.trim()}`] : []), "  ...");
   }
   return lines.length ? `${output}\n${lines.join("\n")}\n` : output;
 }
@@ -200,7 +208,7 @@ export async function detectTestRunner(root: string, override?: string): Promise
     // A lone test.py / tests.py at the root is not collected by pytest's default patterns: name it.
     return { kind: "pytest", command: [py, "-m", "pytest", "-q", "--no-header", "-p", "no:cacheprovider", ...(rootTestPy && !(await findFile(root, (name) => /^(test_.*|.*_test)\.py$/.test(name))) ? [rootTestPy] : [])], timeoutSec: 180 };
   }
-  if (await exists(path.join(root, "go.mod"))) return { kind: "go", command: ["go", "test", "./..."], timeoutSec: 240 };
+  if (await exists(path.join(root, "go.mod"))) return { kind: "go", command: ["go", "test", "-count=1", "-v", "./..."], timeoutSec: 240 };
   if (await exists(path.join(root, "Cargo.toml"))) return { kind: "cargo", command: ["cargo", "test"], timeoutSec: 300 };
   if (await makeHasTest(root)) return { kind: "make", command: ["make", "test"], timeoutSec: 240 };
   return null;

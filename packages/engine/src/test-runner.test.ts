@@ -92,15 +92,20 @@ test("node:test spec reporter (Node 22 default when not TAP) is counted, not rea
   assert.equal(readTestOutput(tap, false).passed, 84);
 });
 
-test("go test -v output: counted, and a failure becomes TAP with got and want", async () => {
+test("go test -v output: counted, and failing subtests become TAP with got and want", async () => {
   const { readTestOutput, goToTap } = await import("./test-runner.js");
-  const out = "=== RUN   TestSpaces\n    apex_task_check_test.go:9: got hello_world, want hello-world\n--- FAIL: TestSpaces (0.00s)\n=== RUN   TestLower\n--- PASS: TestLower (0.00s)\nFAIL\nFAIL\tdemo\t0.004s\n";
-  assert.deepEqual({ ...readTestOutput(out, true), failedNames: undefined }, { passed: 1, failed: 1, failedNames: undefined });
+  const out = [
+    "=== RUN   TestSlug", "=== RUN   TestSlug/spaces", '    c_test.go:52: Slugify("A B") = "a_b", want "a-b"', "=== RUN   TestSlug/empty",
+    "--- FAIL: TestSlug (0.00s)", "    --- FAIL: TestSlug/spaces (0.00s)", "    --- PASS: TestSlug/empty (0.00s)",
+    "=== RUN   TestLower", "--- PASS: TestLower (0.00s)", "FAIL", "FAIL\texample.com/demo\t0.35s", ""].join("\n");
+  const r = readTestOutput(out, true);
+  assert.equal(r.passed, 1); assert.equal(r.failed, 1);
   const tap = goToTap(out);
-  assert.match(tap, /not ok 1 - TestSpaces/);
-  assert.match(tap, /actual: hello_world/);
-  assert.match(tap, /expected: hello-world/);
-  assert.match(tap, /ok 2 - TestLower/);
+  assert.match(tap, /not ok 1 - TestSlug\/spaces/);
+  assert.doesNotMatch(tap, /not ok \d+ - TestSlug\n/, "the parent is left out");
+  assert.match(tap, /actual: "a_b"/);
+  assert.match(tap, /expected: "a-b"/);
+  assert.match(tap, /ok 3 - TestLower/);
 });
 
 test("go: the check file goes beside the code, in its package", async () => {

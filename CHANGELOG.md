@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.2.0 (unreleased)
-- **`--lock-tests`** (an agent cannot edit or delete its way to green), **signed reports** (`--sign-key`, `--gen-key`, `--check-report`), Go checks (written, not run by us), and the full-pipeline cross-company measurement, which withdraws the earlier "two checkers that both object: 60%" claim (`benchmark/results/cross-vendor-full-set`).
+- **`--lock-tests`** (an agent cannot edit or delete its way to green), **signed reports** (`--sign-key`, `--gen-key`, `--check-report`), Go checks (tested on a real Go module and with a real model), and the full-pipeline cross-company measurement, which withdraws the earlier "two checkers that both object: 60%" claim (`benchmark/results/cross-vendor-full-set`).
 - **Checks for Jest, Vitest (TypeScript too) and Rust** (`cargo test`), run by the project's own framework. Windows added to CI. Gemini CLI `AfterAgent` hook tested in a real session.
 - **`--second-model`** (two checkers must both object), **`--fresh-inputs`**, and a **badge** (`--badge-out`, Action input `badge`). Measured: same-company second checker and fresh inputs did not improve results, so neither is default (`docs/EXPERIMENTS.md`).
 - **Name: Apex verify** (`apex verify`). It was briefly called ReallyDone while we looked for a name; the repository is `apex-verify`.

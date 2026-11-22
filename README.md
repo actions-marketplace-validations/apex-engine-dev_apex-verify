@@ -82,7 +82,7 @@ Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what i
 - **It does not replace review or CI.** It runs next to them and gives a short, evidence-backed verdict.
 - **It sends your task and the relevant source files** (about 24 KB at most) to the checker model you configure, and nothing else. No telemetry.
 - **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort) and Linux bubblewrap, both tested in CI, with no network except localhost. **Windows runs (tested in CI) but has no sandbox yet**: use WSL2 or the [container recipe](docs/SANDBOX.md) for code you do not trust.
-- **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`), and for Go (`go test`, written but never run by us: Go is not installed on the maintainer's machine).** For other stacks it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
+- **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`), and Go (`go test`).** For other stacks it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
 
 ## What's left
 
@@ -90,7 +90,6 @@ Honest list of what is not done yet, each with an issue you can pick up:
 
 | Not done yet | Issue |
 |---|---|
-| **Run the Go checks** on a real Go project (the code is written, never run) | [#2](https://github.com/apex-engine-dev/apex-verify/issues/2) |
 | A **sandbox on Windows** (it runs there, unsandboxed) | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
 | Try the **Claude Code plugin** in a live session | [#12](https://github.com/apex-engine-dev/apex-verify/issues/12) (good first issue) |
 | Test the **Codex and Cursor** hooks (Gemini CLI is done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
