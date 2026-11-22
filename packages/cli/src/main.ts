@@ -9,8 +9,8 @@ const VERSION = JSON.parse(fs.readFileSync(path.join(path.dirname(new URL(import
 
 const USAGE = VERIFY_USAGE.replace(/^reallydone verify /, "reallydone [verify] ");
 
-/** The documented names are REALLYDONE_*; the engine underneath reads APEX_*, so map one to the other (an explicit APEX_* wins). */
-for (const [k, v] of Object.entries(process.env)) if (k.startsWith("REALLYDONE_") && v !== undefined && process.env[`APEX_${k.slice(11)}`] === undefined) process.env[`APEX_${k.slice(11)}`] = v;
+/** The documented names are REALLYDONE_*; the engine underneath reads APEX_*, so map one to the other (an explicit, non-empty APEX_* wins). */
+for (const [k, v] of Object.entries(process.env)) if (k.startsWith("REALLYDONE_") && v !== undefined && !process.env[`APEX_${k.slice(11)}`]) process.env[`APEX_${k.slice(11)}`] = v;
 
 async function main(argv: string[]): Promise<number> {
   // `reallydone verify ...` and `reallydone ...` are the same: verify is the only command.
