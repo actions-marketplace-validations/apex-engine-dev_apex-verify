@@ -90,7 +90,7 @@ Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what i
 - **It is not a proof of correctness.** It raises the bar. A check can be wrong in both directions; the numbers above are the honest rates.
 - **It does not replace review or CI.** It runs next to them and gives a short, evidence-backed verdict.
 - **It sends your task and the relevant source files** (about 24 KB at most) to the checker model you configure, and nothing else. No telemetry.
-- **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort) and Linux bubblewrap, both tested in CI, with no network except localhost. **Windows runs (tested in CI) but has no sandbox yet**: use WSL2 or the [container recipe](docs/SANDBOX.md) for code you do not trust.
+- **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort), Linux bubblewrap and Windows AppContainer, all tested in CI, with no network (localhost allowed on macOS and Linux). **Windows** uses an AppContainer (no network, writes only in the scratch copy, tested on a real Windows runner in CI), at about 30 seconds of startup per test run; see [docs/SANDBOX.md](docs/SANDBOX.md) for the limits.
 - **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`), and Go (`go test`).** For other stacks it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
 
 ## What's left
@@ -99,7 +99,6 @@ Honest list of what is not done yet, each with an issue you can pick up:
 
 | Not done yet | Issue |
 |---|---|
-| **File and network isolation on Windows** (it runs there; keys are scrubbed from the environment, files and network are not isolated) | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
 | Run the **Codex and Cursor** hooks inside the real apps (Gemini CLI and Claude Code are done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
 | Measure on **even more real projects**, and cut the false alarms seen there | [#13](https://github.com/apex-engine-dev/apex-verify/issues/13) |
 | Locked tests and **signed evidence** (so an agent cannot tamper with its own verdict) | [#7](https://github.com/apex-engine-dev/apex-verify/issues/7) |

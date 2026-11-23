@@ -12,7 +12,7 @@ Honest state of the project. Updated with every release.
 | GitHub Action | Written (`action.yml`); fork pull requests run without a model by design. Needs real-world trials on pull requests from other people. |
 | Engine (`apex-verify-engine`) | Extracted from Apex Capsule IDE, a separate commercial product that depends on it. Tests green on Node 20 and 22. |
 | Languages | node:test and pytest checks; your own `--test` command for anything else. |
-| Sandbox | macOS Seatbelt and Linux bubblewrap, both tested in CI (best effort, not a security boundary); a container recipe tested in CI. Windows: runs and is tested in CI, with no sandbox (use WSL2 or the container for untrusted code). |
+| Sandbox | macOS Seatbelt, Linux bubblewrap and Windows AppContainer, all tested in CI on real runners (best effort, not a security boundary); a container recipe tested in CI. |
 | Install | A 48 KB file attached to every release (`npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify ...`), or clone and build. Not published to npm, and does not need to be. |
 | Licence | Apache-2.0; trademark policy in TRADEMARKS.md. |
 | Maintainers | One. A second is the most useful contribution of all. |

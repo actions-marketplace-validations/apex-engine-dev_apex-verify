@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.2.0 (unreleased)
+- **Windows sandbox** (AppContainer; no network, writes only in the scratch copy), tested in CI. **Fixes found by running Apex verify on a real large project:** the original copy now links `node_modules` like the working copy (the baseline test run could not start), and a baseline whose tests could not run is no longer used to call failures new. **Benchmark:** 18 more real-library tasks (200 real-project changes in all): the gate blocks 80% of wrong changes there but also wrongly blocks 11% of right ones.
 - **`--lock-tests`** (an agent cannot edit or delete its way to green), **signed reports** (`--sign-key`, `--gen-key`, `--check-report`), Go checks (tested on a real Go module and with a real model), and the full-pipeline cross-company measurement, which withdraws the earlier "two checkers that both object: 60%" claim (`benchmark/results/cross-vendor-full-set`).
 - **Checks for Jest, Vitest (TypeScript too) and Rust** (`cargo test`), run by the project's own framework. Windows added to CI. Gemini CLI `AfterAgent` hook tested in a real session.
 - **`--second-model`** (two checkers must both object), **`--fresh-inputs`**, and a **badge** (`--badge-out`, Action input `badge`). Measured: same-company second checker and fresh inputs did not improve results, so neither is default (`docs/EXPERIMENTS.md`).
