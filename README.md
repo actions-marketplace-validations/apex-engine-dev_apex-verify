@@ -8,7 +8,7 @@
   <a href="https://github.com/apex-engine-dev/apex-verify/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/apex-engine-dev/apex-verify?style=social"></a>
 </p>
 
-<p align="center"><img src="docs/assets/demo.gif" alt="Terminal: the project's own test passes, then apex verify says NOT READY and names the failing checks with expected and actual values" width="760"></p>
+<p align="center"><img src="docs/assets/demo.gif" alt="Terminal: an AI agent changed a slug function and the project's tests pass; apex verify then says NOT READY: expected hello-world, actual hello-world!" width="760"></p>
 
 AI coding agents say "done" when the tests pass. But the tests only check what somebody wrote down. **Apex verify** takes the change an AI made and the task you gave it, has a *different* AI write the missing checks, proves those checks can fail, runs them next to your own tests, and answers `ready`, `not ready` or `unknown`, **with the evidence**. It works on a copy of your code, so your project is never touched.
 
@@ -79,9 +79,11 @@ Generated checks and your tests run in a sandbox where the platform allows: macO
 
 ## Does it work? The honest numbers
 
-We collected AI-written changes and knew which were wrong, using hidden tests Apex verify never saw. A "wrong" change looks fine and may pass the visible tests but does not do what the task asked.
+**The short version: on 200 AI-written changes to real open-source libraries, your tests plus a cheating scan stopped none of the wrong ones; Apex verify stopped about 80 in 100, and it wrongly stopped about 4 in 100 good changes (11 by the strictest count).** It still misses some, so treat `ready` as strong evidence, not a proof.
 
-<p align="center"><img src="docs/assets/results.svg" alt="Out of 100 wrong AI changes, tests plus a cheating scan stop 8, Apex verify stops 52 on the public projects and 65 across all 17 projects" width="720"></p>
+How we know: we collected AI-written changes and knew which were wrong, using hidden tests Apex verify never saw. A "wrong" change looks fine and may pass the visible tests but does not do what the task asked.
+
+<p align="center"><img src="docs/assets/results.svg" alt="Out of 100 wrong AI changes: tests plus a cheating scan stop 8 on small projects and none on real libraries; Apex verify stops 52 to 80" width="760"></p>
 
 | | Wrong changes stopped | Good changes wrongly stopped |
 |---|---|---|
