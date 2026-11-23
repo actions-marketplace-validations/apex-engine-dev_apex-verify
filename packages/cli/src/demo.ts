@@ -39,7 +39,7 @@ export async function runDemo(out: (s: string) => void = console.log): Promise<n
     out(`Project tests: ${tests} passed. Now Apex verify:\n`);
     const report = await verify({ dir: d, task: TASK, checker: { client: checker, model: "built-in demo checker" }, cache: false, secondLook: false, timeoutSec: 60 });
     out(renderText(report));
-    out("\nThat is the point: green tests, wrong change, caught with the expected and actual value.\nOn a real change, a model writes the checks from your task. Try it on your own project:\n  apex verify \"what you asked the AI to do\"    (needs GEMINI_API_KEY, or --no-model for tests and cheating scan only)\nThen tell us how it went: https://github.com/apex-engine-dev/apex-verify/issues/3");
+    out("\nThat is the point: green tests, wrong change, caught with the expected and actual value.\nOn a real change, a model writes the checks from your task. Try it on your own project:\n  apex verify \"what you asked the AI to do\"    (needs GEMINI_API_KEY, or --no-model for tests and cheating scan only)\nThen tell us how it went: https://github.com/apex-engine-dev/apex-verify/issues/new/choose");
     return report.verdict === "not_ready" ? 0 : 1;
   } finally { fs.rmSync(d, { recursive: true, force: true }); }
 }

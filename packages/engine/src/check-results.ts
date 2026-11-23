@@ -50,7 +50,7 @@ export function parseTestOutcomes(output: string): TestOutcome[] {
     const tap = /^(\s*)(not ok|ok) \d+ - (.+?)(?:\s+#\s*(SKIP|TODO).*)?$/i.exec(line);
     if (tap) {
       const ok = tap[2] === "ok";
-      const outcome: TestOutcome = { name: tap[3].trim(), ok, top: tap[1].length === 0, ...(/^skip$/i.test(tap[4] ?? "") ? { skipped: true } : {}) };
+      const outcome: TestOutcome = { name: tap[3].trim(), ok, top: tap[1].length === 0, ...(/^(skip|todo)$/i.test(tap[4] ?? "") ? { skipped: true } : {}) };
       if (!ok) {
         outcome.failure = tapFailure(lines, i + 1, tap[1].length);
         // node:test prints subtests before their parent; a parent's "1 subtest failed" says nothing, the child does.
@@ -63,7 +63,7 @@ export function parseTestOutcomes(output: string): TestOutcome[] {
       out.push(outcome);
       continue;
     }
-    const py = /^(PASSED|FAILED|ERROR)\s+(\S+?)(?:\s+-\s+(.*))?$/.exec(line.trim());
+    const py = /^(PASSED|FAILED|ERROR)\s+(.+?)(?:\s+-\s+(.*))?$/.exec(line.trim());
     if (py) {
       const ok = py[1] === "PASSED";
       const message = (py[3] ?? "").trim();
@@ -77,7 +77,7 @@ export function parseTestOutcomes(output: string): TestOutcome[] {
 /** The YAML block node:test prints under a failing test: error, expected, actual. */
 function tapFailure(lines: string[], start: number, indent: number): CheckFailure {
   // The YAML block is indented two past the test line; some runners (and nested subtests) indent it further.
-  const open = (lines[start] ?? "").match(/^(\s*)---\s*$/);
+  const open = (lines[start] ?? "").match(/^(\s*)---[ \t]*$/);
   if (!open || open[1].length < indent) return { message: "failed" };
   const pad = open[1];
   const fields: Record<string, string> = {};
@@ -94,7 +94,7 @@ function tapFailure(lines: string[], start: number, indent: number): CheckFailur
     }
   }
   const clean = (s: string | undefined) => (s === undefined ? undefined : s.trim().slice(0, 600));
-  const fromStack = clean(fields.stack)?.split("\n").find((l) => l.trim() && !/^\s*at\s/.test(l));
+  const fromStack = clean(fields.stack)?.split("\n").find((l) => l.trim() && !/^[ \t]*at\s/.test(l));
   const message = clean(fields.error)?.split("\n").filter((l) => l.trim()).slice(0, 4).join("\n") || fromStack || (fields.code ? `${clean(fields.failureType) ?? "failed"} (${clean(fields.code)})` : "") || clean(fields.failureType) || "failed";
   return { message, ...(fields.expected !== undefined ? { expected: clean(fields.expected) } : {}), ...(fields.actual !== undefined ? { actual: clean(fields.actual) } : {}) };
 }
@@ -128,7 +128,8 @@ export function checkResults(checks: string[], output: string, proof?: CheckProo
       byIndex.set(n, [...(byIndex.get(n) ?? []), t]);
     }
   } else {
-    const top = tests.filter((t) => t.top && !/^\[implicit\]/i.test(t.name));
+    // A test file that exits early shows up as one "test" named after the file: that is not a check passing.
+    const top = tests.filter((t) => t.top && !/^\[implicit\]/i.test(t.name) && !/\.(?:[cm]?[jt]sx?|py)$/.test(t.name));
     top.slice(0, checks.length).forEach((t, i) => byIndex.set(i + 1, [t]));
   }
   const results: CheckResult[] = checks.map((line, i) => {
@@ -279,7 +280,7 @@ export function checksLoadError(output: string): string | null {
   const tests = parseTestOutcomes(output);
   const fileLevel = tests.length === 1 && !tests[0].ok && tests[0].top && /\.(?:[mc]?[jt]sx?)$/.test(tests[0].name);
   if (fileLevel) {
-    const err = lines.map((l) => l.replace(/^#\s?/, "")).find((l) => /^\s*(?:\w*Error\b|Error \[)/.test(l));
+    const err = lines.map((l) => l.replace(/^#\s?/, "")).find((l) => /^[ \t]*(?:\w*Error\b|Error \[)/.test(l));
     return (err ?? "the file did not load").trim().slice(0, 300);
   }
   if (/ERROR collecting|errors? during collection/.test(output)) {
@@ -292,7 +293,7 @@ export function checksLoadError(output: string): string | null {
 /** Check numbers (1-based, up to `count`) that have no test named for them in the file's source. */
 export function missingCheckTests(code: string, count: number, py = false): number[] {
   const have = new Set<number>();
-  const re = py ? /^\s*def test_c(\d+)_/gm : /\b(?:test|it)\s*\(\s*(['"`])\[c(\d+)\]\s/g;
+  const re = py ? /^[ \t]*def test_c(\d+)_/gm : /\b(?:test|it)\s*\(\s*(['"`])\[c(\d+)\]\s/g;
   for (const m of code.matchAll(re)) have.add(Number(py ? m[1] : m[2]));
   return Array.from({ length: count }, (_, i) => i + 1).filter((n) => !have.has(n));
 }
@@ -364,7 +365,7 @@ export interface HeldChange {
 /** A question rather than a request: ends with "?" or opens with a question word. */
 export function isQuestion(text: string): boolean {
   const t = text.trim();
-  return /\?\s*$/.test(t.split("\n")[0] ?? "") || /^(why|how|what|where|when|which|who|is|are|does|do|can|could|should|would|explain)\b/i.test(t);
+  return /\?[ \t]*$/.test(t.split("\n")[0] ?? "") || /^(why|how|what|where|when|which|who|is|are|does|do|can|could|should|would|explain)\b/i.test(t);
 }
 
 /**

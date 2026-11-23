@@ -7,7 +7,7 @@ Thank you. Read the [Code of Conduct](CODE_OF_CONDUCT.md) first.
 Node >= 20.
 
 ```sh
-git clone <your fork> && cd apex
+git clone <your fork> && cd apex-verify
 npm install
 npm run build
 npm test
@@ -16,10 +16,10 @@ npm test
 ## Ways to help
 
 - **Break it.** Find a change `apex verify` calls `ready` that is wrong, or blocks one that is right ([issue templates](https://github.com/apex-engine-dev/apex-verify/issues/new/choose)). Add it to `benchmark/` as a labelled change if you can.
-- **Languages and test runners:** write checks for Jest/Vitest, Go, Rust (today: node:test and pytest); better detection of a project's own tests. See issues labelled `good first issue`.
-- **Integrations:** try the Codex, Cursor or Gemini CLI hook or an MCP client and fix the documented configuration ([docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)). Windows support.
-- **Measurements:** a checker from another vendor, bigger real projects, more labelled changes (`benchmark/README.md`).
-- **Sandboxing and safety:** locked tests, signed evidence ([docs/RELATED-WORK.md](docs/RELATED-WORK.md) lists who does what).
+- **Languages and test runners:** write checks for another language or runner (today: node:test, pytest, Jest, Vitest, `cargo test`, `go test`; Java, C#, Ruby and Swift are open); better detection of a project's own tests. See issues labelled `good first issue`.
+- **Integrations:** run the Codex or Cursor hook, or an MCP client, inside the real app and fix the documented configuration ([docs/INTEGRATIONS.md](docs/INTEGRATIONS.md)).
+- **Measurements:** more real projects and harder bugs, labelled changes (`benchmark/README.md`).
+- **Sandboxing and safety:** keyless signing, stronger isolation ([docs/RELATED-WORK.md](docs/RELATED-WORK.md) lists who does what).
 
 ## Ground rules
 

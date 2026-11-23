@@ -3,8 +3,11 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
-import { testSandboxAvailable, checksOnlyRunner, copyProject, parseTestOutcomes, runCommand, detectTestRunner, draftAcceptance, judgeFailingChecks, readTestOutput, runAcceptance, runTests, type ModelClient, type TestRunner } from "apex-verify-engine";
-import { detectCheats, type Cheat, type FileChange } from "./cheats.js";
+import { isJunkPath, testSandboxAvailable, testSandboxProfile, inTestSandbox, runEnv, checkCommand, frameworkCheckCommand, checksOnlyRunner, copyProject, parseTestOutcomes, runCommand, detectTestRunner, draftAcceptance, judgeFailingChecks, readTestOutput, runAcceptance, runTests, type ModelClient, type TestRunner } from "apex-verify-engine";
+import { assertSafeDiff } from "./safe-diff.js";
+import { looksSecret, redactingClient } from "./redact.js";
+import { readRegularFile, stateDir, writePrivateFile } from "./state.js";
+import { detectCheats, isTestFile, type Cheat, type FileChange } from "./cheats.js";
 
 /**
  * apex verify: given a change somebody (usually an AI agent) already made, decide whether it is really done.
@@ -27,10 +30,13 @@ async function typecheckCommand(dir: string): Promise<{ file: string; args: stri
   const tsc = path.join(dir, "node_modules", ".bin", "tsc");
   try { await fs.access(path.join(dir, "tsconfig.json")); await fs.access(tsc); return { file: tsc, args: ["--noEmit", "-p", "."], label: "tsc --noEmit" }; } catch { return null; }
 }
-/** Whether a path is one of the project's own test files (tests/ or test/ folders, *.test.* / *.spec.*, test_*.py, *_test.go / .py, __tests__). */
-export function isTestPath(p: string): boolean {
-  return /(^|\/)(tests?|__tests__|spec)\//.test(p) || /\.(test|spec)\.[cm]?[jt]sx?$/.test(p) || /(^|\/)test_[^/]*\.py$/.test(p) || /_test\.(py|go)$/.test(p);
+/** The type check runs project-defined commands, so it gets what the tests get: the scrubbed environment (no keys or tokens) and the sandbox where there is one. */
+async function typecheckRun(tc: { file: string; args: string[] }, dir: string, timeoutSec: number, signal?: AbortSignal) {
+  let { file, args } = tc;
+  if (await testSandboxAvailable().catch(() => false)) ({ file, args } = inTestSandbox(testSandboxProfile({ writable: [dir] }), file, args));
+  return runCommand(file, args, { cwd: dir, timeoutMs: timeoutSec * 1000, signal, env: { ...runEnv(), CI: "1", FORCE_COLOR: "0" } }).catch(() => null);
 }
+
 export interface Reason { kind: "regression" | "cheat" | "check_failed" | "checks_suspect" | "checkers_disagree" | "no_checks" | "checks_unproven" | "no_change" | "no_tests"; summary: string; evidence?: string; hint?: string }
 
 export interface VerifyReport {
@@ -84,7 +90,6 @@ export interface VerifyOptions {
   signal?: AbortSignal;
 }
 
-const SKIP = new Set([".git", ".apex", "node_modules", ".venv", "venv", ".next", ".turbo", ".cache", "coverage", "target", ".parcel-cache", "__pycache__", "dist", "build"]);
 const MAX_FILE = 1_000_000;
 
 async function readTree(root: string): Promise<Map<string, string>> {
@@ -93,8 +98,8 @@ async function readTree(root: string): Promise<Map<string, string>> {
     let ents: import("node:fs").Dirent[] = [];
     try { ents = await fs.readdir(dir, { withFileTypes: true }); } catch { return; }
     for (const e of ents) {
-      if (SKIP.has(e.name)) continue;
       const f = path.join(dir, e.name);
+      if (isJunkPath(path.relative(root, f).split(path.sep), true)) continue;
       if (e.isDirectory()) await walk(f);
       else if (e.isFile()) {
         try { const st = await fs.stat(f); if (st.size <= MAX_FILE) { const buf = await fs.readFile(f); if (!buf.includes(0)) out.set(path.relative(root, f).split(path.sep).join("/"), buf.toString("utf8")); } } catch { /* unreadable */ }
@@ -112,7 +117,7 @@ const git = (dir: string, args: string[]) => execFileSync("git", ["-C", dir, ...
 /** Two trees (before, after) in scratch folders; the project itself is never touched. */
 export async function collectChange(o: { dir: string; base?: string; diffFile?: string }): Promise<Collected> {
   const scratch = await fs.mkdtemp(path.join(os.tmpdir(), "apex-"));
-  const orig = path.join(scratch, "before"), next = path.join(scratch, "after");
+  const origRoot = path.join(scratch, "before"); let orig = origRoot; const next = path.join(scratch, "after");
   const cleanup = () => fs.rm(scratch, { recursive: true, force: true });
   try {
     let mode: "git" | "patch" = "patch", base = "diff";
@@ -120,10 +125,11 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
       await copyProject(o.dir, orig);
       await copyProject(o.dir, next);
       const diff = path.resolve(o.diffFile);
+      assertSafeDiff(await fs.readFile(diff, "utf8"));
       let applied = false;
       for (const p of ["-p1", "-p0"]) {
-        try { execFileSync("patch", [p, "--quiet", "-i", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try git apply (no `patch` on Windows), then the other strip level */ }
-        try { execFileSync("git", ["apply", p, "--unsafe-paths", "--whitespace=nowarn", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try the other strip level */ }
+        try { execFileSync("patch", [p, "--quiet", "--no-backup-if-mismatch", "-i", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try git apply (no `patch` on Windows), then the other strip level */ }
+        try { execFileSync("git", ["apply", p, "--whitespace=nowarn", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try the other strip level */ }
       }
       if (!applied) throw new Error(`could not apply ${o.diffFile} to ${o.dir} (tried -p1 and -p0)`);
     } else {
@@ -133,9 +139,19 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
       base = o.base ?? "HEAD";
       try { git(o.dir, ["rev-parse", "--verify", `${base}^{commit}`]); } catch { throw new Error(`git ref not found: ${base}${o.base ? "" : " (a repository with no commits has nothing to compare with; pass --diff <file>)"}`); }
       const prefix = git(o.dir, ["rev-parse", "--show-prefix"]).trim();
+      await fs.mkdir(origRoot, { recursive: true });
+      // A directory that is new since the base (the whole folder is uncommitted) has nothing to compare with: its original is empty.
+      const sub = prefix.replace(/\/$/, "");
+      const existedAtBase = !sub || (() => { try { git(o.dir, ["cat-file", "-e", `${base}:${sub}`]); return true; } catch { return false; } })();
+      orig = sub ? path.join(origRoot, ...sub.split("/")) : origRoot;
       await fs.mkdir(orig, { recursive: true });
-      const tar = execFileSync("git", ["-C", o.dir, "archive", "--format=tar", prefix ? `${base}:${prefix.replace(/\/$/, "")}` : base], { maxBuffer: 1024 * 1024 * 1024 });
-      execFileSync("tar", ["-x", "-C", orig], { input: tar });
+      if (existedAtBase) {
+        // The base as committed, through a temporary index: unlike `git archive` this ignores .gitattributes export-ignore, so a repository cannot hide its tests from the comparison.
+        const top = git(o.dir, ["rev-parse", "--show-toplevel"]).trim();
+        const env = { ...process.env, GIT_INDEX_FILE: path.join(scratch, "index") };
+        execFileSync("git", ["-C", top, "read-tree", ...(sub ? [`--prefix=${sub}/`, `${base}:${sub}`] : [base])], { env, stdio: "pipe" });
+        execFileSync("git", ["-C", top, "checkout-index", "-a", "-f", `--prefix=${origRoot.replace(/\\/g, "/")}/`], { env, stdio: "pipe", maxBuffer: 1024 * 1024 * 1024 });
+      }
       // The same dependencies as the working copy gets (copyProject links them): without them the baseline test run cannot start.
       try { if (existsSync(path.join(o.dir, "node_modules")) && !existsSync(path.join(orig, "node_modules"))) await fs.symlink(path.join(o.dir, "node_modules"), path.join(orig, "node_modules"), "dir"); } catch { /* none */ }
       await copyProject(o.dir, next);
@@ -143,7 +159,13 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
     }
     const [a, b] = await Promise.all([readTree(orig), readTree(next)]);
     const changes: FileChange[] = [];
+    // Files git ignores (a .env, local config, caches) are in the working copy but are not part of the change, and must never be shown to a model as one.
+    const ignored = new Set<string>();
+    if (mode === "git") { try { for (const f of git(o.dir, ["ls-files", "-z", "--others", "--ignored", "--exclude-standard"]).split("\0").filter(Boolean)) ignored.add(f.replace(/\\/g, "/")); } catch { /* none */ } }
+    const prefixDir = mode === "git" ? git(o.dir, ["rev-parse", "--show-prefix"]).trim() : "";
     for (const p of new Set([...a.keys(), ...b.keys()])) {
+      if (ignored.has(p) && !a.has(p)) continue;
+      void prefixDir;
       const x = a.get(p) ?? null, y = b.get(p) ?? null;
       // A file that differs only in line endings is not a change (Windows checkouts with autocrlf are CRLF, git archive is LF).
       if (x !== y && (x === null || y === null || x.replace(/\r\n/g, "\n") !== y.replace(/\r\n/g, "\n"))) changes.push({ path: p, before: x, after: y });
@@ -156,17 +178,39 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
 type Draft = NonNullable<Awaited<ReturnType<typeof draftAcceptance>>>;
-const cacheDir = () => path.join(process.env.APEX_CACHE_DIR || path.join(os.homedir(), ".cache", "apex-verify"), "checks");
+const cacheDir = () => path.join(process.env.APEX_CACHE_DIR || path.join(stateDir(), "cache"), "checks");
+/** What a cached draft must look like; anything else (a forged or damaged file) is ignored. The command to run is never taken from the cache: it is derived again from the project. */
+export function shapeOk(d: unknown): d is Draft {
+  const x = d as any;
+  if (!x || typeof x !== "object" || typeof x.code !== "string" || typeof x.path !== "string") return false;
+  const p = x.path as string;
+  if (p.length > 200 || path.isAbsolute(p) || /^[A-Za-z]:/.test(p) || p.split(/[\\/]/).some((seg) => seg === ".." || seg === "") || !/^[\w.\-/]+$/.test(p)) return false;
+  if (!/^(?:apex[-_]task[-_]check|test_apex_task_check)/.test(path.basename(p))) return false;
+  const o = x.original;
+  return !!o && typeof o.passed === "number" && typeof o.failed === "number" && (o.loadError === null || typeof o.loadError === "string");
+}
 /** The same task on the same starting code with the same model gets the same checks: stable while an agent retries, and one model call, not one per attempt. */
-async function readDraft(key: string): Promise<Draft | null> {
-  try { return JSON.parse(await fs.readFile(path.join(cacheDir(), key + ".json"), "utf8")) as Draft; } catch { return null; }
+async function readDraft(key: string, testCommand: string[]): Promise<Draft | null> {
+  const text = readRegularFile(path.join(cacheDir(), key + ".json"));
+  if (!text) return null;
+  try {
+    const d = JSON.parse(text) as unknown;
+    if (!shapeOk(d)) return null;
+    const fw = (d as any).framework;
+    if (fw !== undefined && !["vitest", "jest", "cargo", "go"].includes(fw)) return null;
+    const cmd = fw ? { run: frameworkCheckCommand(fw, d.path), py: false } : checkCommand(testCommand, d.path);
+    if (!cmd) return null;
+    return { ...d, run: cmd.run, py: cmd.py } as Draft;
+  } catch { return null; }
 }
 async function writeDraft(key: string, d: Draft): Promise<void> {
-  try { await fs.mkdir(cacheDir(), { recursive: true }); await fs.writeFile(path.join(cacheDir(), key + ".json"), JSON.stringify(d)); } catch { /* best effort */ }
+  try { writePrivateFile(path.join(cacheDir(), key + ".json"), JSON.stringify(d)); } catch { /* best effort */ }
 }
 const trim = (s: string, n: number) => (s.length > n ? s.slice(0, n) + "…" : s);
 
 export async function verify(o: VerifyOptions): Promise<VerifyReport> {
+  // Whatever leaves the machine for a model is redacted first (keys, tokens, private keys), and secret-looking files are never offered to it.
+  o = { ...o, ...(o.checker ? { checker: { ...o.checker, client: redactingClient(o.checker.client) } } : {}), ...(o.secondChecker ? { secondChecker: { ...o.secondChecker, client: redactingClient(o.secondChecker.client) } } : {}) };
   const t0 = Date.now();
   const say = (l: string) => o.onProgress?.(l);
   const timeout = o.timeoutSec ?? 90;
@@ -198,9 +242,14 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     const locked = new Set<string>();
     if (o.lockTests) {
       for (const x of c.changes) {
-        if (x.before === null || !isTestPath(x.path)) continue;
-        await fs.mkdir(path.dirname(path.join(c.next, x.path)), { recursive: true });
-        await fs.writeFile(path.join(c.next, x.path), x.before);
+        if (x.before === null || !isTestFile(x.path)) continue;
+        // Never write through a symlinked folder that leads out of the copy.
+        const target = path.join(c.next, x.path);
+        await fs.mkdir(path.dirname(target), { recursive: true });
+        const realNext = await fs.realpath(c.next), realDir = await fs.realpath(path.dirname(target));
+        if (realDir !== realNext && !realDir.startsWith(realNext + path.sep)) continue;
+        try { if ((await fs.lstat(target)).isSymbolicLink()) await fs.unlink(target); } catch { /* new file */ }
+        await fs.writeFile(target, x.before);
         locked.add(x.path);
       }
       if (locked.size) { report.lockedTests = [...locked].sort(); say(`locked tests: restored ${locked.size} file${locked.size === 1 ? "" : "s"} from ${c.base}`); }
@@ -222,6 +271,7 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       const after = await runTests(c.next, runner.command, o.signal, Math.max(timeout, runner.timeoutSec ?? 0));
       const aOut = readTestOutput(after.output, after.exitCode !== 0);
       report.tests.after = { passed: after.passed, failed: after.failed };
+      if (after.passed + after.failed === 0 && after.exitCode === 0) warnings.push(`the project's test command (${report.tests.command}) ran no tests, so only the checks written from the task say anything about this change`);
       if (after.failed > 0 || (after.exitCode !== 0 && after.passed === 0)) {
         const before = await runTests(c.orig, runner.command, o.signal, Math.max(timeout, runner.timeoutSec ?? 0));
         const bOut = readTestOutput(before.output, before.exitCode !== 0);
@@ -247,9 +297,9 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     // 2b. the project's type check, if it has one: only errors the change introduced count
     const tc = await typecheckCommand(c.next);
     if (tc) {
-      const after = await runCommand(tc.file, tc.args, { cwd: c.next, timeoutMs: timeout * 1000, signal: o.signal }).catch(() => null);
+      const after = await typecheckRun(tc, c.next, timeout, o.signal);
       if (after && after.exitCode !== 0 && !after.timedOut) {
-        const before = await runCommand(tc.file, tc.args, { cwd: c.orig, timeoutMs: timeout * 1000, signal: o.signal }).catch(() => null);
+        const before = await typecheckRun(tc, c.orig, timeout, o.signal);
         const lines = (r: { stdout: string; stderr: string }) => (r.stdout + r.stderr).split("\n").filter((l) => /error/i.test(l));
         const was = new Set(before ? lines(before).map((l) => l.replace(/\(\d+,\d+\)|:\d+:\d+/g, "")) : []);
         const fresh = lines(after).filter((l) => !was.has(l.replace(/\(\d+,\d+\)|:\d+:\d+/g, "")));
@@ -268,9 +318,9 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
         say(`checks: ${ck.model} writes them from the task (never from the agent's own tests)`);
         let draft: Awaited<ReturnType<typeof draftAcceptance>> = null;
         const key = sha(JSON.stringify([o.task, ck.model, o.standardCases === true, o.freshInputs === true, [...(await readTree(c.orig)).entries()].map(([p, t]) => [p, sha(t)])]));
-        if (o.cache !== false) { draft = await readDraft(key); if (draft) say("checks: reused from an earlier run on the same task and code"); }
+        if (o.cache !== false) { draft = await readDraft(key, cr.command); if (draft) say("checks: reused from an earlier run on the same task and code"); }
         for (let i = 0; i < (o.attempts ?? 2) && !draft; i++) {
-          draft = await draftAcceptance({ gateway: ck.client, model: ck.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true, freshInputs: o.freshInputs === true }).catch(() => null);
+          draft = await draftAcceptance({ hidden: looksSecret, gateway: ck.client, model: ck.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true, freshInputs: o.freshInputs === true }).catch(() => null);
           report.usage.modelCalls += draft?.calls ?? 1;
           if (draft && o.cache !== false) await writeDraft(key, draft);
         }
@@ -290,7 +340,7 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
           if (T.failed > 0) {
             let blame: "test" | "code" | "unknown" = "unknown", why = "";
             if (o.secondLook !== false) {
-              const j = await judgeFailingChecks({ gateway: ck.client, model: ck.model, task: o.task, changes: c.changes.map((x) => ({ path: x.path, before: x.before, after: x.after ?? "" })), checksFile: draft.code, failureOutput: T.failures, passed: run.passed, failed: T.failed, signal: o.signal }).catch(() => null);
+              const j = await judgeFailingChecks({ gateway: ck.client, model: ck.model, task: o.task, changes: c.changes.filter((x) => !looksSecret(x.path)).map((x) => ({ path: x.path, before: x.before, after: x.after ?? "" })), checksFile: draft.code, failureOutput: T.failures, passed: run.passed, failed: T.failed, signal: o.signal }).catch(() => null);
               if (j) { blame = j.verdict; why = j.reason; report.usage.modelCalls++; }
             }
             if (blame === "test") push({ kind: "checks_suspect", summary: "a check written from the task fails, but on a second look the check itself looks wrong", evidence: trim(`${why}\n${T.failures}`, 1800), hint: "Review the failing check: it may over-reach. If the change is right, this is a false alarm." });

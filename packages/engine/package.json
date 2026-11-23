@@ -1,7 +1,7 @@
 {
   "name": "apex-verify-engine",
   "version": "0.1.0",
-  "description": "Let any AI model edit your code safely: tries the change on a copy, runs your tests, says ready only when it holds up.",
+  "description": "The verification engine behind Apex verify: writes and runs checks on a scratch copy of a project, runs its tests, decides what counts as proof.",
   "license": "Apache-2.0",
   "type": "module",
   "main": "./dist/index.js",

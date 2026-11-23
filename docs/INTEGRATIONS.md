@@ -37,18 +37,18 @@ Set `GEMINI_API_KEY` (or `OPENAI_API_KEY` and `APEX_CHECKER_MODEL`) in the envir
 
 `APEX_MODE=warn` never blocks. Nothing runs when nothing changed, and an unchanged change is not verified twice. The plugin also gives Claude a `verify_change` tool so it can check itself mid-task, and a skill that tells it to.
 
-Manual hook instead of the plugin (`.claude/settings.json`):
+Manual hook instead of the plugin (`.claude/settings.json`). Hooks run on every stop, so these snippets and the plugin are **pinned to a release** (`v0.2.1`): a mutable `latest` URL would let a future release change what runs inside your agent. Bump the version when you upgrade:
 
 ```json
-{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
+{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.1/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
 ```
 
 ## Codex CLI
 
-Codex documents the same Stop hook contract (`decision: block` plus `reason`; `stop_hook_active` is honoured). **Status: not yet run inside Codex** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)); hooks you add there must be trusted once with `/hooks`. What the test suite covers, and what it does not: [docs/integration-evidence/codex-hook-2026-11-23.md](integration-evidence/codex-hook-2026-11-23.md). In `~/.codex/hooks.json` (or `.codex/hooks.json` in a trusted project):
+Codex documents the same Stop hook contract (`decision: block` plus `reason`; `stop_hook_active` is honoured). **Status: not yet run inside Codex**; hooks you add there must be trusted once with `/hooks`. What the test suite covers, and what it does not: [docs/integration-evidence/codex-hook-2026-11-23.md](integration-evidence/codex-hook-2026-11-23.md). In `~/.codex/hooks.json` (or `.codex/hooks.json` in a trusted project):
 
 ```json
-{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
+{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.1/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
 ```
 
 MCP tool: `codex mcp add apex -- npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --mcp`
@@ -59,7 +59,7 @@ In `.gemini/settings.json` (project) or `~/.gemini/settings.json`:
 
 ```json
 { "hooksConfig": { "enabled": true },
-  "hooks": { "AfterAgent": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --hook", "timeout": 300000 } ] } ] } }
+  "hooks": { "AfterAgent": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.1/apex-verify.tgz verify --hook", "timeout": 300000 } ] } ] } }
 ```
 
 Gemini sends the request as `prompt` and treats `decision: "block"` as a retry, so it works like the Claude Code hook. Tested with Gemini CLI 0.32.1: a wrong `slugify` was blocked with the failing check, the agent fixed it and finished; a correct change got `READY`. (Gemini asks you to trust project-level hooks the first time.)
@@ -69,10 +69,10 @@ Gemini sends the request as `prompt` and treats `decision: "block"` as a retry, 
 In `.cursor/hooks.json` (project) or `~/.cursor/hooks.json`:
 
 ```json
-{ "version": 1, "hooks": { "stop": [ { "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --hook", "timeout": 300, "loop_limit": 3 } ] } }
+{ "version": 1, "hooks": { "stop": [ { "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.1/apex-verify.tgz verify --hook", "timeout": 300, "loop_limit": 3 } ] } }
 ```
 
-Cursor sends `workspace_roots`, `conversation_id` and `status` (not `cwd`) and continues the agent when the hook prints `followup_message`; Apex verify detects that input and prints both `followup_message` and `decision: block`. An aborted or errored run is not verified. **Status: written to Cursor's documented hook format and tested with that input shape, but not yet run inside the Cursor app** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)); Cursor's own forum reports stop-hook follow-ups being unreliable in some versions, so please tell us what you see.
+Cursor sends `workspace_roots`, `conversation_id` and `status` (not `cwd`) and continues the agent when the hook prints `followup_message`; Apex verify detects that input and prints both `followup_message` and `decision: block`. An aborted or errored run is not verified. **Status: written to Cursor's documented hook format and tested with that input shape, but not yet run inside the Cursor app**; Cursor's own forum reports stop-hook follow-ups being unreliable in some versions, so please tell us what you see.
 
 ## Any MCP client (Cursor, Gemini CLI, Claude Desktop, ...)
 
@@ -134,7 +134,7 @@ It shows `ready`, `not ready` or `unknown` for the latest push. Without a model 
 
 `--lock-tests` runs your tests with the **base** version of every test file the change edited or deleted (new test files are kept). An agent that deletes or weakens a failing test, or edits a test to match broken code, gets no benefit: the original test comes back before anything runs, and the report lists the restored files (`lockedTests`). Your project folder is never touched.
 
-`--sign-key <file>` signs the report with Ed25519 (the signature covers the verdict, the task and the proof hash of the changed files, checks and test results). Make a key with `apex verify --gen-key key.pem` (it prints the public key to share), then check a saved report with `apex verify --check-report report.json --pub-key <base64>`; any edit to the report afterwards makes it `NOT VALID`. Keep the private key where the agent cannot read it (a CI secret), and run `apex verify` in CI from the base branch's workflow, so the agent cannot change the verifier either. This is a signature on the evidence, not a sandbox: it does not stop code you run from reading the key if the key is on that machine.
+`--sign-key <file>` signs the report with Ed25519 (the signature covers the **whole report**: verdict, reasons, warnings, tests, checks and the proof hash). Make a key with `apex verify --gen-key key.pem` (it prints the public key to share), then check a saved report with `apex verify --check-report report.json --pub-key <base64>`: **you must pin the key you trust**, because anyone can sign a forged report with their own key (without `--pub-key` the check fails and prints the signer; `--any-key` skips the pin for a quick look). Any edit to the report afterwards makes it `NOT VALID`. Keep the private key where the agent cannot read it (a CI secret), and run `apex verify` in CI from the base branch's workflow, so the agent cannot change the verifier either. This is a signature on the evidence, not a sandbox: it does not stop code you run from reading the key if the key is on that machine.
 
 ## Two checkers
 
@@ -156,4 +156,4 @@ It shows `ready`, `not ready` or `unknown` for the latest push. Without a model 
 | Tests pass but nothing proves the change did anything | `unknown`, never `ready`. |
 | Slow or looping | Each verification is time-boxed; the hook blocks at most 3 times per session and never when nothing changed. |
 
-Safety note: generated checks and your tests run on your machine (macOS: a best-effort sandbox; Linux: as you). Use CI or a container for code you do not trust.
+Safety note: generated checks and your tests run on your machine (macOS Seatbelt, Linux bubblewrap and Windows AppContainer, all best effort: see [docs/SANDBOX.md](SANDBOX.md)). Use CI or a container for code you do not trust.

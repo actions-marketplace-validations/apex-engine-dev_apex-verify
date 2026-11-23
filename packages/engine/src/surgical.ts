@@ -820,10 +820,28 @@ export async function focusedContextX(root: string, changed: string[], failure: 
   return { text: parts.join("\n\n"), segments: seg, form: scope ? "files" : "legacy" };
 }
 
+/** Folders never copied or compared, wherever they are (git's, Apex's, dependencies, bytecode caches). */
+const JUNK_ANYWHERE = new Set([".git", ".apex", "node_modules", "__pycache__"]);
+/** Build output and environments: skipped only at the project root (a source folder called `target` or `coverage` deeper down is source). */
+const JUNK_AT_ROOT = new Set([".venv", "venv", ".next", ".turbo", ".cache", "coverage", "target", ".parcel-cache"]);
+/** Whether a path (as parts, relative to the project) is junk. `diffOnly` also hides root-level `dist` and `build` from comparisons (they are copied, never reported as changes). */
+export function isJunkPath(parts: string[], diffOnly = false): boolean {
+  if (parts.some((p) => JUNK_ANYWHERE.has(p))) return true;
+  const top = parts[0];
+  return top !== undefined && (JUNK_AT_ROOT.has(top) || (diffOnly && (top === "dist" || top === "build")));
+}
+
 export async function copyProject(src: string, dest: string): Promise<void> {
-  // Not copied: git's and Apex's own folders, dependencies (linked below) and build output. Cloned on APFS, so nearly free.
-  const skip = new Set([".git", ".apex", "node_modules", ".venv", "venv", ".next", ".turbo", ".cache", "coverage", "target", ".parcel-cache", "__pycache__"]);
-  await fs.cp(src, dest, { recursive: true, mode: fsConstants.COPYFILE_FICLONE, filter: (p) => !path.relative(src, p).split(path.sep).some((part) => skip.has(part)) });
+  // Cloned on APFS, so nearly free. Symlinks that lead out of the project are not copied: a test could write through one into the real tree.
+  const realSrc = await fs.realpath(src);
+  await fs.cp(src, dest, { recursive: true, mode: fsConstants.COPYFILE_FICLONE, filter: async (p) => {
+    const rel = path.relative(src, p);
+    if (isJunkPath(rel.split(path.sep).filter(Boolean))) return false;
+    try {
+      if ((await fs.lstat(p)).isSymbolicLink()) { const real = await fs.realpath(p); return real === realSrc || real.startsWith(realSrc + path.sep); }
+    } catch { return false; } // a dangling link
+    return true;
+  } });
   // Which project this copy is of (a copy of a copy: the first one's), for the test sandbox's choice per project.
   copyOf.set(path.resolve(dest), copyOf.get(path.resolve(src)) ?? path.resolve(src));
   if (copyOf.size > 500) copyOf.delete(copyOf.keys().next().value!);
@@ -847,7 +865,7 @@ export function pythonPathFor(cwd: string): { PYTHONPATH?: string } {
  * checks, probe scripts): what a test runner needs to start, and nothing that names a key, token or password. The
  * the host's own variables (control tokens, provider keys) never reach such code.
  */
-const RUN_ENV_KEEP = /^(PATH|HOME|USER|LOGNAME|SHELL|LANG|LANGUAGE|LC_[A-Z_]+|TZ|TERM|TMPDIR|TEMP|TMP|PWD|SystemRoot|ComSpec|PATHEXT|APPDATA|LOCALAPPDATA|USERPROFILE|ELECTRON_RUN_AS_NODE|NODE_PATH|NODE_ENV|NVM_DIR|NVM_BIN|VOLTA_HOME|PNPM_HOME|COREPACK_HOME|VIRTUAL_ENV|PYTHONPATH|PYTHONHOME|PYENV_ROOT|CONDA_PREFIX|CONDA_DEFAULT_ENV|UV_CACHE_DIR|XDG_[A-Z_]+|GOPATH|GOROOT|GOCACHE|GOMODCACHE|GOFLAGS|CARGO_HOME|RUSTUP_HOME|JAVA_HOME|DOTNET_ROOT|HOMEBREW_PREFIX)$/;
+const RUN_ENV_KEEP = /^(PATH|HOME|USER|LOGNAME|SHELL|LANG|LANGUAGE|LC_[A-Z_]+|TZ|TERM|TMPDIR|TEMP|TMP|PWD|SystemRoot|ComSpec|PATHEXT|APPDATA|LOCALAPPDATA|USERPROFILE|ELECTRON_RUN_AS_NODE|NODE_PATH|NODE_ENV|NVM_DIR|NVM_BIN|VOLTA_HOME|PNPM_HOME|COREPACK_HOME|VIRTUAL_ENV|PYTHONPATH|PYTHONHOME|PYENV_ROOT|CONDA_PREFIX|CONDA_DEFAULT_ENV|UV_CACHE_DIR|XDG_[A-Z_]+|GOPATH|GOROOT|GOCACHE|GOMODCACHE|GOFLAGS|CARGO_HOME|RUSTUP_HOME|JAVA_HOME|DOTNET_ROOT|HOMEBREW_PREFIX)$/i;
 const RUN_ENV_SECRET = /KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL|AUTH/i;
 export function runEnv(source: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};

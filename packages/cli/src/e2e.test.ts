@@ -192,3 +192,28 @@ test("the MCP server answers initialize, lists verify_change and verifies a chan
   assert.equal(call.isError, false);
   assert.equal(call.structuredContent.verdict, "ready");
 });
+
+test("the stop hook sees a change to an untracked file with a space or accent in its name, and blocks at most 3 times per session even as the change changes", async () => {
+  const d = repo("good"); const t = path.join(d, "..", `apex-e2e-fp-${process.pid}.jsonl`);
+  fs.writeFileSync(t, JSON.stringify({ type: "user", message: { role: "user", content: TASK } }) + "\n");
+  const run = (session: string) => new Promise<string>((resolve) => {
+    const p = spawn(process.execPath, [MAIN, "--hook"], { cwd: d, env: { ...env(), APEX_CACHE_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "apex-e2e-fp-c-")) } });
+    let out = ""; p.stdout.on("data", (x) => (out += x)); p.on("close", () => resolve(out.trim())); p.stdin.end(JSON.stringify({ cwd: d, transcript_path: t, session_id: session }));
+  });
+  const { changeFingerprint } = await import("./hook.js");
+  fs.mkdirSync(path.join(d, "test"), { recursive: true });
+  const f = path.join(d, "test", "Zoë two.test.js");
+  fs.writeFileSync(f, "// v1\n"); const a = changeFingerprint(d);
+  fs.writeFileSync(f, "// v2\n"); const b = changeFingerprint(d);
+  assert.notEqual(a, b, "a rewrite of an untracked file with an odd name changes the fingerprint");
+  // block limit: the change differs on every call, the limit still holds for the session
+  const w = repo("wrong"); fs.writeFileSync(t, JSON.stringify({ type: "user", message: { role: "user", content: TASK } }) + "\n");
+  const runW = (n: number) => new Promise<string>((resolve) => {
+    fs.appendFileSync(path.join(w, "src/slug.js"), `// edit ${n}\n`);
+    const p = spawn(process.execPath, [MAIN, "--hook"], { cwd: w, env: { ...env(), APEX_CACHE_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "apex-e2e-fp-w-")) } });
+    let out = ""; p.stdout.on("data", (x) => (out += x)); p.on("close", () => resolve(out.trim())); p.stdin.end(JSON.stringify({ cwd: w, transcript_path: t, session_id: `loop-${process.pid}` }));
+  });
+  const outs: string[] = []; for (let i = 0; i < 6; i++) outs.push(await runW(i));
+  assert.equal(outs.filter((o) => o && JSON.parse(o).decision === "block").length, 3, outs.join("\n"));
+  void run;
+});

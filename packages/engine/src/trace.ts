@@ -1,5 +1,5 @@
 /**
- * Stack traces pasted into a request: Node/JS, Python, Java/Kotlin and Go frames, mapped to the capsule's own files.
+ * Stack traces pasted into a request: Node/JS, Python, Java/Kotlin and Go frames, mapped to the project's own files.
  * Library and runtime frames (node_modules, node:internal, site-packages, the JDK) are left out: the bug is almost
  * always in the first frame that is the user's code.
  */

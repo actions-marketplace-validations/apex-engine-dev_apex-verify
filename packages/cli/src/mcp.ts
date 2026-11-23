@@ -1,4 +1,5 @@
 import readline from "node:readline";
+import { VERSION } from "./version.js";
 import { checkersFrom, parseVerifyArgs } from "./verify-cmd.js";
 import { verify } from "./verify.js";
 import { openAiClient } from "./openai-client.js";
@@ -27,14 +28,14 @@ export async function handle(msg: any, env: NodeJS.ProcessEnv = process.env): Pr
   const ok = (result: unknown) => ({ jsonrpc: "2.0", id, result });
   const fail = (code: number, message: string) => ({ jsonrpc: "2.0", id, error: { code, message } });
   switch (msg.method) {
-    case "initialize": return ok({ protocolVersion: msg.params?.protocolVersion ?? "2025-06-18", capabilities: { tools: {} }, serverInfo: { name: "apex", version: "0.2.0" } });
+    case "initialize": return ok({ protocolVersion: msg.params?.protocolVersion ?? "2025-06-18", capabilities: { tools: {} }, serverInfo: { name: "apex", version: VERSION } });
     case "ping": return ok({});
     case "tools/list": return ok({ tools: [TOOL] });
     case "tools/call": {
       if (msg.params?.name !== TOOL.name) return fail(-32602, `unknown tool ${msg.params?.name}`);
       const args = msg.params.arguments ?? {};
       try {
-        const a = parseVerifyArgs([String(args.task ?? ""), "--dir", String(args.dir ?? process.cwd()), "--quiet", ...(args.base ? ["--base", String(args.base)] : []), ...(env.APEX_NO_MODEL === "1" ? ["--no-model"] : [])], env);
+        const a = parseVerifyArgs(["--task", String(args.task ?? ""), "--dir", String(args.dir ?? process.cwd()), "--quiet", ...(args.base ? ["--base", String(args.base)] : []), ...(env.APEX_NO_MODEL === "1" ? ["--no-model"] : [])], env);
         const { checker, secondChecker } = checkersFrom(a);
         const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, secondChecker, freshInputs: a.freshInputs, timeoutSec: a.timeoutSec });
         return ok({ content: [{ type: "text", text: renderMarkdown(report) }], structuredContent: report, isError: false });
@@ -49,8 +50,10 @@ export function runMcp(input: NodeJS.ReadableStream = process.stdin, write: (s: 
   const pending: Promise<void>[] = [];
   rl.on("line", (line) => {
     if (!line.trim()) return;
-    let msg: any; try { msg = JSON.parse(line); } catch { return; }
-    pending.push(handle(msg).then((r) => { if (r) write(JSON.stringify(r) + "\n"); }));
+    let msg: any;
+    try { msg = JSON.parse(line); } catch { write(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "parse error" } }) + "\n"); return; }
+    if (!msg || typeof msg !== "object" || Array.isArray(msg)) { write(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "invalid request: send one JSON-RPC object per line" } }) + "\n"); return; }
+    pending.push(handle(msg).then((r) => { if (r) write(JSON.stringify(r) + "\n"); }).catch((e) => { write(JSON.stringify({ jsonrpc: "2.0", id: msg.id ?? null, error: { code: -32603, message: `internal error: ${e instanceof Error ? e.message : String(e)}` } }) + "\n"); }));
   });
   return new Promise((resolve) => rl.on("close", () => { void Promise.all(pending).then(() => resolve()); }));
 }

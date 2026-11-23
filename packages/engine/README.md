@@ -8,7 +8,7 @@ What `apex verify` uses:
 - **Reading results** (`check-results.ts`, `check-screen.ts`): which check results count, and which failures are the check's fault.
 - **Helpers** in `surgical.ts` (project context, copying a project, running tests) and `graph.ts`/`scoped-context.ts` (a code graph, used when [Graphify](https://pypi.org/project/graphifyy/) is installed).
 
-The engine is shared with a separate commercial product (an IDE with a code-writing agent loop), so it also contains that loop (`surgical.ts`'s best-of-n versions step, `verified.ts`). `apex verify` does not use it, and it is not part of what this repository supports.
+The engine was extracted from a larger project, so it also contains a code-writing loop (`surgical.ts`'s best-of-n versions step, `verified.ts`). `apex verify` does not use it, and it is not part of what this repository supports.
 
 Seams: `ModelClient` (one method, `stream(request)`), `Workspace` (file access), `EngineOptions`.
 

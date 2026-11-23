@@ -125,3 +125,31 @@ test("test runs never see API keys or tokens from the environment (every platfor
     assert.doesNotMatch(r.output, /LEAKED/);
   } finally { delete process.env.APEX_SECRET_PROBE_TOKEN; delete process.env.APEX_SECRET_PROBE_KEY; }
 });
+
+test("output made of blank lines does not stall the parsers (no quadratic regex)", async () => {
+  const { readTestOutput, goToTap, jestToTap, cargoToTap } = await import("./test-runner.js");
+  const big = "\n".repeat(80_000);
+  const t0 = Date.now();
+  readTestOutput(big, false); goToTap(big); jestToTap(big); cargoToTap(big);
+  assert.ok(Date.now() - t0 < 2000, `took ${Date.now() - t0} ms`);
+});
+
+test("TAP skip/todo are not counted, a pytest id with a space is one test, goToTap follows === CONT", async () => {
+  const { readTestOutput, goToTap } = await import("./test-runner.js");
+  const { parseTestOutcomes } = await import("./check-results.js");
+  const r = readTestOutput("ok 1 - a # SKIP later\nok 2 - b\nnot ok 3 - c # TODO not yet\n", false);
+  assert.equal(r.passed, 1); assert.equal(r.failed, 0);
+  const py = parseTestOutcomes("FAILED t.py::test_c1_x[hello world] - assert 1 == 2\nPASSED t.py::test_c1_x[abc]\n");
+  assert.equal(py.length, 2); assert.equal(py[0]!.ok, false); assert.equal(py[0]!.name, "t.py::test_c1_x[hello world]");
+  const out = ["=== RUN   TestA", "=== PAUSE TestA", "=== RUN   TestB", "=== CONT  TestA", "    a_test.go:5: got 1, want 2", "=== CONT  TestB", "--- FAIL: TestA (0.00s)", "--- PASS: TestB (0.00s)", "FAIL", ""].join("\n");
+  const tap = goToTap(out);
+  assert.match(tap, /not ok 1 - TestA[\s\S]*actual: 1/);
+});
+
+test("a Python check file with a docstring before `from __future__` keeps the future import first", async () => {
+  const { selfExcludingChecks } = await import("./check-screen.js");
+  const code = '"""doc"""\nfrom __future__ import annotations\nimport os\n\ndef test_a():\n    assert True\n';
+  const out = selfExcludingChecks(code, true);
+  const futureAt = out.indexOf("from __future__"), preludeAt = out.indexOf("__apex_os");
+  assert.ok(futureAt >= 0 && preludeAt > futureAt, "the prelude comes after the future import");
+});

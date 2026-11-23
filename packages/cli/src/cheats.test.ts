@@ -58,3 +58,12 @@ test("special-casing the task's own example value is a warning", () => {
   assert.equal(c[0]!.severity, "medium");
   assert.deepEqual(detectCheats([{ path: "src/money.js", before: "export const f = () => 0;\n", after: "export const f = (n) => n / 100;\n" }], task), []);
 });
+
+test("RegExp.test and cursor.skip are not tests or skips; an echo before a real test command is not hollow; Java and Ruby test files count as tests", () => {
+  const before = { path: "src/a.test.js", before: 'import { test } from "node:test";\ntest("a", () => {});\ntest("b", () => {});\nconst ok = /x/.test("x");\n', after: 'import { test } from "node:test";\ntest("a", () => {});\ntest("b", () => {});\nconst ok = /x/.test("x"); const page = cursor.skip(5);\nassert.match("x", /x/);\n' };
+  assert.deepEqual(detectCheats([before], "x").filter((c) => c.severity === "high"), []);
+  const pkg = { path: "package.json", before: '{"scripts":{"test":"node --test"}}', after: '{"scripts":{"test":"echo building && node --test"}}' };
+  assert.deepEqual(detectCheats([pkg], "x").filter((c) => c.severity === "high"), []);
+  const java = { path: "src/test/java/FooTest.java", before: "class FooTest {}", after: null };
+  assert.ok(detectCheats([java], "x").some((c) => c.kind === "test_deleted"));
+});

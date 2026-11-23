@@ -1,7 +1,7 @@
 # Governance
 
 ## Scope
-This repository is the open project: `apex verify` (CLI, stop hook, MCP server, GitHub Action, Claude Code plugin), the verification engine it uses, and the benchmark that measures it. Apex Capsule IDE is a separate commercial product that depends on the engine.
+This repository is the open project: `apex verify` (CLI, stop hook, MCP server, GitHub Action, Claude Code plugin), the verification engine it uses, and the benchmark that measures it.
 
 ## Decisions
 Maintainers decide in pull request review: one maintainer approval and passing CI for ordinary changes. Changes to what the engine sends to a model, to the proof rules (what counts as `ready`), to the licence or to this document need two maintainers (or the only maintainer, after the proposal has been open a week), with the measured evidence in the thread.

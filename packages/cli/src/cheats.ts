@@ -9,19 +9,19 @@
 export interface FileChange { path: string; before: string | null; after: string | null }
 export interface Cheat { kind: "input_special_cased" | "test_deleted" | "tests_removed" | "tests_skipped" | "tests_focused" | "assertions_removed" | "test_script_changed" | "test_config_changed" | "agent_config_changed"; severity: "high" | "medium"; file: string; detail: string }
 
-const TEST_PATH = [/(^|\/)(tests?|__tests__|specs?)\//i, /\.(test|spec)\.[cm]?[jt]sx?$/i, /(^|\/)test_[^/]*\.py$/i, /_test\.(py|go|rs)$/i, /(^|\/)tests?\.py$/i];
+const TEST_PATH = [/(^|\/)(tests?|__tests__|specs?)\//i, /\.(test|spec)\.[cm]?[jt]sx?$/i, /(^|\/)test_[^/]*\.py$/i, /_test\.(py|go|rs)$/i, /(^|\/)tests?\.py$/i, /(Test|Tests|Spec)\.(java|kt|scala|swift|cs)$/, /_spec\.rb$/i, /\.cy\.[cm]?[jt]sx?$/i, /(^|\/)test\.[cm]?[jt]s$/i];
 export const isTestFile = (p: string) => TEST_PATH.some((r) => r.test(p));
 
 const TEST_CONFIG = [/(^|\/)(jest|vitest|playwright|karma)\.config\.[cm]?[jt]s$/i, /(^|\/)\.mocharc(\.\w+)?$/i, /(^|\/)(pytest\.ini|tox\.ini|setup\.cfg|conftest\.py)$/i, /(^|\/)\.github\/workflows\//];
 const AGENT_CONFIG = [/^\.(claude|cursor|codex|gemini|aider|opencode|windsurf)\//i, /(^|\/)(AGENTS|CLAUDE|GEMINI)\.md$/i, /(^|\/)\.apex(\.\w+)?$/i];
 
 const count = (s: string | null, re: RegExp) => (s ? (s.match(re) ?? []).length : 0);
-const TESTS = /\b(?:test|it)(?:\.\w+)?\s*\(|^\s*(?:async\s+)?def\s+test_|^\s*func\s+Test\w+\(|#\[test\]/gm;
+const TESTS = /(?<![.\w$])(?:test|it)(?:\.\w+)?\s*\(|^\s*(?:async\s+)?def\s+test_|^\s*func\s+Test\w+\(|#\[test\]/gm;
 const ASSERTS = /\bassert\b|\bexpect\s*\(|\.(?:equal|deepEqual|strictEqual|deepStrictEqual|notEqual|ok|throws|rejects|toBe\w*|toEqual|toThrow\w*|toMatch\w*|toContain\w*)\s*\(|\bassert_\w+!?\(/g;
-const SKIPS = /\.(?:skip|todo)\s*\(|\bx(?:it|describe|test)\s*\(|@pytest\.mark\.(?:skip|skipif|xfail)|\bpytest\.(?:skip|xfail)\s*\(|\bt\.Skip\w*\(|@unittest\.skip\w*|#\[ignore\]|\{\s*skip:\s*true/g;
+const SKIPS = /\b(?:test|it|describe|suite|context)\.(?:skip|todo)\s*\(|\bx(?:it|describe|test)\s*\(|@pytest\.mark\.(?:skip|skipif|xfail)|\bpytest\.(?:skip|xfail)\s*\(|\bt\.Skip\w*\(|@unittest\.skip\w*|#\[ignore\]|\{\s*skip:\s*true/g;
 const ONLY = /\.only\s*\(|\bfit\s*\(|\bfdescribe\s*\(/g;
 // A test command that cannot fail.
-const HOLLOW_SCRIPT = /^\s*(?:true|exit\s+0|echo\b.*|:)\s*$|\|\|\s*(?:true|exit\s+0|:)\s*$|;\s*exit\s+0\s*$/;
+const HOLLOW_SCRIPT = /^\s*(?:true|exit\s+0|echo\b[^&|;]*|:)\s*$|\|\|\s*(?:true|exit\s+0|:)\s*$|;\s*exit\s+0\s*$/;
 
 function scriptsTest(json: string | null): string | null {
   if (json === null) return null;

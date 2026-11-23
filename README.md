@@ -47,7 +47,7 @@ cd your-project                  # a git repo where an AI just made a change
 npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify "what you asked the AI to do"
 ```
 
-It downloads a 48 KB file (about 2 seconds), changes nothing in your project, and prints a verdict. Exit code `0` is ready, `1` not ready, `3` unknown. No key? Add `--no-model`: only your tests and the cheating scan run, and the verdict is at most `unknown`.
+It downloads a about 60 KB file (about 2 seconds), changes nothing in your project, and prints a verdict. Exit code `0` is ready, `1` not ready, `3` unknown. No key? Add `--no-model`: only your tests and the cheating scan run, and the verdict is at most `unknown`.
 
 ## Put it where the change happens
 

@@ -18,7 +18,7 @@ inputs:
     required: false
     default: gemini-3.1-pro-preview
   provider:
-    description: gemini or openai (or set base-url).
+    description: gemini, openai, anthropic or openrouter (or set base-url).
     required: false
     default: gemini
   base-url:
@@ -34,7 +34,7 @@ inputs:
     required: false
     default: ""
   fail-on:
-    description: When to fail the job - not_ready (default), unknown (also fail when there is not enough to say) or never.
+    description: When to fail the job - not_ready (default; this also fails when the run itself errors), unknown (also fail when there is not enough to say) or never.
     required: false
     default: not_ready
   comment:
@@ -94,7 +94,11 @@ runs:
         if [ -z "$TASK" ]; then TASK="${COMMIT_MSG:-the change in this commit}"; fi
         BASE="${INPUT_BASE:-${PR_BASE_SHA:-HEAD~1}}"
         OUT="$RUNNER_TEMP/apex"; mkdir -p "$OUT"
-        ARGS=(verify "$TASK" --dir "$GITHUB_WORKSPACE" --base "$BASE" --quiet --format text --markdown-out "$OUT/report.md" --sarif-out "$OUT/report.sarif" --json-out "$OUT/report.json" --badge-out "$OUT/badge.json")
+        # A shallow checkout may not have the base commit (HEAD~1 on a push): deepen it before comparing, so the run is a real one and not a setup error.
+        if ! git -C "$GITHUB_WORKSPACE" rev-parse --verify --quiet "$BASE^{commit}" >/dev/null; then
+          git -C "$GITHUB_WORKSPACE" fetch --no-tags --quiet --deepen=50 origin 2>/dev/null || git -C "$GITHUB_WORKSPACE" fetch --no-tags --quiet origin "$BASE" 2>/dev/null || true
+        fi
+        ARGS=(verify --task "$TASK" --dir "$GITHUB_WORKSPACE" --base "$BASE" --quiet --format text --markdown-out "$OUT/report.md" --sarif-out "$OUT/report.sarif" --json-out "$OUT/report.json" --badge-out "$OUT/badge.json")
         [ -n "$INPUT_TEST" ] && ARGS+=(--test "$INPUT_TEST")
         if [ -n "$INPUT_BASE_URL" ]; then ARGS+=(--base-url "$INPUT_BASE_URL" --model "$INPUT_MODEL" --api-key-env APEX_CHECKER_KEY)
         else ARGS+=(--provider "$INPUT_PROVIDER" --model "$INPUT_MODEL" --api-key-env APEX_CHECKER_KEY); fi
@@ -108,7 +112,7 @@ runs:
         echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"; echo "report=$OUT/report.json" >> "$GITHUB_OUTPUT"
         [ -f "$OUT/report.md" ] && cat "$OUT/report.md" >> "$GITHUB_STEP_SUMMARY"
         if [ "$INPUT_COMMENT" = "true" ] && [ -n "${PR_NUMBER:-}" ] && [ -f "$OUT/report.md" ]; then
-          ID=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '[.[] | select(.body | contains("<!-- apex-verify -->"))][0].id // empty' 2>/dev/null || true)
+          ID=$(gh api "repos/$REPO/issues/$PR_NUMBER/comments" --paginate --jq '[.[] | select(.user.login == "github-actions[bot]" and (.body | contains("<!-- apex-verify -->")))][0].id // empty' 2>/dev/null || true)
           if [ -n "$ID" ]; then gh api -X PATCH "repos/$REPO/issues/comments/$ID" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not update the Apex verify comment (read-only token on a fork pull request?). The report is in the job summary."
           else gh api -X POST "repos/$REPO/issues/$PR_NUMBER/comments" -F body=@"$OUT/report.md" >/dev/null 2>&1 || echo "::warning::Could not post the Apex verify comment (read-only token on a fork pull request?). The report is in the job summary."; fi
         fi
@@ -125,5 +129,6 @@ runs:
         case "$INPUT_FAIL_ON" in
           never) exit 0 ;;
           unknown) [ "$CODE" -ne 0 ] && exit 1 || exit 0 ;;
-          *) [ "$CODE" -eq 1 ] && exit 1 || exit 0 ;;
+          # not_ready (1) fails the job, and so does a crash or setup error (2): a run that could not verify must not look like a pass
+          *) { [ "$CODE" -eq 1 ] || [ "$CODE" -eq 2 ]; } && exit 1 || exit 0 ;;
         esac

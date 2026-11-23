@@ -3,16 +3,15 @@
 No dates and no promises. Open an issue before starting. Everything here serves one claim: **Apex verify tells you, with proof, whether an AI's change is really done**, and we publish how often it is right.
 
 ## Now
-- **Measure the gate** on far more tasks: how many wrong changes it catches, how many correct ones it wrongly blocks, per language, with significance. (Today's number is in the README and is preliminary: tens of tasks, one model family.)
-- **Make check-writing reliable**: it must produce usable checks for nearly every task, and say `unknown` honestly when it cannot.
-- **More languages and test runners**: Jest/Vitest, Go, Rust, Java, C#, Ruby (today: node:test and pytest, plus whatever your own `--test` command runs).
-- **The default gate measured with a different-vendor checker** (done once for single check sets; the default pipeline with the second look still uses Gemini).
+- **Cut the remaining checker false alarms on real libraries** (issue #20): about 4 in 100 good changes are wrongly stopped after a hand audit; find out why the generated checks sometimes contradict the task or break, and fix it without losing the catch rate.
+- **Measure the gate on more tasks and harder bugs**, per language, with significance. Today: 200 changes on 23 real libraries plus 108 on 17 small projects, one model family wrote the changes.
+- **More languages and test runners**: Java, C#, Ruby, Swift (today: node:test, pytest, Jest, Vitest, `cargo test`, `go test`, plus whatever your own `--test` command runs).
+- **Run the Codex and Cursor hooks inside the real apps** (written to their documented formats, not yet run there).
 
 ## Next
-- **Two independent checkers that must both object** (measured: 60% of wrong changes blocked, 2% false alarms; `benchmark/results/second-vendor`): make it an option, then the default when two keys are present.
 - **A patch judge** as a second signal next to the checks (a model reads the change against the task).
 - **Mutation-checked checks**: a check that survives deliberately broken versions of the code is a check worth trusting.
-- **Linux sandbox** for generated checks (bubblewrap or a container recipe), and **Windows** support.
+- **Keyless signing in CI** for reports, and stronger isolation (today the sandboxes are best effort).
 - **GitHub App** (so fork pull requests can get model checks without exposing secrets).
 - A public **"break the verifier" challenge** and scoreboard.
 

@@ -15,9 +15,11 @@ export const VERIFY_USAGE = `apex verify "<what the change should do>" [--dir <p
   --standard-cases   also ask for unstated standard-practice checks (CRLF, empty input); measured no gain, off by default
   --second-model <id> [--second-provider p]   a second, independent checker: NOT READY only when both object; one objection alone is UNKNOWN
   --fresh-inputs   ask the checker to use inputs other than the task's own examples (off by default; see benchmark/results)
+  --quiet          no progress lines, just the report
+  --version        print the version
   --demo           a 30-second demonstration on a built-in project: no key, nothing sent anywhere
   --lock-tests     run your tests with the base versions of any test files the change edited or deleted (an agent cannot edit its way to green)
-  --sign-key <file>   sign the report (Ed25519; make a key with --gen-key <file>); check one with --check-report <file> [--pub-key <base64>]
+  --sign-key <file>   sign the report (Ed25519; make a key with --gen-key <file>); check one with --check-report <file> --pub-key <base64> (the key you trust; --any-key skips that check)
   --badge-out <file>   write a badge with the verdict: shields.io endpoint JSON, or a static SVG when the file ends in .svg
   --no-model   only the deterministic parts: the project's tests and the cheating scan (needs no key)
   --markdown-out / --sarif-out / --json-out <file>   also write those formats to a file (one run)
@@ -33,16 +35,35 @@ export interface VerifyCliArgs {
   secondModel?: string; secondBaseUrl?: string; secondApiKey?: string;
 }
 
-export function parseVerifyArgs(argv: string[], env: NodeJS.ProcessEnv = process.env): VerifyCliArgs {
+const BOOL_FLAGS = new Set(["no-model", "quiet", "json", "standard-cases", "fresh-inputs", "lock-tests", "demo", "hook", "mcp", "help", "version", "any-key"]);
+const VALUE_FLAGS = new Set(["task", "dir", "base", "diff", "model", "provider", "base-url", "api-key-env", "format", "out", "markdown-out", "sarif-out", "json-out", "test", "timeout", "second-model", "second-provider", "badge-out", "sign-key", "gen-key", "check-report", "pub-key"]);
+
+/** `--flag=value` becomes `--flag value` (split at the FIRST "="), `--boolean=false` is dropped, and everything after a bare `--` is the task. */
+export function normalizeArgv(argv: string[]): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]!;
+    if (a === "--") { const task = argv.slice(i + 1).join(" "); if (task) out.push("--task", task); break; }
+    const m = /^--([A-Za-z][A-Za-z0-9-]*)=([\s\S]*)$/.exec(a);
+    if (!m) { out.push(a); if (a.startsWith("--") && VALUE_FLAGS.has(a.slice(2)) && i + 1 < argv.length) out.push(argv[++i]!); continue; }
+    const [, k, v] = m;
+    if (BOOL_FLAGS.has(k!)) { if (!/^(false|0|no|off)$/i.test(v!)) out.push("--" + k); }
+    else out.push("--" + k, v!);
+  }
+  return out;
+}
+
+export function parseVerifyArgs(rawArgv: string[], env: NodeJS.ProcessEnv = process.env): VerifyCliArgs {
+  const argv = normalizeArgv(rawArgv);
   const flags = new Map<string, string | true>();
   const rest: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;
     if (a.startsWith("--")) {
-      const [k, v] = a.slice(2).split("=", 2);
-      if (v !== undefined) flags.set(k!, v);
-      else if (["no-model", "quiet", "json", "standard-cases", "fresh-inputs", "lock-tests"].includes(k!)) flags.set(k!, true);
-      else flags.set(k!, argv[++i] ?? "");
+      const k = a.slice(2);
+      if (BOOL_FLAGS.has(k)) flags.set(k, true);
+      else if (VALUE_FLAGS.has(k)) flags.set(k, argv[++i] ?? "");
+      else throw new Error(`unknown option --${k} (see apex --help). To start the task text with "--", put it after a bare "--".`);
     } else rest.push(a);
   }
   const task = (typeof flags.get("task") === "string" ? String(flags.get("task")) : rest.join(" ")).trim() || env.APEX_TASK?.trim() || "";
@@ -104,7 +125,13 @@ export function checkersFrom(a: VerifyCliArgs, client?: ModelClient): { checker:
 export async function runVerify(a: VerifyCliArgs, out: (s: string) => void = console.log, err: (s: string) => void = console.error, client?: ModelClient): Promise<number> {
   if (!fs.existsSync(a.dir) || !fs.statSync(a.dir).isDirectory()) throw new Error(`directory not found: ${a.dir}`);
   const { checker, secondChecker } = checkersFrom(a, client);
-  const report = await verify({ dir: a.dir, task: a.task, base: a.base, diffFile: a.diffFile, checker, secondChecker, testCommand: a.testCommand, timeoutSec: a.timeoutSec, standardCases: a.standardCases, freshInputs: a.freshInputs, lockTests: a.lockTests, onProgress: a.quiet ? undefined : (l) => err(l) });
+  // Ctrl-C (or a terminated CI job) stops the run and lets it clean up its scratch copy instead of leaving it behind.
+  const ac = new AbortController();
+  const onSignal = () => ac.abort();
+  process.once("SIGINT", onSignal); process.once("SIGTERM", onSignal);
+  let report: Awaited<ReturnType<typeof verify>>;
+  try { report = await verify({ signal: ac.signal, dir: a.dir, task: a.task, base: a.base, diffFile: a.diffFile, checker, secondChecker, testCommand: a.testCommand, timeoutSec: a.timeoutSec, standardCases: a.standardCases, freshInputs: a.freshInputs, lockTests: a.lockTests, onProgress: a.quiet ? undefined : (l) => err(l) }); } finally { process.off("SIGINT", onSignal); process.off("SIGTERM", onSignal); }
+  if (ac.signal.aborted) throw new Error("interrupted");
   if (a.signKey) report.signature = signReport(report, a.signKey);
   if (a.markdownOut) fs.writeFileSync(a.markdownOut, renderMarkdown(report) + "\n");
   if (a.sarifOut) fs.writeFileSync(a.sarifOut, renderSarif(report) + "\n");

@@ -26,7 +26,7 @@ export function renderText(r: VerifyReport): string {
     if (x.evidence) out.push(...x.evidence.split("\n").slice(0, 14).map((l) => `      ${l}`));
     if (x.hint) out.push(`      fix: ${x.hint}`);
   }
-  if (r.verdict === "ready") out.push("", "  The checks written from your task pass, the tests pass, and nothing was weakened.");
+  if (r.verdict === "ready") out.push("", `  The checks written from your task pass, ${testsOkText(r)}, and nothing was weakened.`);
   out.push("", `  ${testsLine(r)}`, `  ${checksLine(r)}`, `  change: ${plural(r.change.files.length, "file")} ${r.change.mode === "patch" ? "in the diff" : `compared with ${r.change.base}`}`);
   out.push(`  sandbox: ${r.sandbox}`);
   for (const w of r.warnings) out.push(`  note: ${w}`);
@@ -35,17 +35,25 @@ export function renderText(r: VerifyReport): string {
 }
 
 /** One comment for a pull request; the marker lets the Action update it in place. */
+/** What can honestly be said about the project's own tests next to a READY. */
+const testsOkText = (r: VerifyReport) => (r.tests.after && r.tests.after.failed > 0 ? `the change broke none of the tests (${r.tests.after.failed} already failed before it)` : r.tests.after && r.tests.after.passed + r.tests.after.failed === 0 ? "no project tests ran" : "the tests pass");
+
+/** Text from a test name, a warning or a check is untrusted (a pull request can put anything there): one line, no HTML, no markdown links or mentions. */
+const mdInline = (t: string) => t.replace(/\s*\n\s*/g, " ").replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]!).replace(/([\\`*_{}\[\]()#+!|~])/g, "\\$1").replace(/@/g, "@\u200b");
+/** A code fence that nothing inside it can close early. */
+const mdFence = (body: string) => "`".repeat(Math.max(3, ...[...body.matchAll(/`+/g)].map((m) => m[0].length + 1)));
+
 export function renderMarkdown(r: VerifyReport): string {
   const icon = r.verdict === "ready" ? "✅" : r.verdict === "not_ready" ? "❌" : "❔";
   const out = ["<!-- apex-verify -->", `### ${icon} Apex verify: **${verdictLabel(r)}**`, ""];
   for (const x of r.reasons) {
-    out.push(`- **${x.summary}**`);
-    if (x.evidence) out.push("  <details><summary>evidence</summary>", "", "  ```", ...x.evidence.split("\n").slice(0, 20).map((l) => `  ${l}`), "  ```", "  </details>");
-    if (x.hint) out.push(`  - fix: ${x.hint}`);
+    out.push(`- **${mdInline(x.summary)}**`);
+    if (x.evidence) { const lines = x.evidence.split("\n").slice(0, 20); const f = mdFence(lines.join("\n")); out.push("  <details><summary>evidence</summary>", "", `  ${f}`, ...lines.map((l) => `  ${l}`), `  ${f}`, "  </details>"); }
+    if (x.hint) out.push(`  - fix: ${mdInline(x.hint)}`);
   }
-  if (r.verdict === "ready") out.push("The checks written from the task pass, the tests pass, and nothing was weakened.");
-  out.push("", `| | |`, `|---|---|`, `| ${testsLine(r).split(": ")[0]} | ${testsLine(r).split(": ").slice(1).join(": ")} |`, `| checks | ${checksLine(r).replace(/^checks: /, "")} |`, `| change | ${plural(r.change.files.length, "file")} vs \`${r.change.base}\` |`);
-  if (r.warnings.length) out.push("", ...r.warnings.map((w) => `> note: ${w}`));
+  if (r.verdict === "ready") out.push(`The checks written from the task pass, ${testsOkText(r)}, and nothing was weakened.`);
+  out.push("", `| | |`, `|---|---|`, `| ${testsLine(r).split(": ")[0]} | ${mdInline(testsLine(r).split(": ").slice(1).join(": "))} |`, `| checks | ${mdInline(checksLine(r).replace(/^checks: /, ""))} |`, `| change | ${plural(r.change.files.length, "file")} vs \`${r.change.base.replace(/`/g, "")}\` |`);
+  if (r.warnings.length) out.push("", ...r.warnings.map((w) => `> note: ${mdInline(w)}`));
   out.push("", `<sub>${r.usage.seconds}s, ${plural(r.usage.modelCalls, "model call")} · proof \`${r.proof.slice(0, 19)}…\` · [Apex verify](https://github.com/apex-engine-dev/apex-verify)</sub>`);
   return out.join("\n");
 }

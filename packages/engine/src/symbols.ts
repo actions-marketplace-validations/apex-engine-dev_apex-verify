@@ -1,6 +1,6 @@
 /**
  * Read code by symbol instead of by file: an outline of a file, or one function / class with its line numbers.
- * Heuristic and dependency-free (JS/TS by braces, Python by indentation), so it works in every capsule.
+ * Heuristic and dependency-free (JS/TS by braces, Python by indentation), so it works in any project.
  */
 
 export interface SymbolEntry {

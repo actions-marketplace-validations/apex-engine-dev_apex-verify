@@ -255,6 +255,14 @@ test("signed reports: valid, changed after signing, and signed by another key", 
   assert.equal(checkReport({ ...signed, verdict: "ready" }, pub).ok, false, "the verdict was edited");
   assert.equal(checkReport(signed, generateKey(key + "2")).ok, false, "a different key than expected");
   assert.equal(checkReport(r).ok, false, "unsigned");
+  assert.equal(checkReport(signed).ok, false, "no key pinned: anyone can sign");
+  assert.equal(checkReport(signed, undefined, true).ok, true, "explicitly allowed");
+  const forged = { ...signed, reasons: [{ kind: "no_change", summary: "edited after signing" }] };
+  assert.equal(checkReport(forged as any, pub).ok, false, "reasons are covered by the signature");
+  const attackerKey = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "apex-key2-")), "k.pem"); generateKey(attackerKey);
+  const fake = { ...r, verdict: "ready" as const }; (fake as any).signature = signReport(fake as any, attackerKey);
+  assert.equal(checkReport(fake as any, pub).ok, false, "a forged ready signed with another key is rejected when the right key is pinned");
+  assert.throws(() => generateKey(key), /already exists/);
 });
 
 test("--demo: no key, a pretend agent's wrong change is caught with expected and actual, exit 0", async () => {
@@ -290,4 +298,120 @@ test("a baseline whose tests could not run is not used to call a failure new", a
   write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
   const r = await verify({ dir: d, task: TASK, checker: null });
   assert.ok(!r.reasons.some((x) => x.kind === "regression"), JSON.stringify(r.reasons));
+});
+
+test("a diff that names a path outside the project, an absolute path or a symlink is refused before anything is applied", async () => {
+  const d = repo();
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "apex-home-"));
+  const tryDiff = async (text: string) => { const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "apex-d-")), "x.diff"); fs.writeFileSync(f, text); return verify({ dir: d, task: TASK, checker: null, diffFile: f }).then(() => "applied", (e: Error) => e.message); };
+  const victim = path.join(home, "authorized_keys");
+  const rel = path.relative(d, victim);
+  assert.match(await tryDiff(`--- /dev/null\n+++ b/${rel}\n@@ -0,0 +1 @@\n+evil\n`), /outside the project/);
+  assert.equal(fs.existsSync(victim), false, "nothing was written outside the copy");
+  assert.match(await tryDiff(`--- /dev/null\n+++ ${victim}\n@@ -0,0 +1 @@\n+evil\n`), /absolute path/);
+  assert.match(await tryDiff(`diff --git a/link b/link\nnew file mode 120000\nindex 0000000..1111111\n--- /dev/null\n+++ b/link\n@@ -0,0 +1 @@\n+../../etc\n`), /symbolic link/);
+  assert.match(await tryDiff("--- a/src/slug.js\n+++ b/src/slug.js\n@@ -1 +1 @@\n-x\n+y\u0000\n"), /NUL/);
+});
+
+test("a forged or damaged cached draft is ignored (path traversal, a wrong file name, a missing shape)", async () => {
+  const { shapeOk } = await import("./verify.js");
+  const good = { code: "x", path: "test/apex-task-check.test.js", original: { passed: 1, failed: 1, loadError: null } };
+  assert.equal(shapeOk(good), true);
+  assert.equal(shapeOk({ ...good, path: "../../../home/u/.zshrc" }), false);
+  assert.equal(shapeOk({ ...good, path: "/etc/passwd" }), false);
+  assert.equal(shapeOk({ ...good, path: "test/evil.test.js" }), false, "only a check file name is accepted");
+  assert.equal(shapeOk({ ...good, path: "test/../x/apex-task-check.test.js" }), false);
+  assert.equal(shapeOk({ ...good, original: undefined }), false);
+  assert.equal(shapeOk({ path: good.path }), false);
+});
+
+test("the type check does not see API keys or tokens from the environment", async () => {
+  const d = repo();
+  const leak = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "apex-leak-")), "leaked.txt");
+  const pkg = JSON.parse(fs.readFileSync(path.join(d, "package.json"), "utf8")); pkg.scripts.typecheck = "node leak.mjs"; fs.writeFileSync(path.join(d, "package.json"), JSON.stringify(pkg));
+  fs.writeFileSync(path.join(d, "leak.mjs"), `import fs from "node:fs"; fs.writeFileSync(${JSON.stringify(leak)}, "KEYS:" + Object.keys(process.env).filter((k) => /KEY|TOKEN|SECRET/i.test(k)).join(","));\n`);
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "tc"]);
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  process.env.APEX_TEST_FAKE_API_KEY = "s3cret"; process.env.GH_TOKEN = "tok";
+  try { await verify({ dir: d, task: TASK, checker: null }); } finally { delete process.env.APEX_TEST_FAKE_API_KEY; delete process.env.GH_TOKEN; }
+  assert.ok(fs.existsSync(leak), "the type check ran");
+  assert.equal(fs.readFileSync(leak, "utf8"), "KEYS:", "no key-like variable reached the type check");
+});
+
+test("secrets: a git-ignored .env is not part of the change and nothing key-shaped is sent to the model", async () => {
+  const d = repo();
+  fs.writeFileSync(path.join(d, ".gitignore"), ".env\n"); execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "ignore"]);
+  fs.writeFileSync(path.join(d, ".env"), "API_KEY=SECRET-DOTENV-VALUE-123456789\n");
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); } // sk_live_ABCDEFGHIJKLMNOP\n");
+  const sent: string[] = [];
+  const client = { async *stream(req: any) { sent.push(req.messages.map((m: any) => m.content).join("\n")); yield { type: "text-delta", text: "no tests" }; yield { type: "done" }; } };
+  const r = await verify({ dir: d, task: TASK, checker: { client: client as any, model: "m" }, cache: false });
+  assert.ok(!r.change.files.some((f) => f.path === ".env"), "the ignored file is not a changed file");
+  const all = sent.join("\n");
+  assert.ok(!all.includes("SECRET-DOTENV-VALUE"), "the .env value never reaches the model");
+  assert.ok(!all.includes("sk_live_ABCDEFGHIJKLMNOP"), "key-shaped strings are redacted");
+});
+
+test("markdown output cannot be broken or abused by untrusted text (links, mentions, HTML, code fences)", async () => {
+  const { renderMarkdown } = await import("./report.js");
+  const d = repo(); write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  r.reasons.push({ kind: "check_failed", summary: "x](https://evil/login) ![t](https://evil/p.png) @octocat <img src=x onerror=1>", evidence: "line 1\n```\n## injected\n```\nline 5", hint: "a\nb | c" });
+  r.warnings.push("multi\nline | warning @someone");
+  const md = renderMarkdown(r);
+  assert.ok(!md.includes("](https://evil/login)"), md);
+  assert.ok(!/<img/.test(md) && !md.includes("@octocat") && !md.includes("@someone"));
+  assert.ok(/````/.test(md), "the evidence fence is longer than the backticks inside it");
+  assert.ok(!md.split("\n").some((l) => l.startsWith("b |") || l === "b | c"), "newlines are collapsed");
+});
+
+test("an uncommitted new folder as --dir is compared with an empty original, not a git error", async () => {
+  const d = repo();
+  const sub = path.join(d, "newpkg"); fs.mkdirSync(sub); fs.writeFileSync(path.join(sub, "a.js"), "export const a = 1;\n");
+  const r = await verify({ dir: sub, task: "add a", checker: null });
+  assert.ok(r.change.files.some((f) => f.path === "a.js" && f.status === "added"), JSON.stringify(r.change.files));
+});
+
+test("READY does not claim the tests pass when some already failed before the change", async () => {
+  const { renderText } = await import("./report.js");
+  const d = repo();
+  fs.writeFileSync(path.join(d, "test/slug.test.js"), "import { test } from \"node:test\";\ntest(\"already broken\", () => { throw new Error(\"x\"); });\n");
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "broken"]);
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  r.verdict = "ready";
+  assert.doesNotMatch(renderText(r), /the tests pass/);
+  assert.match(renderText(r), /already failed before/);
+});
+
+test("edits under src/build, src/target or src/coverage are seen, and such source folders are copied for the tests", async () => {
+  const d = repo();
+  fs.mkdirSync(path.join(d, "src/target"), { recursive: true }); fs.writeFileSync(path.join(d, "src/target/t.js"), "export const t = 1;\n");
+  fs.mkdirSync(path.join(d, "src/build"), { recursive: true }); fs.writeFileSync(path.join(d, "src/build/b.js"), "export const b = 1;\n");
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "dirs"]);
+  fs.writeFileSync(path.join(d, "src/build/b.js"), "export const b = 2;\n");
+  const c = await (await import("./verify.js")).collectChange({ dir: d });
+  try {
+    assert.deepEqual(c.changes.map((x) => x.path), ["src/build/b.js"]);
+    assert.ok(fs.existsSync(path.join(c.next, "src/target/t.js")), "a source folder named target is copied");
+  } finally { await c.cleanup(); }
+});
+
+test("a symlink that leads out of the project is not copied into the scratch copy", async () => {
+  const d = repo(); const outside = fs.mkdtempSync(path.join(os.tmpdir(), "apex-outside-"));
+  fs.symlinkSync(outside, path.join(d, "escape"), "dir");
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const c = await (await import("./verify.js")).collectChange({ dir: d });
+  try { assert.equal(fs.existsSync(path.join(c.next, "escape")), false); } finally { await c.cleanup(); }
+});
+
+test(".gitattributes export-ignore cannot hide tests from the comparison (the baseline is not built with git archive)", async () => {
+  const d = repo();
+  fs.writeFileSync(path.join(d, ".gitattributes"), "test/ export-ignore\n");
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "ignore tests"]);
+  fs.unlinkSync(path.join(d, "test/slug.test.js"));
+  write(d, "src/slug.js", "export function slugify(s) { return 42; }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  assert.ok(r.cheats.some((x) => /deleted|removed/i.test(x.detail) || x.kind === "test_deleted"), JSON.stringify(r.cheats));
+  assert.equal(r.verdict, "not_ready");
 });

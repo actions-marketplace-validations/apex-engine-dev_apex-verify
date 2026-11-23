@@ -37,7 +37,7 @@ export function selfExcludingChecks(code: string, py = false): string {
     ].join("\n");
     // `from __future__` imports must stay first.
     const fut = /^(?:from __future__ import [^\n]*\n)+/m.exec(code);
-    if (fut && code.slice(0, fut.index).trim() === "" ) return code.slice(0, fut.index + fut[0].length) + prelude + code.slice(fut.index + fut[0].length);
+    if (fut && /^\s*(?:#[^\n]*\n|"""[\s\S]*?"""\s*|'''[\s\S]*?'''\s*|"[^"\n]*"\s*|'[^'\n]*'\s*)*$/.test(code.slice(0, fut.index))) return code.slice(0, fut.index + fut[0].length) + prelude + code.slice(fut.index + fut[0].length);
     return prelude + code;
   }
   const esm = /^\s*import\s/m.test(code) || /^\s*export\s/m.test(code);

@@ -27,3 +27,5 @@ With a model, the container needs the network for the model call only: run `--no
 ## What is still not isolated
 
 The model call sends your task and a budgeted excerpt of the relevant source files (about 24 KB) to the checker model you configure. Nothing else leaves the machine; there is no telemetry. If that excerpt must not leave your network, do not use a hosted checker model.
+
+**Where Apex verify keeps its own files.** Cached checks and the stop hook's state live in `~/.apex-verify/` (override with `APEX_STATE_DIR`; `APEX_CACHE_DIR` moves only the cache). It is a mode-700 folder that is *not* one of the places the sandbox lets tests write to, so code under test cannot plant a cached check or forge a hook verdict. If you point `APEX_CACHE_DIR` at a folder the sandbox can write (a temp folder, `~/.cache`), you give that protection up.

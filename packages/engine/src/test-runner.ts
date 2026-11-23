@@ -78,7 +78,7 @@ export async function detectFramework(root: string): Promise<Framework | null> {
 }
 /** The Rust crate's name (for `use <name>::...` in an integration test), from Cargo.toml. */
 export async function cargoCrateName(root: string): Promise<string> {
-  try { const m = /^\s*name\s*=\s*"([^"]+)"/m.exec(await fs.readFile(path.join(root, "Cargo.toml"), "utf8")); if (m) return m[1]!.replace(/-/g, "_"); } catch { /* none */ }
+  try { const m = /^[ \t]*name\s*=\s*"([^"]+)"/m.exec(await fs.readFile(path.join(root, "Cargo.toml"), "utf8")); if (m) return m[1]!.replace(/-/g, "_"); } catch { /* none */ }
   return "crate_name";
 }
 /** Where a Go check file goes: the folder holding most of the non-test .go files (the root when it has any), and that package's name. */
@@ -88,7 +88,7 @@ export function goPackageOf(files: string[], read: (rel: string) => string): { d
   const best = counts.has("") ? "" : [...counts.entries()].sort((a, b) => b[1].length - a[1].length)[0]?.[0] ?? "";
   const first = counts.get(best)?.[0];
   let pkg = "main";
-  if (first) { try { pkg = /^\s*package\s+(\w+)/m.exec(read(first))?.[1] ?? "main"; } catch { /* unreadable */ } }
+  if (first) { try { pkg = /^[ \t]*package\s+(\w+)/m.exec(read(first))?.[1] ?? "main"; } catch { /* unreadable */ } }
   return { dir: best, pkg };
 }
 /** go test -v output as TAP, so check results are read the same way for every runner. Subtests are reported by their full name; a parent that only failed because a subtest did is left out. The t.Errorf lines stream right after "=== RUN   name". */
@@ -97,12 +97,12 @@ export function goToTap(output: string): string {
   const msgs = new Map<string, string[]>();
   let cur = "";
   for (const l of plain) {
-    const run = /^=== RUN\s+(\S+)/.exec(l);
+    const run = /^=== (?:RUN|CONT)\s+(\S+)/.exec(l);
     if (run) { cur = run[1]!; continue; }
-    if (/^\s*--- /.test(l) || /^(FAIL|ok|PASS)\b/.test(l)) { cur = ""; continue; }
+    if (/^[ \t]*--- /.test(l) || /^(FAIL|ok|PASS)\b/.test(l)) { cur = ""; continue; }
     if (cur && /^\s+\S/.test(l)) msgs.set(cur, [...(msgs.get(cur) ?? []), l.trim()]);
   }
-  const results = [...plain.join("\n").matchAll(/^\s*--- (PASS|FAIL): (\S+)/gm)].map((m) => ({ ok: m[1] === "PASS", name: m[2]! }));
+  const results = [...plain.join("\n").matchAll(/^[ \t]*--- (PASS|FAIL): (\S+)/gm)].map((m) => ({ ok: m[1] === "PASS", name: m[2]! }));
   const lines: string[] = []; let n = 0;
   for (const r of results) {
     if (!r.ok && results.some((o) => !o.ok && o.name.startsWith(r.name + "/"))) continue;
@@ -132,11 +132,11 @@ export function frameworkCheckCommand(fw: Framework, file: string): string[] {
 export function cargoToTap(output: string): string {
   const plain = output.replace(/\x1b\[[0-9;]*m/g, "");
   const lines: string[] = []; let n = 0;
-  for (const m of plain.matchAll(/^test (\S+) \.\.\. (ok|FAILED)\s*$/gm)) {
+  for (const m of plain.matchAll(/^test (\S+) \.\.\. (ok|FAILED)[ \t]*$/gm)) {
     n++; const name = m[1]!;
     if (m[2] === "ok") { lines.push(`ok ${n} - ${name}`); continue; }
     const block = plain.split(`---- ${name} stdout ----`)[1]?.split(/^---- |^failures:/m)[0] ?? "";
-    const left = /^\s*left:\s*(.+)$/m.exec(block)?.[1]?.trim(), right = /^\s*right:\s*(.+)$/m.exec(block)?.[1]?.trim();
+    const left = /^[ \t]*left:\s*(.+)$/m.exec(block)?.[1]?.trim(), right = /^[ \t]*right:\s*(.+)$/m.exec(block)?.[1]?.trim();
     const msg = block.split("\n").map((l) => l.trim()).find((l) => l && !/^thread '/.test(l)) ?? "failed";
     lines.push(`not ok ${n} - ${name}`, "  ---", `  error: ${msg}`, ...(left !== undefined ? [`  actual: ${left}`] : []), ...(right !== undefined ? [`  expected: ${right}`] : []), "  ...");
   }
@@ -145,16 +145,16 @@ export function cargoToTap(output: string): string {
 /** Jest prints no TAP; add TAP lines (name, expected, actual) so check results are read the same way for every runner. */
 export function jestToTap(output: string): string {
   const plain = output.replace(/\x1b\[[0-9;]*m/g, "");
-  if (!/^\s*Tests:\s/m.test(plain) || !/^\s*[✓✕√×]\s/m.test(plain)) return output;
+  if (!/^[ \t]*Tests:\s/m.test(plain) || !/^[ \t]*[✓✕√×]\s/m.test(plain)) return output;
   const lines: string[] = []; let n = 0;
   const detail = new Map<string, { expected?: string; actual?: string; message?: string }>();
-  for (const block of plain.split(/^\s*●\s+/m).slice(1)) {
+  for (const block of plain.split(/^[ \t]*●\s+/m).slice(1)) {
     const title = block.split("\n")[0]!.trim().split(/\s+›\s+/).pop()!.trim();
     const exp = /Expected[^:\n]*:\s*(.+)/.exec(block)?.[1]?.trim(), act = /Received[^:\n]*:\s*(.+)/.exec(block)?.[1]?.trim();
     const msg = block.split("\n").map((l) => l.trim()).find((l, i) => i > 0 && l && !/^expect\(/.test(l));
     detail.set(title, { expected: exp, actual: act, message: msg });
   }
-  for (const m of plain.matchAll(/^\s*([✓✕√×])\s+(.+?)(?:\s+\(\d+\s*ms\))?\s*$/gm)) {
+  for (const m of plain.matchAll(/^[ \t]*([✓✕√×])\s+(.+?)(?:\s+\(\d+\s*ms\))?[ \t]*$/gm)) {
     n++; const ok = m[1] === "✓" || m[1] === "√", name = m[2]!.trim();
     lines.push(`${ok ? "ok" : "not ok"} ${n} - ${name}`);
     if (!ok) { const d = detail.get(name); lines.push("  ---", `  error: ${d?.message ?? "failed"}`, ...(d?.expected ? [`  expected: ${d.expected}`] : []), ...(d?.actual ? [`  actual: ${d.actual}`] : []), "  ..."); }
@@ -176,7 +176,7 @@ export async function whichOnPath(name: string, envPath = process.env.PATH ?? ""
 
 /** The command that runs this project's tests, or null when there are none Apex can run. */
 export async function detectTestRunner(root: string, override?: string): Promise<TestRunner | null> {
-  // The project's own test command (Settings / the capsule's project commands) wins over detection.
+  // The project's own test command (passed in, for example `--test`) wins over detection.
   // An override that is just the project's usual test command (`npm test` on a node:test project, `go test ./...`…)
   // uses the detected runner: the versions path reads results by runner kind, and a generic `bash -c` hid them
   // (measured: every version scored "0 passing, 0 failing", so nothing was ever applied).
@@ -190,7 +190,7 @@ export async function detectTestRunner(root: string, override?: string): Promise
   let script = "";
   try { script = String(JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8")).scripts?.test ?? ""); } catch { /* none */ }
   const real = script && !/no test specified/i.test(script);
-  const plainNode = /^\s*node\s+--test\b/.test(script);
+  const plainNode = /^[ \t]*node\s+--test\b/.test(script);
   if (real && !plainNode && (await exists(path.join(root, "node_modules")))) return { kind: "npm", command: ["npm", "test", "--silent"], timeoutSec: 180 };
   if (await findFile(root, async (name, full) => /\.test\.[mc]?js$/.test(name) && /node:test/.test(await fs.readFile(full, "utf8").catch(() => "")))) {
     return { kind: "node", command: ["node", "--test"], timeoutSec: 90 };
@@ -254,38 +254,39 @@ export async function detectProjectCommands(root: string): Promise<{ test?: stri
 export function readTestOutput(output: string, errored: boolean): { passed: number; failed: number; failedNames: string[] } {
   const plain = output.replace(/\x1b\[[0-9;]*m/g, "");
   const num = (re: RegExp) => { const m = re.exec(plain); return m ? Number(m[1]) : null; };
-  let passed = (plain.match(/^ok \d+ - /gm) ?? []).length;
-  let failed = (plain.match(/^not ok \d+ - /gm) ?? []).length;
+  // A "# SKIP" or "# TODO" result is neither a pass nor a failure.
+  let passed = (plain.match(/^ok \d+ - (?![^\n]*#[ \t]*(?:SKIP|TODO)\b)/gim) ?? []).length;
+  let failed = (plain.match(/^not ok \d+ - (?![^\n]*#[ \t]*(?:SKIP|TODO)\b)/gim) ?? []).length;
   const names = [...plain.matchAll(/^not ok \d+ - (.+)$/gm)].map((m) => m[1].trim());
   // node:test summary, TAP ("# pass 84") or spec reporter ("ℹ pass 84"): the most reliable count when present.
-  const sumPass = num(/^\s*[#ℹ]\s*pass (\d+)\s*$/m), sumFail = num(/^\s*[#ℹ]\s*fail (\d+)\s*$/m);
+  const sumPass = num(/^[ \t]*[#ℹ]\s*pass (\d+)[ \t]*$/m), sumFail = num(/^[ \t]*[#ℹ]\s*fail (\d+)[ \t]*$/m);
   if (sumPass !== null || sumFail !== null) {
     passed = sumPass ?? 0; failed = sumFail ?? 0;
-    for (const m of plain.matchAll(/^\s*✖\s+(.+?)(?:\s+\([\d.]+m?s\))?\s*$/gm)) if (!/^failing tests:?$/i.test(m[1])) names.push(m[1]);
-  } else if (!passed && !failed && /^\s*[✔✖]\s/m.test(plain)) {
+    for (const m of plain.matchAll(/^[ \t]*✖\s+(.+?)(?:\s+\([\d.]+m?s\))?[ \t]*$/gm)) if (!/^failing tests:?$/i.test(m[1])) names.push(m[1]);
+  } else if (!passed && !failed && /^[ \t]*[✔✖]\s/m.test(plain)) {
     // node:test spec reporter without the summary (cut off): count the result lines.
-    passed = (plain.match(/^\s*✔\s/gm) ?? []).length;
-    failed = (plain.match(/^\s*✖\s/gm) ?? []).length;
+    passed = (plain.match(/^[ \t]*✔\s/gm) ?? []).length;
+    failed = (plain.match(/^[ \t]*✖\s/gm) ?? []).length;
   }
-  if (!passed && !failed && /^\s*--- (?:PASS|FAIL): /m.test(plain)) {
+  if (!passed && !failed && /^[ \t]*--- (?:PASS|FAIL): /m.test(plain)) {
     // go test -v: one "--- PASS: TestX (0.00s)" or "--- FAIL: TestX" per top-level test (subtests are indented and counted with them).
     for (const m of plain.matchAll(/^--- (PASS|FAIL): (\S+)/gm)) { if (m[1] === "PASS") passed++; else { failed++; names.push(m[2]!); } }
   }
   if (!passed && !failed && /^test result: /m.test(plain)) {
     // cargo test (libtest): "test result: FAILED. 2 passed; 1 failed; ..." once per test binary.
     for (const m of plain.matchAll(/^test result: \w+\. (\d+) passed; (\d+) failed/gm)) { passed += Number(m[1]); failed += Number(m[2]); }
-    for (const m of plain.matchAll(/^test (\S+) \.\.\. FAILED\s*$/gm)) names.push(m[1]!);
+    for (const m of plain.matchAll(/^test (\S+) \.\.\. FAILED[ \t]*$/gm)) names.push(m[1]!);
   }
   if (!passed && !failed) {
     // jest: "Tests:       1 failed, 5 passed, 6 total"; vitest: "Tests  1 failed | 5 passed (6)".
-    const line = /^\s*Tests:?\s+.*$/m.exec(plain)?.[0] ?? "";
+    const line = /^[ \t]*Tests:?\s+.*$/m.exec(plain)?.[0] ?? "";
     if (line) { passed = Number(/(\d+) passed/.exec(line)?.[1] ?? 0); failed = Number(/(\d+) failed/.exec(line)?.[1] ?? 0); }
     // mocha: "5 passing", "1 failing".
-    else if (/^\s*\d+ passing\b/m.test(plain)) { passed = num(/^\s*(\d+) passing\b/m) ?? 0; failed = num(/^\s*(\d+) failing\b/m) ?? 0; }
+    else if (/^[ \t]*\d+ passing\b/m.test(plain)) { passed = num(/^[ \t]*(\d+) passing\b/m) ?? 0; failed = num(/^[ \t]*(\d+) failing\b/m) ?? 0; }
     // pytest: "2 failed, 5 passed in 0.12s" (either part may be missing).
     else if (/\b\d+ (passed|failed|error)s?\b.* in [\d.]+s/.test(plain)) { passed = num(/(\d+) passed/) ?? 0; failed = (num(/(\d+) failed/) ?? 0) + (num(/(\d+) errors?\b/) ?? 0); }
-    for (const m of plain.matchAll(/^\s*●\s+(.+?)\s*$/gm)) if (!/^Console$/.test(m[1])) names.push(m[1]);       // jest
-    for (const m of plain.matchAll(/^\s*(?:FAIL|×|✗)\s+(.+?)(?:\s+\d+ms)?\s*$/gm)) names.push(m[1]);             // vitest
+    for (const m of plain.matchAll(/^[ \t]*●\s+(.+?)[ \t]*$/gm)) if (!/^Console$/.test(m[1])) names.push(m[1]);       // jest
+    for (const m of plain.matchAll(/^[ \t]*(?:FAIL|×|✗)\s+(.+?)(?:\s+\d+ms)?[ \t]*$/gm)) names.push(m[1]);             // vitest
     for (const m of plain.matchAll(/^FAILED\s+(\S+)/gm)) names.push(m[1]);                                       // pytest
   }
   if (errored && !failed) failed = 1;
@@ -344,6 +345,8 @@ export function runCommand(file: string, args: string[], o: { cwd: string; env?:
       if (size > max) { overflow = true; killAll(); return; }
       if (which === "out") stdout += text; else stderr += text;
     };
+    child.stdout?.setEncoding("utf8");
+    child.stderr?.setEncoding("utf8");
     child.stdout?.on("data", take("out"));
     child.stderr?.on("data", take("err"));
     const timer = o.timeoutMs && o.timeoutMs > 0 ? setTimeout(() => { timedOut = true; killAll(); }, o.timeoutMs) : null;
@@ -402,8 +405,8 @@ export function testSandboxProfile(o: { writable: string[]; readable?: string[];
     path.join(path.dirname(real(os.tmpdir())), "C"),
     ...[env.GOCACHE, env.GOMODCACHE, env.UV_CACHE_DIR, env.XDG_CACHE_HOME, env.npm_config_cache].filter((v): v is string => Boolean(v && path.isAbsolute(v))),
   ].filter((p) => existsSync(p)).map(real);
-  for (const dir of inHome(".ssh", ".aws", ".gnupg", ".azure", ".kube", ".docker", ".config/gcloud", ".config/gh", ".config/op", "Library/Keychains", "Library/Cookies", "Library/Application Support", "Library/Mail", "Library/Messages", "Library/Safari")) lines.push(`(deny file-read* (subpath ${q(dir)}))`);
-  for (const file of inHome(".netrc", ".npmrc", ".pypirc", ".git-credentials", ".yarnrc.yml")) lines.push(`(deny file-read* (literal ${q(file)}))`);
+  for (const dir of inHome(".ssh", ".aws", ".gnupg", ".azure", ".kube", ".docker", ".config/gcloud", ".config/gh", ".config/op", ".claude", ".codex", ".gemini", ".cursor", ".config/github-copilot", ".config/anthropic", ".openai", "Library/Keychains", "Library/Cookies", "Library/Application Support", "Library/Mail", "Library/Messages", "Library/Safari")) lines.push(`(deny file-read* (subpath ${q(dir)}))`);
+  for (const file of inHome(".netrc", ".npmrc", ".pypirc", ".git-credentials", ".yarnrc.yml", ".cargo/credentials", ".cargo/credentials.toml", ".pgpass", ".vault-token", ".zsh_history", ".bash_history", ".python_history", ".node_repl_history")) lines.push(`(deny file-read* (literal ${q(file)}))`);
   // After the denials (the last matching rule wins): the copy, the temporary folders and the caches.
   for (const dir of [...temp, ...caches]) lines.push(`(allow file-write* (subpath ${q(dir)}))`);
   // Local sockets a test opens for itself; not the ones elsewhere (an ssh agent, Docker).
@@ -429,8 +432,8 @@ function linuxSandboxSpec(o: { writable: string[]; readable?: string[]; home?: s
   // A fresh machine (a CI runner) has no ~/.cache: without one Go, pip and others cannot create their caches inside the sandbox.
   try { mkdirSync(path.join(home, ".cache"), { recursive: true }); } catch { /* read-only home: tools fall back to their own errors */ }
   const caches = [...inHome(".npm", ".cache", ".yarn", ".pnpm-store", "go/pkg", ".cargo/registry", ".cargo/git"), ...[env.GOCACHE, env.GOMODCACHE, env.UV_CACHE_DIR, env.XDG_CACHE_HOME, env.npm_config_cache].filter((v): v is string => Boolean(v && path.isAbsolute(v)))].filter((p) => existsSync(p)).map(real);
-  const hideDirs = inHome(".ssh", ".aws", ".gnupg", ".azure", ".kube", ".docker", ".config/gcloud", ".config/gh", ".config/op").filter((p) => existsSync(p));
-  const hideFiles = inHome(".netrc", ".npmrc", ".pypirc", ".git-credentials", ".yarnrc.yml").filter((p) => existsSync(p));
+  const hideDirs = inHome(".ssh", ".aws", ".gnupg", ".azure", ".kube", ".docker", ".config/gcloud", ".config/gh", ".config/op", ".claude", ".codex", ".gemini", ".cursor", ".config/github-copilot", ".config/anthropic", ".openai").filter((p) => existsSync(p));
+  const hideFiles = inHome(".netrc", ".npmrc", ".pypirc", ".git-credentials", ".yarnrc.yml", ".cargo/credentials", ".cargo/credentials.toml", ".pgpass", ".vault-token", ".zsh_history", ".bash_history", ".python_history", ".node_repl_history").filter((p) => existsSync(p));
   const writable = [...new Set([...temp, ...caches, ...o.writable.map(real)])].filter((p) => p !== "/" && p !== home);
   return BWRAP_PREFIX + JSON.stringify({ writable, hideDirs, hideFiles });
 }

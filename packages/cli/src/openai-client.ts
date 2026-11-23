@@ -8,6 +8,13 @@ export interface OpenAiClientOptions {
 }
 
 /** A ModelClient over any OpenAI-compatible chat-completions endpoint (OpenAI, Gemini, ...). */
+/** A model call never waits forever: the caller's signal, and a time limit (APEX_MODEL_TIMEOUT_SEC, default 300 s) for the whole call. */
+function modelSignal(own?: AbortSignal): AbortSignal {
+  const sec = Number(process.env.APEX_MODEL_TIMEOUT_SEC ?? 300);
+  const t = AbortSignal.timeout((Number.isFinite(sec) && sec > 0 ? sec : 300) * 1000);
+  return own ? AbortSignal.any([own, t]) : t;
+}
+
 export function openAiClient(o: OpenAiClientOptions): ModelClient {
   const doFetch = o.fetchImpl ?? fetch;
   return {
@@ -27,7 +34,7 @@ export function openAiClient(o: OpenAiClientOptions): ModelClient {
           method: "POST",
           headers: { "content-type": "application/json", ...(o.apiKey ? { authorization: `Bearer ${o.apiKey}` } : {}) },
           body: JSON.stringify(body),
-          signal: req.signal,
+          signal: modelSignal(req.signal),
         });
       } catch (e) {
         yield { type: "error", message: e instanceof Error ? e.message : String(e) };
