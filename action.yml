@@ -61,16 +61,20 @@ runs:
     - name: Install Apex verify
       id: install
       shell: bash
+      env:
+        # Passed in explicitly: inside a composite action the GITHUB_ACTION_REF variable is not reliably set.
+        ACTION_REF: ${{ github.action_ref }}
+        ACTION_REPO: ${{ github.action_repository }}
       run: |
         set -uo pipefail
         cd "$GITHUB_ACTION_PATH"
         # On a release tag (vX.Y.Z, or the moving v1) the bundle built for that release is downloaded: seconds, not a build.
         # On any other ref, or when the download fails or is not the expected version, the bundle is built from this source.
-        REF="${GITHUB_ACTION_REF:-}"; VER=$(node -p 'require("./package.json").version')
+        REF="${ACTION_REF:-}"; VER=$(node -p 'require("./package.json").version')
         BIN=""
         if [ "$REF" = "v$VER" ] || [ "$REF" = "v1" ]; then
           D="$RUNNER_TEMP/apex-bundle"; rm -rf "$D"; mkdir -p "$D"
-          URL="https://github.com/${GITHUB_ACTION_REPOSITORY:-apex-engine-dev/apex-verify}/releases/download/v$VER/apex-verify-$VER.tgz"
+          URL="https://github.com/${ACTION_REPO:-apex-engine-dev/apex-verify}/releases/download/v$VER/apex-verify-$VER.tgz"
           if curl -fsSL --retry 2 --max-time 60 -o "$D/a.tgz" "$URL" && tar -xzf "$D/a.tgz" -C "$D" \
              && [ "$(node -p 'require(process.argv[1]).version' "$D/package/package.json" 2>/dev/null)" = "$VER" ] && [ -f "$D/package/dist/apex.mjs" ]; then
             BIN="$D/package/dist/apex.mjs"; echo "Apex verify $VER: using the release bundle."

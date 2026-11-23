@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.7 (2026-11-23)
+- **GitHub Action**: the release-bundle download announced in 0.2.6 never ran, because GitHub does not reliably set `GITHUB_ACTION_REF` inside a composite action; the Action kept building from source (which works, about 7 seconds). The ref is now passed in explicitly, and this repository's own workflow runs the released Action so the path stays tested.
+
 ## 0.2.6 (2026-11-23)
 The starter issues, each with a test.
 - **Package managers**: a project with a `pnpm-lock.yaml`, `yarn.lock` or `bun.lock` has its tests run by that tool when it is installed (npm otherwise).
