@@ -1,18 +1,13 @@
-// apex-verify-engine: the public API. Each module is re-exported whole; ai-runtime re-exports what it exported before.
+// apex-verify-engine: what `apex verify` uses. Each remaining module is re-exported whole.
 export * from "./graph.js";
 export * from "./symbols.js";
 export * from "./scoped-context.js";
 export * from "./test-runner.js";
 export * from "./check-results.js";
 export * from "./check-screen.js";
-export * from "./edit-match.js";
-export * from "./trace.js";
-export * from "./acceptance-from-task.js";
 export * from "./model.js";
-export * from "./provenance.js";
 export * from "./options.js";
 export * from "./workspace.js";
 export * from "./mechanical.js";
 export * from "./surgical.js";
 export * from "./proof-gate.js";
-export * from "./verified.js";

@@ -4,8 +4,6 @@ import { promises as fs } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import type { ModelEvent as GatewayEvent, ModelRequest } from "./model.js";
-import { surgicalBestOfN } from "./index.js";
 import { detectTestRunner, readTestOutput } from "./index.js";
 
 const hasPytest = (() => { try { execFileSync("python3", ["-m", "pytest", "--version"], { stdio: "pipe" }); return true; } catch { return false; } })();
@@ -41,43 +39,6 @@ test("the project's own test command is found: npm test with dependencies, node:
   const py = await mk({ "cart.py": "", "tests/test_cart.py": "" });
   assert.equal((await detectTestRunner(py))?.kind, hasPytest ? "pytest" : undefined, "pytest only when it is installed");
   assert.equal(await detectTestRunner(await mk({ "README.md": "hi" })), null);
-});
-
-
-test("a Python project's change is picked by pytest", { skip: !hasPytest }, async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "apex-py-"));
-  await fs.mkdir(path.join(dir, "tests"));
-  await fs.writeFile(path.join(dir, "cart.py"), "def total(items):\n    return sum(items)\n");
-  await fs.writeFile(path.join(dir, "tests/test_cart.py"), "import sys, os\nsys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))\nfrom cart import total\n\ndef test_total():\n    assert total([1, 2]) == 3\n");
-  const edit = (body: string) => `=== FILE: cart.py\n<<<<<<< SEARCH\ndef total(items):\n    return sum(items)\n=======\n${body}\n>>>>>>> REPLACE\n`;
-  const good = edit("def total(items, tax=0):\n    return sum(items) * (1 + tax)");
-  const bad = edit("def total(items, tax=0):\n    return sum(items) + tax + 1");
-  const gw = { async *stream(req: ModelRequest): AsyncIterable<GatewayEvent> { yield { type: "text-delta", text: req.slot === 2 ? good : bad }; yield { type: "done" }; } };
-  const runner = await detectTestRunner(dir);
-  assert.equal(runner?.kind, "pytest");
-  const r = await surgicalBestOfN({ gateway: gw, model: "m", root: dir, task: "Add an optional tax rate to total in cart.py", n: 2, repairs: 0, testCommand: runner!.command, testTimeoutSec: runner!.timeoutSec });
-  assert.equal(r.chosen?.index, 1);
-  assert.equal(r.chosen?.failed, 0);
-  assert.match(await fs.readFile(path.join(dir, "cart.py"), "utf8"), /1 \+ tax\)/);
-  assert.equal(r.modelCalls, 2, "no node:test checks are written for a Python project");
-});
-
-test("a project tested through npm test (any runner) gets its versions judged by that command", async () => {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "apex-npm-"));
-  await fs.mkdir(path.join(dir, "node_modules"));
-  await fs.mkdir(path.join(dir, "src"));
-  // A stand-in runner that prints the way mocha does and exits non-zero on failure.
-  await fs.writeFile(path.join(dir, "run-tests.cjs"), 'const { add } = require("./src/add.cjs");\nconst ok = add(2, 3) === 5;\nconsole.log(ok ? "  1 passing (2ms)" : "  0 passing (2ms)\\n  1 failing");\nprocess.exit(ok ? 0 : 1);\n');
-  await fs.writeFile(path.join(dir, "package.json"), '{"scripts":{"test":"node run-tests.cjs"}}');
-  await fs.writeFile(path.join(dir, "src/add.cjs"), "exports.add = (a, b) => a - b;\n");
-  const edit = (body: string) => `=== FILE: src/add.cjs\n<<<<<<< SEARCH\nexports.add = (a, b) => a - b;\n=======\n${body}\n>>>>>>> REPLACE\n`;
-  const gw = { async *stream(req: ModelRequest): AsyncIterable<GatewayEvent> { yield { type: "text-delta", text: req.slot === 2 ? edit("exports.add = (a, b) => a + b;") : edit("exports.add = (a, b) => a * b;") }; yield { type: "done" }; } };
-  const runner = await detectTestRunner(dir);
-  assert.equal(runner?.kind, "npm");
-  const r = await surgicalBestOfN({ gateway: gw, model: "m", root: dir, task: "Fix add in src/add.cjs", n: 2, repairs: 0, testCommand: runner!.command, testTimeoutSec: runner!.timeoutSec });
-  assert.equal(r.chosen?.index, 1, JSON.stringify(r.candidates));
-  assert.equal(r.chosen?.failed, 0);
-  assert.equal(r.candidates[0].failed, 1, JSON.stringify(r.candidates.map((c: any) => ({ f: c.failed, p: c.passed, o: String(c.output ?? c.testOutput ?? "").slice(0, 400) }))));
 });
 
 test("node:test spec reporter (Node 22 default when not TAP) is counted, not read as 0/0", () => {

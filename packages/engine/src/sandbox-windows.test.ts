@@ -66,3 +66,12 @@ test("windows sandbox: the environment is scrubbed of keys and the wrapper scrip
   const r = await inSandbox('console.log("KEYS:"+Object.keys(process.env).filter((k)=>/KEY|TOKEN|SECRET/i.test(k)).length)');
   assert.match(r.out, /KEYS:0/, r.out);
 });
+
+test("windows sandbox: arguments with & ^ % ( ) and spaces reach the program as they were given", { skip }, async () => {
+  if (!(await testSandboxAvailable())) { assert.equal(must, false, "AppContainer sandbox unusable on this runner"); return; }
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "apex-wsb-q-"));
+  const given = ["a&b", "x^y", "100%PATH%", "c d", "(e)", "f|g", "h<i>j", 'say "hi"'];
+  const { file, args } = inTestSandbox(testSandboxProfile({ writable: [dir] }), process.execPath, ["-e", "console.log(JSON.stringify(process.argv.slice(1)))", ...given]);
+  const r = await runCommand(file, args, { cwd: dir, env: runEnv(), timeoutMs: 90_000 });
+  assert.deepEqual(JSON.parse(r.stdout.trim().split("\n").pop()!), given, r.stdout + r.stderr);
+});

@@ -18,7 +18,6 @@ import { isTestPath, type CodeGraph } from "./graph.js";
 import { outline, type SymbolEntry } from "./symbols.js";
 
 const CODE = /\.(m?[jt]sx?|cjs|py|go|rs|java|kt|rb)$/;
-export { isTestPath };
 
 /** Characters per named part of a prompt (file listing, outlines, ranges, …), written to the eval trace. */
 export type Segments = Record<string, number>;
@@ -480,25 +479,3 @@ export async function scopedContext(o: {
   return { blocks, ranges: new Map([...kept].filter(([f]) => !wholeFiles.has(f))), wholeFiles: [...wholeFiles], outlines, callSites, names: info.filter((x) => x.defs.length).map((x) => x.name), segments: seg };
 }
 
-/**
- * Every line that uses one of `names` (whole word), as "path:line  text", for names used in 1 to `perName` places:
- * a short list a model can act on without searching (a name used everywhere is left out).
- */
-export async function usesOf(root: string, files: string[], names: string[], o: { perName?: number; maxChars?: number; hidden?: (rel: string) => boolean } = {}): Promise<string[]> {
-  const perName = o.perName ?? 30, maxChars = o.maxChars ?? 1500;
-  const bodies = new Map<string, string[]>();
-  await Promise.all(files.filter((f) => CODE.test(f) && !(o.hidden?.(f) ?? false)).slice(0, 800).map(async (f) => {
-    const body = await fs.readFile(path.join(root, f), "utf8").catch(() => "");
-    if (body && body.length <= 400_000) bodies.set(f, body.split("\n"));
-  }));
-  const out: string[] = [];
-  let used = 0;
-  for (const name of [...new Set(names)].slice(0, 8)) {
-    const re = wordRe(name);
-    const hits: string[] = [];
-    for (const [f, lines] of [...bodies].sort((x, y) => Number(isTestPath(x[0])) - Number(isTestPath(y[0])) || x[0].localeCompare(y[0]))) lines.forEach((l, i) => { if (re.test(l)) hits.push(`${f}:${i + 1}  ${l.trim().slice(0, 100)}`); });
-    if (!hits.length || hits.length > perName) continue;
-    for (const h of hits) { if (used + h.length > maxChars) return [...out, "… more uses not listed"]; out.push(h); used += h.length + 1; }
-  }
-  return out;
-}

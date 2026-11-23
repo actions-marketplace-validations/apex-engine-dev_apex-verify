@@ -491,3 +491,18 @@ test("round 2: a typecheck that passed before and fails now is a regression what
   assert.ok(!r.cheats.some((x) => x.kind === "test_deleted"), JSON.stringify(r.cheats));
   assert.ok(!r.change.files.some((f) => f.path.startsWith("docs/")));
 });
+
+test("without a sandbox, a test that modifies the real node_modules makes the change NOT READY and says to reinstall", async () => {
+  const d = repo();
+  fs.mkdirSync(path.join(d, "node_modules/dep"), { recursive: true });
+  fs.writeFileSync(path.join(d, "node_modules/dep/index.js"), "module.exports = 1;\n");
+  fs.writeFileSync(path.join(d, ".gitignore"), "node_modules\n");
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "deps"]);
+  write(d, "test/slug.test.js", "import { test } from \"node:test\";\nimport fs from \"node:fs\";\ntest(\"poison\", () => { fs.writeFileSync(new URL(\"../node_modules/dep/index.js\", import.meta.url), \"module.exports = 'PWNED';\\n\"); });\n");
+  process.env.APEX_TEST_SANDBOX = "0";
+  try {
+    const r = await verify({ dir: d, task: TASK, checker: null });
+    assert.equal(r.verdict, "not_ready", JSON.stringify(r.reasons));
+    assert.ok(r.reasons.some((x) => /node_modules/.test(x.summary)), JSON.stringify(r.reasons));
+  } finally { delete process.env.APEX_TEST_SANDBOX; }
+});

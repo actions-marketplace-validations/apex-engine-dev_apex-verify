@@ -11,7 +11,7 @@ Honest state of the project. Updated with every release.
 | Gemini CLI | `AfterAgent` hook run in a real session (a wrong change was blocked, the agent fixed it). |
 | Codex / Cursor | Hook configuration written to their documented formats and tested with synthetic input; not run inside the apps (docs/INTEGRATIONS.md). |
 | GitHub Action | Tested on real pull requests and runs on this repository's own; fork pull requests run without a model by design. Needs trials on pull requests from other people. |
-| Engine (`apex-verify-engine`) | The verification engine `apex verify` uses; it also contains code from the larger project it was extracted from, which `verify` does not use. Tests green on Node 20 and 22. |
+| Engine (`apex-verify-engine`) | The verification engine `apex verify` uses, extracted from a larger project; the code `verify` cannot reach is removed before publishing. Tests green on Node 20 and 22. |
 | Languages | Checks are written for node:test, pytest, Jest, Vitest, `cargo test` and `go test`; your own `--test` command for anything else. |
 | Sandbox | macOS Seatbelt, Linux bubblewrap and Windows AppContainer, all tested in CI on real runners (best effort, not a security boundary); a container recipe tested in CI. |
 | Install | A about 60 KB file attached to every release (`npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify ...`), or clone and build. Not published to npm, and does not need to be. |

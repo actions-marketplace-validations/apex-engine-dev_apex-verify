@@ -21,7 +21,7 @@ verdict              ready | not_ready | unknown, with the failing check (expect
 Where the code is:
 - `packages/cli/src/verify.ts` the gate; `cheats.ts` the scan; `report.ts` the output formats; `verify-cmd.ts` the command line; `hook.ts` the agent stop hook; `mcp.ts` the MCP server.
 - `packages/engine/src/proof-gate.ts` writes and runs the checks (`draftAcceptance`, `runAcceptance`); `test-runner.ts` detects and runs your tests and holds the sandbox; `check-results.ts` and `check-screen.ts` read test output and decide which check results count; `surgical.ts` holds helpers the gate uses (context, running tests, copying a project).
-- The engine was extracted from a larger project (an IDE with an agent loop), so it contains more than `verify` uses: the code-writing loop in `surgical.ts` and `verified.ts` is not used by `apex verify`.
+- The engine was extracted from a larger project (an IDE with an agent loop). The code `apex verify` cannot reach (the code-writing loop and what served only it) is removed when this repository is published, so the engine here holds only what the command uses.
 
 Rules worth knowing:
 - A check that also passes on the unchanged project proves nothing: the verdict is at most `unknown`.

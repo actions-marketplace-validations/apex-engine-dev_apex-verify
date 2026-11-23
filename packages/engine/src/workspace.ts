@@ -56,8 +56,6 @@ export interface TaskPack { text: string; packFiles: string[] }
 export type TaskPackProvider = (root: string, task: string, hidden: (rel: string) => boolean, budgetChars: number) => Promise<TaskPack>;
 
 let defaultTaskPack: TaskPackProvider | undefined;
-/** The provider used when a call passes none. A host registers its own once; by default there is none (an empty pack). */
-export function registerTaskPack(p: TaskPackProvider | undefined): void { defaultTaskPack = p; }
 export function taskPackProvider(explicit?: TaskPackProvider): TaskPackProvider {
   const p = explicit ?? defaultTaskPack;
   return p ?? (async () => ({ text: "", packFiles: [] }));

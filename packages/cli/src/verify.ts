@@ -188,6 +188,25 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 
+/** A cheap fingerprint of an installed node_modules (path, size and modification time of up to 60,000 entries; tool caches left out). */
+export async function nodeModulesStamp(dir: string): Promise<string | null> {
+  if (!existsSync(dir)) return null;
+  const h = createHash("sha256"); let n = 0;
+  async function walk(d: string): Promise<void> {
+    let ents: import("node:fs").Dirent[] = [];
+    try { ents = await fs.readdir(d, { withFileTypes: true }); } catch { return; }
+    for (const e of ents.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+      if (n >= 60_000) return;
+      if (d === dir && [".cache", ".vite", ".vitest", ".vite-temp", ".package-lock.json"].includes(e.name)) continue;
+      const f = path.join(d, e.name);
+      if (e.isDirectory()) await walk(f);
+      else { n++; try { const st = await fs.lstat(f); h.update(`${path.relative(dir, f)}:${st.size}:${st.mtimeMs}\n`); } catch { h.update(`${f}:?\n`); } }
+    }
+  }
+  await walk(dir);
+  return h.digest("hex");
+}
+
 /** A digest of every file in a folder (bytes, not only text), without following links: to notice code under test rewriting the baseline copy. */
 export async function digestTree(root: string): Promise<string> {
   const h = createHash("sha256");
@@ -291,6 +310,11 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       else if (ch.severity === "high") reasons.push({ kind: "cheat", summary: `${ch.file}: ${ch.detail}`, hint: "Do not delete, skip or weaken tests to make a change pass. Restore them and fix the code instead." });
       else warnings.push(`${ch.file}: ${ch.detail}`);
     }
+
+    // Without a sandbox the tests can write to the real node_modules (it is linked into the copies, not copied): notice when they did.
+    const sandboxed = await testSandboxAvailable().catch(() => false);
+    const realNodeModules = path.join(o.dir, "node_modules");
+    const nmBefore = sandboxed ? null : await nodeModulesStamp(realNodeModules);
 
     // The baseline copy must stay what it was: the new code's tests run first, in a sandbox that can write to the temp folder both copies live in.
     const baselineDigest = await digestTree(c.orig);
@@ -422,6 +446,10 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       if (second && !second.written) warnings.push(`the second checker (${second.writtenBy}) could not write usable checks, so only ${report.checks.writtenBy} judged the change`);
       else if (second && !report.checks.written) { Object.assign(report.checks, second); report.secondChecks = undefined; warnings.push("only the second checker could write usable checks"); }
       reasons.push(...(report.checks.written || !second ? firstReasons : secondReasons));
+    }
+
+    if (nmBefore !== null && (await nodeModulesStamp(realNodeModules)) !== nmBefore) {
+      reasons.push({ kind: "cheat", summary: "code in this change modified the project's installed dependencies (node_modules) while its tests ran; there was no sandbox to stop it", hint: "Reinstall your dependencies (for example `npm ci`) before trusting this checkout, and run Apex verify where a sandbox is available." });
     }
 
     // 4. the verdict

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.5 (2026-11-23)
+- Without a sandbox, a test that modifies the project's installed dependencies (`node_modules`, which is linked into the scratch copies) now makes the change `not ready`, with a note to reinstall. With a sandbox it was already read-only.
+- A generated Python check that holds a code fence inside a triple-quoted string is no longer cut short at that line.
+- Windows: a test on the Windows runner proves that arguments with `&`, `^`, `%`, parentheses, pipes and quotes reach the program unchanged inside the sandbox.
+- README: a real pull request comment, pasted as the tool wrote it.
+- **The smaller repository announced in 0.2.3 ships now.** A publishing mistake left the removal of unreachable engine code (and the scan for private information that runs with it) out of 0.2.3 and 0.2.4. The published trees were scanned afterwards and contained nothing private; the publishing script now stops if either step did not run.
+
 ## 0.2.4 (2026-11-23)
 - **Correction to published results.** A bug kept Apex verify from running the tests of a project that has a `package.json` test script, no declared dependencies and no `node_modules` (all 23 real-library benchmark tasks). Its "tests alone stopped none of the wrong changes" result on real libraries was therefore wrong. Fixed, and re-measured: the projects' own tests block 80 of 107 wrong changes (75%); the full gate 97 (91%), with 21 of 93 right changes wrongly blocked (23%). README, chart and `benchmark/results/real-projects` are corrected; the withdrawn rows are kept.
 - Sandbox: the real project's `node_modules` (linked into the scratch copies) is read-only for tests, and on macOS dotfiles in the home folder (shell profiles, tool configs) are no longer readable. Windows: arguments with `&`, `^`, `%` and similar are quoted.

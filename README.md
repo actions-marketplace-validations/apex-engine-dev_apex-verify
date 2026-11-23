@@ -77,6 +77,36 @@ jobs:
 ```
 The task is the pull request's title and description. It posts one comment that it keeps up to date, and fails the job on `not ready` (or when it could not run). Make it a required check to gate merges.
 
+This is what the comment looks like (real output of a run on the demo change above, pasted as it was written):
+
+---
+
+### ❌ Apex verify: **NOT READY**
+
+- **2 checks written from the task fail on the new code**
+  <details open><summary>evidence</summary>
+
+  ```
+  check: slugify('Hello, World!') is 'hello-world'
+    expected: hello-world
+    actual:   hello-world!
+  check: edge: returns a clean URL slug containing only valid characters
+    slug should only contain lowercase letters, numbers, and hyphens
+    actual:   clean?-url-slug!
+  ```
+  </details>
+  - fix: Make the change satisfy the behaviour in the task; the failing check output shows what is expected.
+
+| | |
+|---|---|
+| tests | 2 passed, 0 failed |
+| checks | 5 passed, 2 failed; written from the task by gemini-3.1-pro-preview; they fail on the old code |
+| change | 1 file vs `HEAD` |
+
+<sub>25.2s, 2 model calls · proof `sha256:68e33e1bcc77…` · [Apex verify](https://github.com/apex-engine-dev/apex-verify)</sub>
+
+---
+
 **Gemini CLI**: an `AfterAgent` hook (run in a real session). **Any MCP client**: the `verify_change` tool. **Codex CLI and Cursor**: stop hooks written to their documented formats and tested with synthetic input, **not yet run inside those apps**. Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). What is and is not tested, per use case: [docs/USE-CASES.md](docs/USE-CASES.md).
 
 ## How it decides

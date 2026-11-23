@@ -1,6 +1,6 @@
 # Research track: can proof lift a weaker model? (not part of `apex verify`)
 
-> **Status.** This was the project's first goal. The agent runner and the benchmark harness that served it were removed from this repository when the project focused on `apex verify`; the engine's code-writing loop still exists inside the shared engine and the commercial product. The measurements are kept in `docs/research/results/` and summarised in `docs/EXPERIMENTS.md`: the first uplift results were positive but not statistically significant.
+> **Status.** This was the project's first goal. The agent runner and the benchmark harness that served it were removed from this repository when the project focused on `apex verify`; the engine's code-writing loop is no longer in this repository either (it remains in the commercial product), so the files named in the table below are partly or wholly absent here. The measurements are kept in `docs/research/results/` and summarised in `docs/EXPERIMENTS.md`: the first uplift results were positive but not statistically significant.
 
 # The goal, and how the code serves it
 

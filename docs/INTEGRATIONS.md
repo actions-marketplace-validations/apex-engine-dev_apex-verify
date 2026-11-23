@@ -37,10 +37,10 @@ Set `GEMINI_API_KEY` (or `OPENAI_API_KEY` and `APEX_CHECKER_MODEL`) in the envir
 
 `APEX_MODE=warn` never blocks. Nothing runs when nothing changed, and an unchanged change is not verified twice. The plugin also gives Claude a `verify_change` tool so it can check itself mid-task, and a skill that tells it to.
 
-Manual hook instead of the plugin (`.claude/settings.json`). Hooks run on every stop, so these snippets and the plugin are **pinned to a release** (`v0.2.4`): a mutable `latest` URL would let a future release change what runs inside your agent. Bump the version when you upgrade:
+Manual hook instead of the plugin (`.claude/settings.json`). Hooks run on every stop, so these snippets and the plugin are **pinned to a release** (`v0.2.5`): a mutable `latest` URL would let a future release change what runs inside your agent. Bump the version when you upgrade:
 
 ```json
-{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.4/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
+{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.5/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
 ```
 
 ## Codex CLI
@@ -48,7 +48,7 @@ Manual hook instead of the plugin (`.claude/settings.json`). Hooks run on every 
 Codex documents the same Stop hook contract (`decision: block` plus `reason`; `stop_hook_active` is honoured). **Status: not yet run inside Codex**; hooks you add there must be trusted once with `/hooks`. What the test suite covers, and what it does not: [docs/integration-evidence/codex-hook-2026-11-23.md](integration-evidence/codex-hook-2026-11-23.md). In `~/.codex/hooks.json` (or `.codex/hooks.json` in a trusted project):
 
 ```json
-{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.4/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
+{ "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.5/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
 ```
 
 MCP tool: `codex mcp add apex -- npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --mcp`
@@ -59,7 +59,7 @@ In `.gemini/settings.json` (project) or `~/.gemini/settings.json`:
 
 ```json
 { "hooksConfig": { "enabled": true },
-  "hooks": { "AfterAgent": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.4/apex-verify.tgz verify --hook", "timeout": 300000 } ] } ] } }
+  "hooks": { "AfterAgent": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.5/apex-verify.tgz verify --hook", "timeout": 300000 } ] } ] } }
 ```
 
 Gemini sends the request as `prompt` and treats `decision: "block"` as a retry, so it works like the Claude Code hook. Tested with Gemini CLI 0.32.1: a wrong `slugify` was blocked with the failing check, the agent fixed it and finished; a correct change got `READY`. (Gemini asks you to trust project-level hooks the first time.)
@@ -69,7 +69,7 @@ Gemini sends the request as `prompt` and treats `decision: "block"` as a retry, 
 In `.cursor/hooks.json` (project) or `~/.cursor/hooks.json`:
 
 ```json
-{ "version": 1, "hooks": { "stop": [ { "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.4/apex-verify.tgz verify --hook", "timeout": 300, "loop_limit": 3 } ] } }
+{ "version": 1, "hooks": { "stop": [ { "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.5/apex-verify.tgz verify --hook", "timeout": 300, "loop_limit": 3 } ] } }
 ```
 
 Cursor sends `workspace_roots`, `conversation_id` and `status` (not `cwd`) and continues the agent when the hook prints `followup_message`; Apex verify detects that input and prints both `followup_message` and `decision: block`. An aborted or errored run is not verified. **Status: written to Cursor's documented hook format and tested with that input shape, but not yet run inside the Cursor app**; Cursor's own forum reports stop-hook follow-ups being unreliable in some versions, so please tell us what you see.

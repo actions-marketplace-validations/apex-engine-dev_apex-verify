@@ -221,32 +221,6 @@ async function makeHasTest(root: string): Promise<boolean> {
   return /^test\s*:/m.test(text);
 }
 
-/** The commands that test, run and serve this project, from its own files. Any may be missing. */
-export async function detectProjectCommands(root: string): Promise<{ test?: string; run?: string; dev?: string }> {
-  const out: { test?: string; run?: string; dev?: string } = {};
-  let pkg: { scripts?: Record<string, unknown>; main?: unknown } | null = null;
-  try { pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8")); } catch { /* none */ }
-  if (pkg) {
-    const scripts = pkg.scripts ?? {};
-    const has = (k: string) => typeof scripts[k] === "string" && String(scripts[k]).trim().length > 0;
-    if (has("test") && !/no test specified/i.test(String(scripts.test))) out.test = "npm test";
-    if (has("dev")) out.dev = "npm run dev";
-    else if (has("start")) out.dev = "npm start";
-    if (has("start")) out.run = "npm start";
-    else if (typeof pkg.main === "string" && pkg.main) out.run = `node ${pkg.main}`;
-  }
-  if (!out.test && (await exists(path.join(root, "go.mod")))) out.test = "go test ./...";
-  if (!out.run && (await exists(path.join(root, "go.mod")))) out.run = "go run .";
-  if (!out.test && (await exists(path.join(root, "Cargo.toml")))) out.test = "cargo test";
-  if (!out.run && (await exists(path.join(root, "Cargo.toml")))) out.run = "cargo run";
-  if (!out.test && (await makeHasTest(root))) out.test = "make test";
-  if (!out.test) {
-    const r = await detectTestRunner(root).catch(() => null);
-    if (r) out.test = r.command.join(" ");
-  }
-  return out;
-}
-
 /**
  * Passed and failed counts and the failed tests' names from a run's output, for TAP (node:test), jest, vitest,
  * mocha and pytest. `errored` is the runner's own verdict (non-zero exit, a timeout): when the output names no

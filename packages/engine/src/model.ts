@@ -69,6 +69,3 @@ export interface ModelClient {
   decide?(model: string, req: { scope?: string; prefix?: string; state: string; questions: Record<string, { type: "noul" | "choice"; instructions: string; criteria?: Record<string, string | null> }>; signal?: AbortSignal }): Promise<Record<string, { noul?: number; choice?: string; probabilities?: Record<string, number>; confidence?: number }>>;
 }
 
-/** What the engine reports while it works (candidate started, check written, ...). The host maps these to its own UI. */
-export interface EngineEvent { kind: string; text: string; n?: number }
-export type EventSink = (e: EngineEvent) => void;
