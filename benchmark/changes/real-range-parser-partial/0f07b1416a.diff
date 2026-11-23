@@ -1,0 +1,90 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:38
++++ b/index.js	2026-11-23 09:26:38
+@@ -23,15 +23,15 @@
+  */
+ 
+ function rangeParser(size, str) {
+-  var valid = true;
+   var i = str.indexOf('=');
+ 
+   if (-1 == i) return -2;
+ 
+-  var arr = str.slice(i + 1).split(',').map(function(range){
+-    var range = range.split('-')
+-      , start = parseInt(range[0], 10)
+-      , end = parseInt(range[1], 10);
++  var type = str.slice(0, i);
++  var ranges = str.slice(i + 1).split(',').map(function(rangeStr){
++    var rangeParts = rangeStr.split('-');
++    var start = parseInt(rangeParts[0], 10);
++    var end = parseInt(rangeParts[1], 10);
+ 
+     // -nnn
+     if (isNaN(start)) {
+@@ -45,11 +45,14 @@
+     // limit last-byte-pos to current length
+     if (end > size - 1) end = size - 1;
+ 
+-    // invalid
+-    if (isNaN(start)
+-      || isNaN(end)
+-      || start > end
+-      || start < 0) valid = false;
++    // A range is invalid if:
++    // 1. start or end are not numbers (after parsing and adjustments)
++    // 2. start is greater than end (e.g., bytes=500-20, or after capping end)
++    // 3. start is negative (e.g., if size - end resulted in negative)
++    // 4. start is equal to or greater than the resource size (means no data available from start)
++    if (isNaN(start) || isNaN(end) || start > end || start < 0 || start >= size) {
++      return null; // Mark this range as invalid
++    }
+ 
+     return {
+       start: start,
+@@ -57,7 +60,13 @@
+     };
+   });
+ 
+-  arr.type = str.slice(0, i);
++  // Filter out the nulls (invalid ranges)
++  var validRanges = ranges.filter(function(range) {
++    return range !== null;
++  });
+ 
+-  return valid ? arr : -1;
++  validRanges.type = type;
++
++  // If no valid ranges, return -1. Otherwise, return the valid ranges array.
++  return validRanges.length > 0 ? validRanges : -1;
+ }
+diff -ruN a/test/range-parser.js b/test/range-parser.js
+--- a/test/range-parser.js	2026-11-23 09:26:38
++++ b/test/range-parser.js	2026-11-23 09:26:38
+@@ -81,4 +81,26 @@
+     assert.strictEqual(range.length, 1)
+     assert.deepEqual(range[0], { start: 0, end: 5 })
+   })
++
++  it('should return only valid ranges from multiple, discarding invalid ones', function(){
++    var range = parse(200, 'bytes=0-499,1000-,500-999')
++    assert.strictEqual(range.type, 'bytes')
++    assert.strictEqual(range.length, 1)
++    assert.deepEqual(range[0], { start: 0, end: 199 })
++  })
++
++  it('should return -1 when all ranges are invalid in a multiple range header', function(){
++    assert.strictEqual(parse(200, 'bytes=200-250,500-600'), -1)
++  })
++
++  it('should return -1 for ranges that start beyond the resource size', function(){
++    assert.strictEqual(parse(200, 'bytes=200-200'), -1)
++    assert.strictEqual(parse(200, 'bytes=200-'), -1)
++  })
++
++  it('should return -1 for 0-byte resource', function(){
++    assert.strictEqual(parse(0, 'bytes=0-0'), -1)
++    assert.strictEqual(parse(0, 'bytes=0-'), -1)
++    assert.strictEqual(parse(0, 'bytes=-1'), -1)
++  })
+ })

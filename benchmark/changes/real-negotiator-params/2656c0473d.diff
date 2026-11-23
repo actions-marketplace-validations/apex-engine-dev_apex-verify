@@ -1,0 +1,46 @@
+diff -ruN a/lib/charset.js b/lib/charset.js
+--- a/lib/charset.js	2026-11-23 09:26:37
++++ b/lib/charset.js	2026-11-23 09:26:37
+@@ -57,9 +57,9 @@
+   var charset = match[1];
+   var q = 1;
+   if (match[2]) {
+-    var params = match[2].split(';')
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].trim().split('=');
++    var params = match[2].split(';');
++    for (var j = 0; j < params.length; j++) {
++      var p = params[j].trim().split('=');
+       if (p[0] === 'q') {
+         q = parseFloat(p[1]);
+         break;
+diff -ruN a/lib/encoding.js b/lib/encoding.js
+--- a/lib/encoding.js	2026-11-23 09:26:37
++++ b/lib/encoding.js	2026-11-23 09:26:37
+@@ -74,8 +74,8 @@
+   var q = 1;
+   if (match[2]) {
+     var params = match[2].split(';');
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].trim().split('=');
++    for (var j = 0; j < params.length; j++) {
++      var p = params[j].trim().split('=');
+       if (p[0] === 'q') {
+         q = parseFloat(p[1]);
+         break;
+diff -ruN a/lib/language.js b/lib/language.js
+--- a/lib/language.js	2026-11-23 09:26:37
++++ b/lib/language.js	2026-11-23 09:26:37
+@@ -62,9 +62,9 @@
+ 
+   var q = 1;
+   if (match[3]) {
+-    var params = match[3].split(';')
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].split('=');
++    var params = match[3].split(';');
++    for (var j = 0; j < params.length; j++) {
++      var p = params[j].split('=');
+       if (p[0] === 'q') q = parseFloat(p[1]);
+     }
+   }

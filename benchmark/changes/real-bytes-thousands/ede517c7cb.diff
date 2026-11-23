@@ -1,0 +1,22 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -116,11 +116,16 @@
+     str = str.replace(formatDecimalsRegExp, '$1');
+   }
+ 
++  // Separate the integer and fractional parts
++  var parts = str.split('.');
++  var integerPart = parts[0];
++  var fractionalPart = parts.length > 1 ? '.' + parts[1] : '';
++
+   if (thousandsSeparator) {
+-    str = str.replace(formatThousandsRegExp, thousandsSeparator);
++    integerPart = integerPart.replace(formatThousandsRegExp, thousandsSeparator);
+   }
+ 
+-  return str + unitSeparator + unit;
++  return integerPart + fractionalPart + unitSeparator + unit;
+ }
+ 
+ /**

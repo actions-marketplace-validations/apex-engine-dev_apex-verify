@@ -1,0 +1,7 @@
+Upstream: https://github.com/jshttp/forwarded
+Fix commit: 0c489a12de97f110f8f3775dba1d4af2eadb9f9c
+Parent (project/): a2af4848353280f48f2a00b6de8cb17df4474003
+Hidden tests: test files from the fix commit, copied unchanged (renamed hidden-*.test.js).
+Licence: see LICENSE (MIT).
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+Issue: none linked (found by the maintainer)

@@ -1,0 +1,7 @@
+{
+  "name": "range-parser-partial",
+  "private": true,
+  "scripts": {
+    "test": "node --require ./test/mocha-shim.cjs --test test/range-parser.js"
+  }
+}

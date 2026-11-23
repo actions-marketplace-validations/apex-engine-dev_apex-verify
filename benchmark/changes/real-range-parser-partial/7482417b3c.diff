@@ -1,0 +1,88 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:38
++++ b/index.js	2026-11-23 09:26:38
+@@ -23,16 +23,20 @@
+  */
+ 
+ function rangeParser(size, str) {
+-  var valid = true;
++  var ranges = [];
+   var i = str.indexOf('=');
+ 
+   if (-1 == i) return -2;
+ 
+-  var arr = str.slice(i + 1).split(',').map(function(range){
+-    var range = range.split('-')
+-      , start = parseInt(range[0], 10)
+-      , end = parseInt(range[1], 10);
++  var type = str.slice(0, i);
++  var list = str.slice(i + 1).split(',');
+ 
++  for (var j = 0; j < list.length; j++) {
++    var range = list[j].split('-');
++    var start = parseInt(range[0], 10);
++    var end = parseInt(range[1], 10);
++    var valid = true;
++
+     // -nnn
+     if (isNaN(start)) {
+       start = size - end;
+@@ -49,15 +53,22 @@
+     if (isNaN(start)
+       || isNaN(end)
+       || start > end
+-      || start < 0) valid = false;
++      || start < 0) {
++      valid = false;
++    }
+ 
+-    return {
+-      start: start,
+-      end: end
+-    };
+-  });
++    if (valid) {
++      ranges.push({
++        start: start,
++        end: end
++      });
++    }
++  }
+ 
+-  arr.type = str.slice(0, i);
++  if (ranges.length === 0) {
++    return -1;
++  }
+ 
+-  return valid ? arr : -1;
++  ranges.type = type;
++  return ranges;
+ }
+diff -ruN a/test/range-parser.js b/test/range-parser.js
+--- a/test/range-parser.js	2026-11-23 09:26:38
++++ b/test/range-parser.js	2026-11-23 09:26:38
+@@ -81,4 +81,24 @@
+     assert.strictEqual(range.length, 1)
+     assert.deepEqual(range[0], { start: 0, end: 5 })
+   })
++
++  it('should return -1 if all ranges are unsatisfiable', function(){
++    assert.strictEqual(parse(200, 'bytes=500-600,600-700'), -1)
++  })
++
++  it('should return only satisfiable ranges when some are unsatisfiable', function(){
++    var range = parse(200, 'bytes=0-499,1000-1200,500-599,100-150')
++    assert.strictEqual(range.type, 'bytes')
++    assert.strictEqual(range.length, 2)
++    assert.deepEqual(range[0], { start: 0, end: 199 })
++    assert.deepEqual(range[1], { start: 100, end: 150 })
++  })
++
++  it('should return -1 if a single range is unsatisfiable', function(){
++    assert.strictEqual(parse(200, 'bytes=500-600'), -1)
++  })
++
++  it('should return -1 if start is negative', function(){
++    assert.strictEqual(parse(200, 'bytes=-500'), -1)
++  })
+ })

@@ -1,0 +1,7 @@
+{
+  "name": "fresh-modified",
+  "private": true,
+  "scripts": {
+    "test": "node --require ./test/mocha-shim.cjs --test test/fresh.js"
+  }
+}

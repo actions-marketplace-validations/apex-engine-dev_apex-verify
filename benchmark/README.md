@@ -1,6 +1,6 @@
 # Benchmark: how often is the gate right?
 
-`benchmark/changes/` holds **154 AI-written changes** (diffs) to the 12 public projects in `benchmark/tasks/`. Each is labelled **right or wrong by hidden tests** (`tasks/<id>/hidden`) that `apex verify` never sees: 106 right, 48 wrong. The changes were written earlier by Gemini models (gemini-2.5-flash-lite, gemini-3.8-flash, gemini-3.1-pro-preview).
+`benchmark/changes/` holds **184 AI-written changes** (diffs): 154 to the 12 public projects and 30 to five real open-source libraries (`real-*`) in `benchmark/tasks/`. Each is labelled **right or wrong by hidden tests** (`tasks/<id>/hidden`) that `apex verify` never sees: 106 right, 48 wrong among the first 154 (the 30 real-project changes: 27 right, 3 wrong). The changes were written earlier by Gemini models (gemini-2.5-flash-lite, gemini-3.8-flash, gemini-3.1-pro-preview).
 
 ```sh
 npm install                                   # builds dist/apex.mjs
@@ -16,6 +16,9 @@ It prints: wrong changes blocked, right changes wrongly blocked (each with a 95%
 | Folder | What | Headline |
 |---|---|---|
 | `results/verify-gate-round1/` | the default gate on 108 changes (79 on the public tasks, rest on five real bug fixes not included here) | all 17 tasks: **65%** of wrong changes blocked, **3%** of right ones wrongly blocked. **Public tasks only (the ones you can rerun): 16 of 31 wrong blocked (52%), 1 of 48 right blocked (2%).** Tests + cheating scan alone: 8% |
-| `results/second-vendor/` | checks written by Claude (Anthropic) vs Gemini, one set per task, no repair or second look | Claude 69% blocked / 12% false alarms; Gemini 61% / 19%; **both must object: 60% blocked, 2% false alarms** |
+| `results/second-vendor/` | checks written by Claude (Anthropic) vs Gemini, one set per task, no repair or second look | Claude 69% blocked / 12% false alarms; Gemini 61% / 19%; (its "both must object" row was withdrawn: it did not hold on the full pipeline, see `results/cross-vendor-full-set/`) |
+| `results/cross-vendor-full-set/` | Claude-written checks through the full pipeline on 101 changes | Claude 22 of 40 wrong blocked, 1 of 61 false alarms; Gemini 25 of 40 and 2 of 61; both must object 17 of 40 |
+| `results/fresh-inputs/`, `results/two-checkers-same-vendor/` | two options measured on the 108 changes | neither beat the default; both off by default |
+| `results/real-projects/` | 5 real bug fixes from open-source libraries (bytes, negotiator, fresh, forwarded, range-parser), 30 Gemini-written changes, default gate with gemini-3.1-pro-preview | **3 of 3 wrong blocked, 1 of 27 right wrongly blocked** (5 right left unknown). Tests + cheating scan alone: 0 of 3. Tiny sample, only 3 wrong changes |
 
 Read `results/*/README.md` for the method and limits. In short: small projects, Gemini-written changes, one run per change, and the intervals understate the real uncertainty because changes cluster by task. Please try to break it.

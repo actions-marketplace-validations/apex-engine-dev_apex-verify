@@ -1,0 +1,50 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -70,9 +70,17 @@
+   // if-modified-since
+   if (modifiedSince) {
+     var lastModified = resHeaders['last-modified']
+-    var modifiedStale = !lastModified || Date.parse(lastModified) > Date.parse(modifiedSince)
++    var dateModifiedSince = Date.parse(modifiedSince)
++    var dateLastModified = Date.parse(lastModified)
+ 
+-    if (modifiedStale) {
++    // An unparseable date should never make a response count as fresh.
++    // If either date is invalid, it's stale.
++    if (isNaN(dateModifiedSince) || isNaN(dateLastModified)) {
++      return false
++    }
++
++    // If the response was modified since the request date, it's stale.
++    if (dateLastModified > dateModifiedSince) {
+       return false
+     }
+   }
+diff -ruN a/test/fresh.js b/test/fresh.js
+--- a/test/fresh.js	2026-11-23 09:26:37
++++ b/test/fresh.js	2026-11-23 09:26:37
+@@ -1,4 +1,3 @@
+-
+ var assert = require('assert')
+ var fresh = require('..')
+ 
+@@ -107,15 +106,15 @@
+     describe('with invalid If-Modified-Since date', function () {
+       it('should be stale', function () {
+         var reqHeaders = { 'if-modified-since': 'foo' }
+-        var resHeaders = { 'modified-since': 'Sat, 01 Jan 2000 00:00:00 GMT' }
++        var resHeaders = { 'last-modified': 'Sat, 01 Jan 2000 00:00:00 GMT' } // Corrected header name
+         assert.ok(!fresh(reqHeaders, resHeaders))
+       })
+     })
+ 
+-    describe('with invalid Modified-Since date', function () {
++    describe('with invalid Last-Modified date', function () { // Renamed for clarity
+       it('should be stale', function () {
+         var reqHeaders = { 'if-modified-since': 'Sat, 01 Jan 2000 00:00:00 GMT' }
+-        var resHeaders = { 'modified-since': 'foo' }
++        var resHeaders = { 'last-modified': 'foo' } // Corrected header name
+         assert.ok(!fresh(reqHeaders, resHeaders))
+       })
+     })

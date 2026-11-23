@@ -1,0 +1,66 @@
+diff -ruN a/lib/charset.js b/lib/charset.js
+--- a/lib/charset.js	2026-11-23 09:26:37
++++ b/lib/charset.js	2026-11-23 09:26:37
+@@ -58,9 +58,10 @@
+   var q = 1;
+   if (match[2]) {
+     var params = match[2].split(';')
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].trim().split('=');
+-      if (p[0] === 'q') {
++    for (var j = 0; j < params.length; j ++) {
++      var p = params[j].split('=');
++      var key = p[0].trim();
++      if (key === 'q') {
+         q = parseFloat(p[1]);
+         break;
+       }
+diff -ruN a/lib/encoding.js b/lib/encoding.js
+--- a/lib/encoding.js	2026-11-23 09:26:37
++++ b/lib/encoding.js	2026-11-23 09:26:37
+@@ -74,9 +74,10 @@
+   var q = 1;
+   if (match[2]) {
+     var params = match[2].split(';');
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].trim().split('=');
+-      if (p[0] === 'q') {
++    for (var j = 0; j < params.length; j ++) {
++      var p = params[j].split('=');
++      var key = p[0].trim();
++      if (key === 'q') {
+         q = parseFloat(p[1]);
+         break;
+       }
+diff -ruN a/lib/language.js b/lib/language.js
+--- a/lib/language.js	2026-11-23 09:26:37
++++ b/lib/language.js	2026-11-23 09:26:37
+@@ -63,9 +63,13 @@
+   var q = 1;
+   if (match[3]) {
+     var params = match[3].split(';')
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].split('=');
+-      if (p[0] === 'q') q = parseFloat(p[1]);
++    for (var j = 0; j < params.length; j ++) {
++      var p = params[j].split('=');
++      var key = p[0].trim();
++      if (key === 'q') {
++        q = parseFloat(p[1]);
++        break; // Added break to stop after finding the first 'q' parameter
++      }
+     }
+   }
+ 
+diff -ruN a/lib/mediaType.js b/lib/mediaType.js
+--- a/lib/mediaType.js	2026-11-23 09:26:37
++++ b/lib/mediaType.js	2026-11-23 09:26:37
+@@ -64,7 +64,7 @@
+ 
+     for (var j = 0; j < kvps.length; j++) {
+       var pair = kvps[j];
+-      var key = pair[0].toLowerCase();
++      var key = pair[0].trim().toLowerCase(); // Added .trim() to normalize key
+       var val = pair[1];
+ 
+       // get the value, unwrapping quotes

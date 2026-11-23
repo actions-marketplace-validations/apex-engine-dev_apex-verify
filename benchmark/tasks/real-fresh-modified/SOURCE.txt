@@ -1,0 +1,7 @@
+Upstream: https://github.com/jshttp/fresh
+Fix commit: 7a2b460ad608809921734d5aba0b9b3704c0f692
+Parent (project/): 15995306ff32de51b54508b8d553346769577e79
+Hidden tests: test files from the fix commit, copied unchanged (renamed hidden-*.test.js).
+Licence: see LICENSE (MIT).
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+Issue: https://github.com/jshttp/fresh/issues/23

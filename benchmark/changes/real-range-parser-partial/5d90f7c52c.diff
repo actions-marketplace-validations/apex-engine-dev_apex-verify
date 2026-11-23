@@ -1,0 +1,51 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:38
++++ b/index.js	2026-11-23 09:26:38
+@@ -23,13 +23,13 @@
+  */
+ 
+ function rangeParser(size, str) {
+-  var valid = true;
+   var i = str.indexOf('=');
+ 
+   if (-1 == i) return -2;
+ 
+-  var arr = str.slice(i + 1).split(',').map(function(range){
+-    var range = range.split('-')
++  var type = str.slice(0, i);
++  var ranges = str.slice(i + 1).split(',').map(function(rangeStr){
++    var range = rangeStr.split('-')
+       , start = parseInt(range[0], 10)
+       , end = parseInt(range[1], 10);
+ 
+@@ -45,19 +45,25 @@
+     // limit last-byte-pos to current length
+     if (end > size - 1) end = size - 1;
+ 
+-    // invalid
++    // Mark invalid ranges to be filtered out later
+     if (isNaN(start)
+       || isNaN(end)
+       || start > end
+-      || start < 0) valid = false;
++      || start < 0) {
++      return null;
++    }
+ 
+     return {
+       start: start,
+       end: end
+     };
+-  });
++  }).filter(Boolean); // Filter out null values (invalid ranges)
+ 
+-  arr.type = str.slice(0, i);
++  // If no valid ranges were found, return -1
++  if (ranges.length === 0) {
++    return -1;
++  }
+ 
+-  return valid ? arr : -1;
++  ranges.type = type;
++  return ranges;
+ }

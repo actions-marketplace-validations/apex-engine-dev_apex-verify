@@ -1,0 +1,21 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -117,7 +117,16 @@
+   }
+ 
+   if (thousandsSeparator) {
+-    str = str.replace(formatThousandsRegExp, thousandsSeparator);
++    var parts = str.split('.');
++    var integerPart = parts[0];
++    var fractionalPart = parts[1] || '';
++
++    integerPart = integerPart.replace(formatThousandsRegExp, thousandsSeparator);
++
++    str = integerPart;
++    if (fractionalPart) {
++      str += '.' + fractionalPart;
++    }
+   }
+ 
+   return str + unitSeparator + unit;

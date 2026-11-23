@@ -1,0 +1,28 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -110,15 +110,21 @@
+   }
+ 
+   var val = value / map[unit.toLowerCase()];
+-  var str = val.toFixed(decimalPlaces);
++  var parts = val.toFixed(decimalPlaces).split('.');
++  var integerPart = parts[0];
++  var fractionalPart = parts[1];
+ 
+   if (!fixedDecimals) {
+-    str = str.replace(formatDecimalsRegExp, '$1');
++    if (fractionalPart) {
++      fractionalPart = fractionalPart.replace(formatDecimalsRegExp, '$1');
++    }
+   }
+ 
+   if (thousandsSeparator) {
+-    str = str.replace(formatThousandsRegExp, thousandsSeparator);
++    integerPart = integerPart.replace(formatThousandsRegExp, thousandsSeparator);
+   }
++
++  var str = integerPart + (fractionalPart ? '.' + fractionalPart : '');
+ 
+   return str + unitSeparator + unit;
+ }

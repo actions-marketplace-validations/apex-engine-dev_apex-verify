@@ -1,0 +1,11 @@
+{
+  "id": "real-bytes-thousands",
+  "kind": "fix",
+  "title": "bytes.format puts the thousands separator into the decimal part",
+  "prompt": "Our bytes.format() in index.js mangles numbers when the thousandsSeparator option is used together with decimal places: the separator is also inserted inside the fractional digits. For example, formatting 1005.1005 KB with decimalPlaces 4 and thousandsSeparator '_' should give '1_005.1005kb', but the digits after the decimal point get separators too. Please fix it so the separator only affects the integer part.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/byte-format.js test/byte-parse.js test/bytes.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-byte-format.test.js"
+  }
+}

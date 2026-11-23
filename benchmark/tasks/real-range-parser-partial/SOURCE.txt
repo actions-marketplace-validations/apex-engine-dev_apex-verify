@@ -1,0 +1,7 @@
+Upstream: https://github.com/jshttp/range-parser
+Fix commit: 8de80cd694ab4e67dcb41cbdea04845bdf91b2d5
+Parent (project/): 3059318473627d20d7c22093e5f1fb95422f31a5
+Hidden tests: test files from the fix commit, copied unchanged (renamed hidden-*.test.js).
+Licence: see LICENSE (MIT).
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+Issue: https://github.com/jshttp/range-parser/issues/13

@@ -1,0 +1,11 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -37,6 +37,7 @@
+   var proxyAddrs = (req.headers['x-forwarded-for'] || '')
+     .split(TOKEN_LIST_REGEXP)
+     .filter(Boolean)
++    .map(function (addr) { return addr.trim() })
+     .reverse()
+   var socketAddr = req.connection.remoteAddress
+   var addrs = [socketAddr].concat(proxyAddrs)

@@ -1,0 +1,291 @@
+diff -ruN a/lib/charset.js b/lib/charset.js
+--- a/lib/charset.js	2026-11-23 09:26:37
++++ b/lib/charset.js	2026-11-23 09:26:37
+@@ -56,12 +56,21 @@
+ 
+   var charset = match[1];
+   var q = 1;
++
+   if (match[2]) {
+-    var params = match[2].split(';')
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].trim().split('=');
+-      if (p[0] === 'q') {
+-        q = parseFloat(p[1]);
++    var params = splitParameters(match[2]);
++    for (var j = 0; j < params.length; j++) {
++      var pair = splitKeyValuePair(params[j]);
++      var key = pair[0].toLowerCase();
++      var val = pair[1];
++
++      // get the value, unwrapping quotes
++      var value = val && val[0] === '"' && val[val.length - 1] === '"'
++        ? val.substr(1, val.length - 2)
++        : val;
++
++      if (key === 'q') {
++        q = parseFloat(value);
+         break;
+       }
+     }
+@@ -166,4 +175,67 @@
+ 
+ function isQuality(spec) {
+   return spec.q > 0;
++}
++
++/**
++ * Count the number of quotes in a string.
++ * @private
++ */
++
++function quoteCount(string) {
++  var count = 0;
++  var index = 0;
++
++  while ((index = string.indexOf('"', index)) !== -1) {
++    count++;
++    index++;
++  }
++
++  return count;
++}
++
++/**
++ * Split a key value pair.
++ * @private
++ */
++
++function splitKeyValuePair(str) {
++  var index = str.indexOf('=');
++  var key;
++  var val;
++
++  if (index === -1) {
++    key = str;
++  } else {
++    key = str.substr(0, index);
++    val = str.substr(index + 1);
++  }
++
++  return [key, val];
++}
++
++/**
++ * Split a string of parameters.
++ * @private
++ */
++
++function splitParameters(str) {
++  var parameters = str.split(';');
++
++  for (var i = 1, j = 0; i < parameters.length; i++) {
++    if (quoteCount(parameters[j]) % 2 == 0) {
++      parameters[++j] = parameters[i];
++    } else {
++      parameters[j] += ';' + parameters[i];
++    }
++  }
++
++  // trim parameters
++  parameters.length = j + 1;
++
++  for (var i = 0; i < parameters.length; i++) {
++    parameters[i] = parameters[i].trim();
++  }
++
++  return parameters;
+ }
+diff -ruN a/lib/encoding.js b/lib/encoding.js
+--- a/lib/encoding.js	2026-11-23 09:26:37
++++ b/lib/encoding.js	2026-11-23 09:26:37
+@@ -73,11 +73,19 @@
+   var encoding = match[1];
+   var q = 1;
+   if (match[2]) {
+-    var params = match[2].split(';');
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].trim().split('=');
+-      if (p[0] === 'q') {
+-        q = parseFloat(p[1]);
++    var params = splitParameters(match[2]);
++    for (var j = 0; j < params.length; j++) {
++      var pair = splitKeyValuePair(params[j]);
++      var key = pair[0].toLowerCase();
++      var val = pair[1];
++
++      // get the value, unwrapping quotes
++      var value = val && val[0] === '"' && val[val.length - 1] === '"'
++        ? val.substr(1, val.length - 2)
++        : val;
++
++      if (key === 'q') {
++        q = parseFloat(value);
+         break;
+       }
+     }
+@@ -181,4 +189,67 @@
+ 
+ function isQuality(spec) {
+   return spec.q > 0;
++}
++
++/**
++ * Count the number of quotes in a string.
++ * @private
++ */
++
++function quoteCount(string) {
++  var count = 0;
++  var index = 0;
++
++  while ((index = string.indexOf('"', index)) !== -1) {
++    count++;
++    index++;
++  }
++
++  return count;
++}
++
++/**
++ * Split a key value pair.
++ * @private
++ */
++
++function splitKeyValuePair(str) {
++  var index = str.indexOf('=');
++  var key;
++  var val;
++
++  if (index === -1) {
++    key = str;
++  } else {
++    key = str.substr(0, index);
++    val = str.substr(index + 1);
++  }
++
++  return [key, val];
++}
++
++/**
++ * Split a string of parameters.
++ * @private
++ */
++
++function splitParameters(str) {
++  var parameters = str.split(';');
++
++  for (var i = 1, j = 0; i < parameters.length; i++) {
++    if (quoteCount(parameters[j]) % 2 == 0) {
++      parameters[++j] = parameters[i];
++    } else {
++      parameters[j] += ';' + parameters[i];
++    }
++  }
++
++  // trim parameters
++  parameters.length = j + 1;
++
++  for (var i = 0; i < parameters.length; i++) {
++    parameters[i] = parameters[i].trim();
++  }
++
++  return parameters;
+ }
+diff -ruN a/lib/language.js b/lib/language.js
+--- a/lib/language.js	2026-11-23 09:26:37
++++ b/lib/language.js	2026-11-23 09:26:37
+@@ -62,10 +62,21 @@
+ 
+   var q = 1;
+   if (match[3]) {
+-    var params = match[3].split(';')
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].split('=');
+-      if (p[0] === 'q') q = parseFloat(p[1]);
++    var params = splitParameters(match[3]);
++    for (var j = 0; j < params.length; j++) {
++      var pair = splitKeyValuePair(params[j]);
++      var key = pair[0].toLowerCase();
++      var val = pair[1];
++
++      // get the value, unwrapping quotes
++      var value = val && val[0] === '"' && val[val.length - 1] === '"'
++        ? val.substr(1, val.length - 2)
++        : val;
++
++      if (key === 'q') {
++        q = parseFloat(value);
++        break;
++      }
+     }
+   }
+ 
+@@ -176,4 +187,67 @@
+ 
+ function isQuality(spec) {
+   return spec.q > 0;
++}
++
++/**
++ * Count the number of quotes in a string.
++ * @private
++ */
++
++function quoteCount(string) {
++  var count = 0;
++  var index = 0;
++
++  while ((index = string.indexOf('"', index)) !== -1) {
++    count++;
++    index++;
++  }
++
++  return count;
++}
++
++/**
++ * Split a key value pair.
++ * @private
++ */
++
++function splitKeyValuePair(str) {
++  var index = str.indexOf('=');
++  var key;
++  var val;
++
++  if (index === -1) {
++    key = str;
++  } else {
++    key = str.substr(0, index);
++    val = str.substr(index + 1);
++  }
++
++  return [key, val];
++}
++
++/**
++ * Split a string of parameters.
++ * @private
++ */
++
++function splitParameters(str) {
++  var parameters = str.split(';');
++
++  for (var i = 1, j = 0; i < parameters.length; i++) {
++    if (quoteCount(parameters[j]) % 2 == 0) {
++      parameters[++j] = parameters[i];
++    } else {
++      parameters[j] += ';' + parameters[i];
++    }
++  }
++
++  // trim parameters
++  parameters.length = j + 1;
++
++  for (var i = 0; i < parameters.length; i++) {
++    parameters[i] = parameters[i].trim();
++  }
++
++  return parameters;
+ }

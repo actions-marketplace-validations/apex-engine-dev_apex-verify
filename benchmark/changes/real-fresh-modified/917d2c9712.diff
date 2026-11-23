@@ -1,0 +1,17 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -70,7 +70,12 @@
+   // if-modified-since
+   if (modifiedSince) {
+     var lastModified = resHeaders['last-modified']
+-    var modifiedStale = !lastModified || Date.parse(lastModified) > Date.parse(modifiedSince)
++    var modifiedStale = !lastModified
++    if (modifiedStale === false) {
++      var dateModified = Date.parse(lastModified)
++      var dateModifiedSince = Date.parse(modifiedSince)
++      modifiedStale = isNaN(dateModified) || isNaN(dateModifiedSince) || dateModified <= dateModifiedSince
++    }
+ 
+     if (modifiedStale) {
+       return false

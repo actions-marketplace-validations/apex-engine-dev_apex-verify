@@ -1,0 +1,7 @@
+{
+  "name": "negotiator-params",
+  "private": true,
+  "scripts": {
+    "test": "node --require ./test/mocha-shim.cjs --test test/charset.js test/encoding.js test/language.js test/mediaType.js"
+  }
+}

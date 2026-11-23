@@ -1,0 +1,7 @@
+{
+  "name": "forwarded-ows",
+  "private": true,
+  "scripts": {
+    "test": "node --require ./test/mocha-shim.cjs --test test/test.js"
+  }
+}

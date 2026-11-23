@@ -1,0 +1,7 @@
+{
+  "name": "bytes-thousands",
+  "private": true,
+  "scripts": {
+    "test": "node --require ./test/mocha-shim.cjs --test test/byte-format.js test/byte-parse.js test/bytes.js"
+  }
+}

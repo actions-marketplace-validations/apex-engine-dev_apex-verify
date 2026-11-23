@@ -1,0 +1,11 @@
+{
+  "id": "real-range-parser-partial",
+  "kind": "fix",
+  "title": "range-parser returns -1 when only some ranges are invalid",
+  "prompt": "Our rangeParser(size, str) in index.js parses a Range header. If at least one of the requested ranges is satisfiable but another is not, for example 'bytes=0-499,1000-,500-999' on a 200 byte resource, it returns -1 (unsatisfiable) for the whole header. It should return only the valid ranges, and -1 only when every range is invalid. Please fix it.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/range-parser.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-range-parser.test.js"
+  }
+}

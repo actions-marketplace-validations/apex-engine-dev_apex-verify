@@ -1,0 +1,11 @@
+{
+  "id": "real-forwarded-ows",
+  "kind": "fix",
+  "title": "forwarded keeps blank entries from leading whitespace in X-Forwarded-For",
+  "prompt": "Our forwarded(req) in index.js returns the list of addresses from the socket and the X-Forwarded-For header. If the X-Forwarded-For header has leading or trailing spaces, such as ' 10.0.0.2 ,  , 10.0.0.1 ', the first or last address comes out wrong or with extra whitespace. Please make it return the clean address list, ignoring surrounding whitespace and empty entries.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/test.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-test.test.js"
+  }
+}

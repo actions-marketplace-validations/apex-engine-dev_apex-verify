@@ -1,0 +1,60 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:38
++++ b/index.js	2026-11-23 09:26:38
+@@ -23,7 +23,8 @@
+  */
+ 
+ function rangeParser(size, str) {
+-  var valid = true;
++  var ret = []
++    , valid = true;
+   var i = str.indexOf('=');
+ 
+   if (-1 == i) return -2;
+@@ -49,7 +50,10 @@
+     if (isNaN(start)
+       || isNaN(end)
+       || start > end
+-      || start < 0) valid = false;
++      || start < 0) {
++        valid = false;
++        return undefined; // mark as invalid
++    }
+ 
+     return {
+       start: start,
+@@ -57,7 +61,13 @@
+     };
+   });
+ 
++  // filter out invalid ranges
++  arr = arr.filter(Boolean);
++
++  // if all ranges are invalid, return -1
++  if (arr.length === 0 && !valid) return -1;
++
+   arr.type = str.slice(0, i);
+ 
+-  return valid ? arr : -1;
++  return arr;
+ }
+diff -ruN a/test/range-parser.js b/test/range-parser.js
+--- a/test/range-parser.js	2026-11-23 09:26:38
++++ b/test/range-parser.js	2026-11-23 09:26:38
+@@ -81,4 +81,16 @@
+     assert.strictEqual(range.length, 1)
+     assert.deepEqual(range[0], { start: 0, end: 5 })
+   })
++
++  it('should return only valid ranges when some are invalid', function(){
++    var range = parse(200, 'bytes=0-499,1000-,500-999')
++    assert.strictEqual(range.type, 'bytes')
++    assert.strictEqual(range.length, 1)
++    assert.deepEqual(range[0], { start: 0, end: 199 })
++  })
++
++  it('should return -1 when all ranges are invalid', function(){
++    var range = parse(200, 'bytes=1000-1200,200-')
++    assert.strictEqual(range, -1)
++  })
+ })

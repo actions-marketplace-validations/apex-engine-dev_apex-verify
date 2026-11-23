@@ -1,0 +1,7 @@
+Upstream: https://github.com/visionmedia/bytes.js
+Fix commit: db70acb42f59ef8b1407d9efeac1ee3b4394e3ef
+Parent (project/): 1d09eb71cc2f8488c03f730178f512d11846b14f
+Hidden tests: test files from the fix commit, copied unchanged (renamed hidden-*.test.js).
+Licence: see LICENSE (MIT).
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+Issue: https://github.com/visionmedia/bytes.js/issues/51

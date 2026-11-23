@@ -1,0 +1,54 @@
+diff -ruN a/lib/charset.js b/lib/charset.js
+--- a/lib/charset.js	2026-11-23 09:26:37
++++ b/lib/charset.js	2026-11-23 09:26:37
+@@ -57,11 +57,11 @@
+   var charset = match[1];
+   var q = 1;
+   if (match[2]) {
+-    var params = match[2].split(';')
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].trim().split('=');
+-      if (p[0] === 'q') {
+-        q = parseFloat(p[1]);
++    var params = match[2].split(';');
++    for (var p = 0; p < params.length; p++) {
++      var pair = params[p].trim().split('=');
++      if (pair[0] === 'q') {
++        q = parseFloat(pair[1]);
+         break;
+       }
+     }
+diff -ruN a/lib/encoding.js b/lib/encoding.js
+--- a/lib/encoding.js	2026-11-23 09:26:37
++++ b/lib/encoding.js	2026-11-23 09:26:37
+@@ -74,10 +74,10 @@
+   var q = 1;
+   if (match[2]) {
+     var params = match[2].split(';');
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].trim().split('=');
+-      if (p[0] === 'q') {
+-        q = parseFloat(p[1]);
++    for (var p = 0; p < params.length; p++) {
++      var pair = params[p].trim().split('=');
++      if (pair[0] === 'q') {
++        q = parseFloat(pair[1]);
+         break;
+       }
+     }
+diff -ruN a/lib/language.js b/lib/language.js
+--- a/lib/language.js	2026-11-23 09:26:37
++++ b/lib/language.js	2026-11-23 09:26:37
+@@ -63,9 +63,9 @@
+   var q = 1;
+   if (match[3]) {
+     var params = match[3].split(';')
+-    for (var i = 0; i < params.length; i ++) {
+-      var p = params[i].split('=');
+-      if (p[0] === 'q') q = parseFloat(p[1]);
++    for (var p = 0; p < params.length; p++) {
++      var pair = params[p].split('=');
++      if (pair[0] === 'q') q = parseFloat(pair[1]);
+     }
+   }
+ 

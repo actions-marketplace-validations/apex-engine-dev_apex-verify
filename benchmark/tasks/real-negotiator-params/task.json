@@ -1,0 +1,11 @@
+{
+  "id": "real-negotiator-params",
+  "kind": "fix",
+  "title": "Accept-* headers with extra parameters come back in the wrong order",
+  "prompt": "Our Negotiator in lib/ parses Accept-Charset, Accept-Encoding and Accept-Language headers wrongly when an entry has a parameter other than q before the q value, such as 'UTF-8;foo=bar;q=1, ISO-8859-1;q=1'. The preferences come out in the wrong order or with the wrong weight, so the client's preferred list is not returned as sent. Please make charsets(), encodings() and languages() return the right preferred list for such headers.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/charset.js test/encoding.js test/language.js test/mediaType.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-charset.test.js test/hidden-encoding.test.js test/hidden-language.test.js"
+  }
+}

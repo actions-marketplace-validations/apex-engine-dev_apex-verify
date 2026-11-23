@@ -1,0 +1,28 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -36,6 +36,7 @@
+   // simple header parsing
+   var proxyAddrs = (req.headers['x-forwarded-for'] || '')
+     .split(TOKEN_LIST_REGEXP)
++    .map(String.prototype.trim) // Trim whitespace from each address
+     .filter(Boolean)
+     .reverse()
+   var socketAddr = req.connection.remoteAddress
+diff -ruN a/test/test.js b/test/test.js
+--- a/test/test.js	2026-11-23 09:26:37
++++ b/test/test.js	2026-11-23 09:26:37
+@@ -26,6 +26,13 @@
+     })
+     assert.deepEqual(forwarded(req), ['127.0.0.1', '10.0.0.1', '10.0.0.2'])
+   })
++
++  it('should trim whitespace from entries', function () {
++    var req = createReq('127.0.0.1', {
++      'x-forwarded-for': ' 10.0.0.2 ,  , 10.0.0.1 '
++    })
++    assert.deepEqual(forwarded(req), ['127.0.0.1', '10.0.0.1', '10.0.0.2'])
++  })
+ })
+ 
+ function createReq (socketAddr, headers) {

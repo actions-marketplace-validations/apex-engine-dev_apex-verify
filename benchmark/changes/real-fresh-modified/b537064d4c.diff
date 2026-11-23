@@ -1,0 +1,31 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -70,9 +70,25 @@
+   // if-modified-since
+   if (modifiedSince) {
+     var lastModified = resHeaders['last-modified']
+-    var modifiedStale = !lastModified || Date.parse(lastModified) > Date.parse(modifiedSince)
+ 
+-    if (modifiedStale) {
++    // If Last-Modified is missing, it's stale.
++    if (!lastModified) {
++      return false
++    }
++
++    var reqDate = Date.parse(modifiedSince)
++    var resDate = Date.parse(lastModified)
++
++    // If either date is invalid, it's stale.
++    // Date.parse returns NaN for invalid dates, and NaN comparisons always return false (e.g., NaN > number is false).
++    // So we must explicitly check for NaN.
++    if (isNaN(reqDate) || isNaN(resDate)) {
++      return false
++    }
++
++    // Otherwise, compare valid dates.
++    // If Last-Modified is more recent than If-Modified-Since, it's stale.
++    if (resDate > reqDate) {
+       return false
+     }
+   }

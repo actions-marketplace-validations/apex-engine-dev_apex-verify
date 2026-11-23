@@ -1,0 +1,11 @@
+{
+  "id": "real-fresh-modified",
+  "kind": "fix",
+  "title": "fresh treats an invalid Last-Modified date as fresh",
+  "prompt": "Our fresh(reqHeaders, resHeaders) in index.js decides whether a cached response is still fresh. When the request has an If-Modified-Since header and the date in the request or in the response's Last-Modified header is not a valid date (for example 'foo'), it wrongly says the response is fresh. An unparseable date should never make a response count as fresh. Please fix it.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/fresh.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-fresh.test.js"
+  }
+}

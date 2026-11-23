@@ -1,0 +1,7 @@
+Upstream: https://github.com/jshttp/negotiator
+Fix commit: 0484c749083b90b034ef5d0eefce8d4504c3acc9
+Parent (project/): 2c0de22a71ca9ce3168cbf976e3eeae5cb010227
+Hidden tests: test files from the fix commit, copied unchanged (renamed hidden-*.test.js).
+Licence: see LICENSE (MIT).
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+Issue: none linked (found by the maintainer)

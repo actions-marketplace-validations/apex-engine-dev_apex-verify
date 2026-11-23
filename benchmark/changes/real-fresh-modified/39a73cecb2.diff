@@ -1,0 +1,29 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 09:26:37
++++ b/index.js	2026-11-23 09:26:37
+@@ -70,9 +70,23 @@
+   // if-modified-since
+   if (modifiedSince) {
+     var lastModified = resHeaders['last-modified']
+-    var modifiedStale = !lastModified || Date.parse(lastModified) > Date.parse(modifiedSince)
+ 
+-    if (modifiedStale) {
++    // A response is stale if a Last-Modified header is missing.
++    // An invalid date should also be treated as stale.
++    if (!lastModified) {
++      return false
++    }
++
++    var lastModifiedDate = Date.parse(lastModified)
++    var modifiedSinceDate = Date.parse(modifiedSince)
++
++    // A response is stale if either date is unparseable (NaN).
++    if (isNaN(lastModifiedDate) || isNaN(modifiedSinceDate)) {
++      return false
++    }
++
++    // A response is stale if Last-Modified is more recent than If-Modified-Since.
++    if (lastModifiedDate > modifiedSinceDate) {
+       return false
+     }
+   }
