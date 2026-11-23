@@ -1,0 +1,85 @@
+diff -ruN a/packages/engine/src/proof-gate.ts b/packages/engine/src/proof-gate.ts
+--- a/packages/engine/src/proof-gate.ts	2026-11-23 20:06:28
++++ b/packages/engine/src/proof-gate.ts	2026-11-23 20:06:28
+@@ -71,6 +71,31 @@
+     CHECKS_INPUTS + SELF_EXCLUSION_HINT + (standardCases ? STANDARD_CASES_HINT : "") + (freshInputs ? FRESH_INPUTS_HINT : "");
+ }
+ 
++/** The names of the tests in a checks file (node:test / jest / vitest, pytest, Go, Rust). */
++export function testNames(code: string): string[] {
++  const out: string[] = [];
++  for (const m of code.matchAll(/(?:^|[^\w.])(?:test|it|t\.test)\s*\(\s*(["'`])((?:\\.|(?!\1).)*)\1/gm)) out.push(m[2]);
++  for (const m of code.matchAll(/^\s*(?:async\s+)?def\s+(test_\w+)/gm)) out.push(m[1]);
++  for (const m of code.matchAll(/^func\s+(Test\w+)\s*\(/gm)) out.push(m[1]);
++  for (const m of code.matchAll(/#\[test\]\s*(?:#\[[^\]]*\]\s*)*(?:pub\s+)?fn\s+(\w+)/g)) out.push(m[1]);
++  return out;
++}
++
++/** A pruned checks file is accepted only when it removes tests and does nothing else: at least one test left, fewer than before, every one of them a test the first file had. */
++export function prunedOk(before: string, after: string): boolean {
++  const a = testNames(before), b = testNames(after);
++  if (!b.length || b.length >= a.length) return false;
++  const left = [...a];
++  for (const name of b) { const i = left.indexOf(name); if (i < 0) return false; left.splice(i, 1); }
++  return true;
++}
++
++export function prunePrompt(task: string, code: string, lang: string): string {
++  return `<task>\n${task}\n</task>\n\nSomeone wrote this test file from the task, before any change was made:\n\n\`\`\`${lang}\n${code}\`\`\`\n\n` +
++    "Review it against the task. Do not solve the task and do not look for more to test. Remove every test whose expected result is not decided by the task's own words or examples, or (for a test of behaviour the task leaves alone) by how the code above behaves today: a rule the task does not state, a stricter reading than its words require, a guessed exact value or message, a choice a standard leaves to the implementer. " +
++    "Keep every other test exactly as it is: do not add, rename, rewrite or weaken a test, and keep the imports and helpers the remaining tests use. When every test is decided by the task, return the file unchanged. Answer with the whole file in one code block.";
++}
++
+ async function ask(gw: ProofGateway, model: string, root: string, messages: ModelMessage[], signal: AbortSignal | undefined, t: { input: number; output: number }): Promise<string> {
+   // Done at the closing fence (the stream is then read on only for its usage event); a model repeating lines is left at once.
+   return streamText(gw.stream({ messages, tools: [], model, temperature: 0.2, maxTokens: 16000, signal, scope: root }), {
+@@ -101,7 +126,7 @@
+  * project has no node or pytest tests, or when the file still does not load after one repair (for a reason the
+  * change would not clear: a missing export the request names is expected before the change).
+  */
+-export async function draftAcceptance(o: { gateway: ProofGateway; model: string; root: string; task: string; testCommand: string[]; signal?: AbortSignal; budgetChars?: number; timeoutSec?: number; /** Also test unstated standard-practice behaviour (for an independent checker). */ standardCases?: boolean; /** Use inputs other than the task's own examples. */ freshInputs?: boolean;
++export async function draftAcceptance(o: { gateway: ProofGateway; model: string; root: string; task: string; testCommand: string[]; signal?: AbortSignal; budgetChars?: number; timeoutSec?: number; /** Review the drafted checks once against the task and drop the ones it does not decide (default true). */ prune?: boolean; /** Also test unstated standard-practice behaviour (for an independent checker). */ standardCases?: boolean; /** Use inputs other than the task's own examples. */ freshInputs?: boolean;
+   /** Files the AI may not see (ignore rules, secret files): left out of the prompt. */ hidden?: (rel: string) => boolean;
+   workspace?: Workspace; taskPack?: TaskPackProvider; engine?: EngineOptions }): Promise<Acceptance | null> {
+   const hidden = o.hidden ?? (() => false);
+@@ -136,6 +161,19 @@
+     if (!run.loadError || expected(run.loadError)) break;
+   }
+   if (!run || !code || (run.loadError && !expected(run.loadError))) return null;
++  // A second reading before any change is seen: tests whose expected result the task does not decide are taken out.
++  // The shorter file is used only when it adds nothing, keeps at least one test and still loads.
++  if (o.prune !== false && !o.signal?.aborted) {
++    calls++;
++    const lang = cmd.py ? "python" : fw === "cargo" ? "rust" : fw === "go" ? "go" : "js";
++    const text = await ask(o.gateway, o.model, o.root, [system, msg("user", `${context}\n\n${prunePrompt(o.task, code, lang)}`)], o.signal, tokens).catch(() => "");
++    const shorter = checkCode(text);
++    const next = shorter && !shorter.endsWith("\n") ? shorter + "\n" : shorter;
++    if (next && next !== code && prunedOk(code, next)) {
++      const again = await runAcceptance(o.root, { path: checkPath, code: next, run: cmd.run, py: cmd.py, ...(fw ? { framework: fw } : {}) }, o.signal, o.timeoutSec);
++      if (!again.loadError || expected(again.loadError)) { code = next; run = again; }
++    }
++  }
+   return { path: checkPath, code, run: cmd.run, py: cmd.py, ...(fw ? { framework: fw } : {}), original: { passed: run.passed, failed: run.failed, loadError: run.loadError }, tokens, calls };
+ }
+ 
+diff -ruN a/packages/engine/src/surgical.test.ts b/packages/engine/src/surgical.test.ts
+--- a/packages/engine/src/surgical.test.ts	2026-11-23 20:06:28
++++ b/packages/engine/src/surgical.test.ts	2026-11-23 20:06:28
+@@ -25,3 +25,17 @@
+   assert.equal(hasFencedBlock("```python\ndef test_md():\n    doc = \"\"\"\n```\ncode\n"), false, "still open: the fence is inside the string");
+   assert.equal(checkCode("```js\nconst a = 1;\n```\nmore text"), "const a = 1;");
+ });
++
++test("a pruned checks file is accepted only when it removes tests and adds or renames none", async () => {
++  const { prunedOk, testNames } = await import("./proof-gate.js");
++  const file = 'import { test } from "node:test";\ntest("a: stated", () => {});\ntest(\'b\', async () => {});\nit(`c`, () => {});\n';
++  assert.deepEqual(testNames(file), ["a: stated", "b", "c"]);
++  assert.deepEqual(testNames("def test_one():\n    pass\n\nasync def test_two():\n    pass\n"), ["test_one", "test_two"]);
++  assert.deepEqual(testNames("func TestAdd(t *testing.T) {}\n"), ["TestAdd"]);
++  assert.deepEqual(testNames("#[test]\nfn adds() {}\n"), ["adds"]);
++  assert.equal(prunedOk(file, 'import { test } from "node:test";\ntest("a: stated", () => {});\n'), true);
++  assert.equal(prunedOk(file, file), false, "nothing removed");
++  assert.equal(prunedOk(file, 'import { test } from "node:test";\n'), false, "no test left");
++  assert.equal(prunedOk(file, 'test("a: stated", () => {});\ntest("new one", () => {});\n'), false, "a test the first file did not have");
++  assert.equal(prunedOk(file, 'test("b", () => {});\ntest("b", () => {});\n'), false, "the same test twice");
++});

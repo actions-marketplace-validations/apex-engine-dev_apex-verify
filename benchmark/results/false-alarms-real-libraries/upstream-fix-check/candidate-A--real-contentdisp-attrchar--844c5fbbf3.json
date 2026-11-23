@@ -1,0 +1,32 @@
+{
+ "task": "real-contentdisp-attrchar",
+ "change": {
+  "passed": 8,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "non-ASCII filename with ?: only valid attr-chars remain unescaped :: should percent-encode \"?\"",
+   "non-ASCII filename with :: only valid attr-chars remain unescaped :: should percent-encode \":\""
+  ]
+ },
+ "project": {
+  "passed": 3,
+  "failed": 7,
+  "loadError": null,
+  "fails": [
+   "non-ASCII filename with (: percent-encoded value can still contain characters that are not allowed in an RFC 5987 attr-char, for example '(' :: should percent-encode \"(\" and \")\"",
+   "non-ASCII filename with ,: for example ',' :: should percent-encode \",\"",
+   "non-ASCII filename with ;: for example ';' :: should percent-encode \";\"",
+   "non-ASCII filename with =: for example '=' :: should percent-encode \"=\"",
+   "non-ASCII filename with @: for example '@' :: should percent-encode \"@\"",
+   "non-ASCII filename with ?: only valid attr-chars remain unescaped :: should percent-encode \"?\"",
+   "non-ASCII filename with :: only valid attr-chars remain unescaped :: should percent-encode \":\""
+  ]
+ },
+ "reference": {
+  "passed": 10,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 2,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "values must be valid cookie-octets (optionally wrapped in double quotes) :: argument val is invalid",
+   "domain must be validated strictly :: Missing expected exception: domain containing \";\" should throw",
+   "path must be validated strictly without breaking ordinary values :: option path is invalid",
+   "cookie.serialize validation according to RFC 6265 :: option path is invalid"
+  ]
+ },
+ "project": {
+  "passed": 1,
+  "failed": 5,
+  "loadError": null,
+  "fails": [
+   "names must be valid tokens :: Missing expected exception: name containing \"(\" should throw",
+   "values must be valid cookie-octets (optionally wrapped in double quotes) :: Missing expected exception: value containing \" \" should throw",
+   "domain must be validated strictly :: Missing expected exception: domain containing \";\" should throw",
+   "path must be validated strictly without breaking ordinary values :: Missing expected exception: path containing \";\" should throw",
+   "cookie.serialize validation according to RFC 6265 :: Missing expected exception: path containing \";\" should throw"
+  ]
+ },
+ "reference": {
+  "passed": 6,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

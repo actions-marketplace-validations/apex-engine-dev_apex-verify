@@ -1,0 +1,32 @@
+{
+ "task": "real-contentdisp-attrchar",
+ "change": {
+  "passed": 11,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "encodes comma and semicolon :: should percent-encode , and ;",
+   "encodes mixed invalid attr-chars :: should percent-encode all mixed invalid attr-chars",
+   "contentDisposition with non-ASCII filename encodes invalid attr-chars in filename* :: should percent-encode all mixed invalid attr-chars"
+  ]
+ },
+ "project": {
+  "passed": 8,
+  "failed": 6,
+  "loadError": null,
+  "fails": [
+   "encodes parentheses :: should percent-encode ( and )",
+   "encodes comma and semicolon :: should percent-encode , and ;",
+   "encodes equals and at-sign :: should percent-encode = and @",
+   "encodes colon and question mark :: should percent-encode : and ?",
+   "encodes mixed invalid attr-chars :: should percent-encode all mixed invalid attr-chars",
+   "contentDisposition with non-ASCII filename encodes invalid attr-chars in filename* :: should percent-encode all mixed invalid attr-chars"
+  ]
+ },
+ "reference": {
+  "passed": 14,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

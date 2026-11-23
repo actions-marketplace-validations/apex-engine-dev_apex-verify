@@ -79,7 +79,7 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
   const cwd = input.cwd || input.workspace_roots?.[0] || process.cwd();
   const block = (reason: string) => JSON.stringify(cursor ? { decision: "block", reason, followup_message: reason } : { decision: "block", reason });
   const state = path.join(stateDir(), "hook", (input.session_id || "session").replace(/[^\w.-]/g, "_").slice(0, 120) + ".json");
-  let st: { fp?: string; verdict?: string; message?: string; blocks?: number; head?: string } = {};
+  let st: { fp?: string; verdict?: string; message?: string; blocks?: number; head?: string; task?: string } = {};
   try { const raw = readRegularFile(state); if (raw) st = JSON.parse(raw); } catch { /* first run */ }
   // What to compare with: APEX_BASE when set, else the commit this session was first seen on, so work the agent commits during the session is still verified.
   const head = headOf(cwd);
@@ -96,7 +96,9 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
     if (st.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks && st.message) { st.blocks = (st.blocks ?? 0) + 1; save(); out(block(st.message)); }
     return 0;
   }
-  const task = (input.transcript_path && fs.existsSync(input.transcript_path) ? lastUserPrompt(fs.readFileSync(input.transcript_path, "utf8")) : "") || (typeof input.prompt === "string" ? input.prompt.trim() : "") || env.APEX_TASK || "";
+  const task = (input.transcript_path && fs.existsSync(input.transcript_path) ? lastUserPrompt(fs.readFileSync(input.transcript_path, "utf8")) : "") || (typeof input.prompt === "string" ? input.prompt.trim() : "") || env.APEX_TASK
+    // Gemini CLI calls the hook again after a block with an empty prompt: the task is the one this session was first judged on.
+    || st.task || "";
   if (!task) return 0;
   try {
     const a = parseVerifyArgs(["--task", task, "--dir", cwd, "--quiet", ...(env.APEX_NO_MODEL === "1" ? ["--no-model"] : []), ...(base !== "HEAD" ? ["--base", base] : [])], env);
@@ -104,7 +106,7 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
     const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, secondChecker, freshInputs: a.freshInputs, timeoutSec: a.timeoutSec });
     const text = renderText(report);
     const message = `Apex verify says this change is ${report.verdict === "not_ready" ? "NOT READY" : report.verdict.toUpperCase()}. Do not stop yet.\n\n${text}`;
-    st = { fp, verdict: report.verdict, message, blocks: st.blocks ?? 0, head: st.head }; // the counter belongs to the session, not to one version of the change
+    st = { fp, verdict: report.verdict, message, blocks: st.blocks ?? 0, head: st.head, task }; // the counter belongs to the session, not to one version of the change
     if (report.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks) { st.blocks = (st.blocks ?? 0) + 1; save(); out(block(message)); return 0; }
     save();
     out(JSON.stringify({ systemMessage: report.verdict === "ready" ? `Apex verify: READY (${report.checks.passed} checks, ${report.tests.after?.passed ?? 0} tests pass)` : `Apex verify: ${report.verdict === "not_ready" ? "NOT READY (not blocking: " + (warnOnly ? "warn mode" : "block limit reached") + ")" : "UNKNOWN"}: ${report.reasons[0]?.summary ?? report.warnings[0] ?? ""}` }));

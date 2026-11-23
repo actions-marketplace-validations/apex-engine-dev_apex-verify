@@ -1,0 +1,87 @@
+diff -ruN a/packages/engine/src/surgical.test.ts b/packages/engine/src/surgical.test.ts
+--- a/packages/engine/src/surgical.test.ts	2026-11-23 20:06:28
++++ b/packages/engine/src/surgical.test.ts	2026-11-23 20:06:28
+@@ -25,3 +25,18 @@
+   assert.equal(hasFencedBlock("```python\ndef test_md():\n    doc = \"\"\"\n```\ncode\n"), false, "still open: the fence is inside the string");
+   assert.equal(checkCode("```js\nconst a = 1;\n```\nmore text"), "const a = 1;");
+ });
++
++test("the second look blocks only on a failing check whose quoted words are really in the request", async () => {
++  const { tracedVerdict } = await import("./surgical.js");
++  const request = "Names should have to be valid tokens, and values may be wrapped in double quotes. Please make the validation follow the RFC.";
++  const stated = 'STATED | rejects a name with a space | "Names should have to be valid tokens"\nUNSTATED | rejects a tab in the path | the request does not fix it\nCODE';
++  assert.equal(tracedVerdict(stated, request).verdict, "code");
++  assert.match(tracedVerdict(stated, request).reason, /valid tokens/);
++  assert.equal(tracedVerdict('STATED | x | "names   SHOULD have to be valid tokens"\nCODE', request).verdict, "code", "case and spacing do not matter");
++  assert.equal(tracedVerdict('STATED | rejects a comma | "values must never contain a comma"\nCODE', request).verdict, "test", "a quote that is not in the request counts as none");
++  assert.equal(tracedVerdict('STATED | x | "the RFC"\nCODE', request).verdict, "test", "two words are not a statement");
++  assert.equal(tracedVerdict("UNSTATED | a | expects a value the request does not fix\nUNSTATED | b | wrong input\nTEST", request).verdict, "test");
++  assert.equal(tracedVerdict("CODE\nthe change misses the rule", request).verdict, "code", "no list: the plain reading");
++  assert.equal(tracedVerdict("TEST", request).verdict, "test");
++  assert.equal(tracedVerdict("", request).verdict, "unknown");
++});
+diff -ruN a/packages/engine/src/surgical.ts b/packages/engine/src/surgical.ts
+--- a/packages/engine/src/surgical.ts	2026-11-23 20:06:28
++++ b/packages/engine/src/surgical.ts	2026-11-23 20:06:28
+@@ -34,12 +34,12 @@
+ }): Promise<{ verdict: "test" | "code" | "unknown"; reason: string }> {
+   const diff = o.changes.map((c) => `--- ${c.path}\n${lineDiff(c.before ?? "", c.after).join("\n")}`).join("\n").slice(0, 6000);
+   const messages = [
+-    msg("system", "You settle a disagreement between a code change and a test written for it. First line of your answer: exactly TEST or CODE. Second line: one sentence saying why."),
+-    msg("user", `<request>\n${requestOnly(o.task).slice(0, 4000)}\n</request>\n\n<change note="lines added (+) and removed (-); it passes the project's own tests">\n${diff}\n</change>\n\n<acceptance tests note="written from the request by someone else, before the change">\n${o.checksFile.slice(0, 7000)}\n</acceptance tests>\n\n<failures note="${o.passed} of these tests pass on the change, ${o.failed} fail">\n${failures(o.failureOutput, 2500)}\n</failures>\n\nFor the failing tests, decide who is wrong.\nAnswer TEST when the failing test is at fault: it demands something the request does not ask for, expects a value the request does not fix, builds its input wrongly, or fails for a reason unrelated to the request.\nAnswer CODE when the change is at fault: the failing test checks something the request asks for and the change does not do it.\nWhen you cannot tell, answer CODE.`),
++    msg("system", "You settle a disagreement between a code change and tests written for it. You answer in the exact line format you are given, and nothing else."),
++    msg("user", `<request>\n${requestOnly(o.task).slice(0, 4000)}\n</request>\n\n<change note="lines added (+) and removed (-); it passes the project's own tests">\n${diff}\n</change>\n\n<acceptance tests note="written from the request by someone else, before the change">\n${o.checksFile.slice(0, 7000)}\n</acceptance tests>\n\n<failures note="${o.passed} of these tests pass on the change, ${o.failed} fail">\n${failures(o.failureOutput, 2500)}\n</failures>\n\nFor each failing test write one line, in one of these two forms:\nSTATED | <test name> | "<words copied from the request>"\nUNSTATED | <test name> | <why, in a few words>\nSTATED: the request's own words state the behaviour this test asserts, the value the test expects follows from those words, and the change does not do it. Copy the words from the request exactly as they are written there (5 to 30 words, no paraphrase, no ellipsis); a quote that is not in the request does not count.\nUNSTATED: the test demands something the request does not state, expects a value the request does not fix, builds its input wrongly, or fails for a reason unrelated to the request.\nThen a last line: exactly CODE when at least one failing test is STATED, otherwise exactly TEST.`),
+   ];
+   let text = "";
+   try {
+-    for await (const ev of o.gateway.stream({ messages, tools: [], model: o.model, temperature: 0, maxTokens: 300, thinkingBudget: o.thinkingBudget ?? SHORT_THINKING, segments: { arbiter: 1, diff: diff.length, checks: Math.min(7000, o.checksFile.length) }, signal: o.signal })) {
++    for await (const ev of o.gateway.stream({ messages, tools: [], model: o.model, temperature: 0, maxTokens: 4000, thinkingBudget: o.thinkingBudget ?? SHORT_THINKING, segments: { arbiter: 1, diff: diff.length, checks: Math.min(7000, o.checksFile.length) }, signal: o.signal })) {
+       if (ev.type === "text-delta") text += ev.text;
+       if (ev.type === "message-complete" && !text) text = ev.message.content ?? "";
+       if (ev.type === "usage") o.onUsage?.({ inputTokens: ev.inputTokens ?? 0, outputTokens: ev.outputTokens ?? 0, cachedTokens: ev.cachedTokens ?? 0 });
+@@ -49,7 +49,7 @@
+     if (o.signal?.aborted) throw err;
+     return { verdict: "unknown", reason: "" };
+   }
+-  return readVerdict(text);
++  return tracedVerdict(text, requestOnly(o.task));
+ }
+ 
+ /** The arbiter's answer: its first word decides; anything else is "unknown". */
+@@ -58,6 +58,36 @@
+   const m = /^\W*(TEST|CODE)\b/.exec(clean);
+   const reason = clean.replace(/^\W*(TEST|CODE)\b[\s:.,-]*/, "").split("\n").map((l) => l.trim()).filter(Boolean)[0]?.slice(0, 300) ?? "";
+   return { verdict: m ? (m[1] === "TEST" ? "test" : "code") : "unknown", reason };
++}
++
++/** Text compared loosely: case, quote marks, backslashes and runs of spaces do not matter. */
++const loose = (s: string): string => s.toLowerCase().replace(/[\s"'`\u2018\u2019\u201c\u201d\\]+/g, " ").trim();
++
++/**
++ * The second look, with proof: the arbiter lists each failing check as STATED (with the request's own words that
++ * state the behaviour) or UNSTATED. A failing check blocks only when its quote really is in the request, so "the
++ * change is at fault" needs a sentence of the request to stand on; a quote the arbiter made up counts as none.
++ * "code": at least one failing check is STATED with a quote found in the request. "test": checks were listed and
++ * none is. No list at all: the plain TEST / CODE reading.
++ */
++export function tracedVerdict(text: string, request: string): { verdict: "test" | "code" | "unknown"; reason: string } {
++  const clean = text.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
++  const req = loose(request);
++  let listed = 0, firstWhy = "";
++  for (const line of clean.split("\n")) {
++    const m = /^\W*(STATED|UNSTATED)\s*\|\s*([^|]*)\|\s*(.*)$/.exec(line.trim());
++    if (!m) continue;
++    listed++;
++    const rest = m[3].trim();
++    if (m[1] === "STATED") {
++      const quote = loose(rest);
++      if (quote.split(" ").length >= 3 && req.includes(quote)) return { verdict: "code", reason: `${m[2].trim()}: the request says "${rest.replace(/^["'`]|["'`]$/g, "").slice(0, 200)}"`.slice(0, 300) };
++      firstWhy ||= `${m[2].trim()}: the words quoted for it are not in the request`;
++    } else firstWhy ||= `${m[2].trim()}: ${rest}`;
++  }
++  if (listed) return { verdict: "test", reason: firstWhy.slice(0, 300) };
++  const last = clean.split("\n").map((l) => l.trim()).filter(Boolean).pop() ?? "";
++  return readVerdict(/^\W*(TEST|CODE)\b/.test(last) ? last : clean);
+ }
+ 
+ const SHORT_THINKING = 1024;

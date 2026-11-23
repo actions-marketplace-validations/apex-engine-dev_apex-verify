@@ -1,0 +1,39 @@
+{
+ "task": "real-contentdisp-attrchar",
+ "change": {
+  "passed": 19,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "encodes , in filename* :: should percent-encode ,",
+   "contentDisposition(filename) with non-ASCII and extended characters :: should percent-encode ,"
+  ]
+ },
+ "project": {
+  "passed": 10,
+  "failed": 11,
+  "loadError": null,
+  "fails": [
+   "encodes ( in filename* :: should percent-encode (",
+   "encodes ) in filename* :: should percent-encode )",
+   "encodes , in filename* :: should percent-encode ,",
+   "encodes ; in filename* :: should percent-encode ;",
+   "encodes = in filename* :: should percent-encode =",
+   "encodes @ in filename* :: should percent-encode @",
+   "encodes ? in filename* :: should percent-encode ?",
+   "encodes : in filename* :: should percent-encode :",
+   "contentDisposition(filename) with non-ASCII and extended characters :: should percent-encode :",
+   "uses basename of the string and encodes correctly :: should use basename and encode correctly",
+   "contentDisposition(filename) edge cases and boundaries :: should use basename and encode correctly"
+  ]
+ },
+ "reference": {
+  "passed": 19,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "does not encode valid attr-chars left unescaped by encodeURI :: should not encode valid attr-chars",
+   "contentDisposition(filename) edge cases and boundaries :: should not encode valid attr-chars"
+  ]
+ }
+}

@@ -1,0 +1,602 @@
+[
+ {
+  "task": "csv",
+  "change": "2cb1453487",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "currency",
+  "change": "22e02f6ec1",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "days-between",
+  "change": "0a272b3b6d",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "days-between",
+  "change": "12724689ce",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "duration",
+  "change": "d20c7e02e6",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "lru",
+  "change": "18ac881f66",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "lru",
+  "change": "c2a6abffd8",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "paginate",
+  "change": "dd44861b92",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "paginate",
+  "change": "07ab76465f",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "merge-config",
+  "change": "ade5521cdf",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "rename-fetch",
+  "change": "12d75504a9",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "retry",
+  "change": "0fa467fbc1",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "rename-fetch",
+  "change": "3161ee3679",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "retry",
+  "change": "94b27a4ec5",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "slugify",
+  "change": "1e0e59a0ff",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "todo-persist",
+  "change": "cdfac50a01",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "lru",
+  "change": "4104ac5ec0",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "rename-fetch",
+  "change": "de48a5c87e",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "paginate",
+  "change": "92360697bf",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "days-between",
+  "change": "7cbf6ded0b",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "emitter",
+  "change": "fef053247b",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "retry",
+  "change": "bc8412fabc",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "rename-fetch",
+  "change": "2b99d6dd43",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "days-between",
+  "change": "79f51dec88",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "lru",
+  "change": "14bdda2dbe",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "paginate",
+  "change": "4d828f05fb",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "rename-fetch",
+  "change": "e94488d657",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "retry",
+  "change": "13e1962f40",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "paginate",
+  "change": "cf2bd73d91",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "days-between",
+  "change": "d9ba692ad3",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "lru",
+  "change": "e0297357ca",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "csv",
+  "change": "6c4965c556",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "retry",
+  "change": "2981c215e7",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "days-between",
+  "change": "a6bb222fa5",
+  "correct": true,
+  "verdict": "unknown",
+  "reasons": [
+   "checks_unproven"
+  ]
+ },
+ {
+  "task": "rename-fetch",
+  "change": "e8d712857a",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "currency",
+  "change": "2acba6d5f2",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "paginate",
+  "change": "c8aa8a14c3",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "lru",
+  "change": "6c2e053032",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "retry",
+  "change": "22fe3dead6",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "currency",
+  "change": "09c17b6b35",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "csv",
+  "change": "e784eb9529",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "regression",
+   "check_failed"
+  ]
+ },
+ {
+  "task": "rename-fetch",
+  "change": "31db09b130",
+  "correct": true,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "currency",
+  "change": "2e31b63876",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "duration",
+  "change": "0d71c1ee23",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "emitter",
+  "change": "fc5e21afa4",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "emitter",
+  "change": "f7f4c4ea12",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "slugify",
+  "change": "d25b123767",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "todo-persist",
+  "change": "5c581967a7",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "rename-fetch",
+  "change": "0224a589bb",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "merge-config",
+  "change": "7d1c7fead2",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "todo-persist",
+  "change": "74b22cc119",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "csv",
+  "change": "8b1d7b781e",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "todo-persist",
+  "change": "017d584c08",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "currency",
+  "change": "b507c87ffb",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "duration",
+  "change": "c3005aac62",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "emitter",
+  "change": "5e2ff4cf4e",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "csv",
+  "change": "441a1363ff",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "slugify",
+  "change": "dd618f2e8b",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "merge-config",
+  "change": "2ea8b474d3",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "todo-persist",
+  "change": "b3614774a5",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "duration",
+  "change": "790bd33d44",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "currency",
+  "change": "01e3860f0a",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "slugify",
+  "change": "bf13f61f30",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "merge-config",
+  "change": "8da46ead73",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "todo-persist",
+  "change": "fe84bd787c",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "currency",
+  "change": "4f57c4fc07",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "emitter",
+  "change": "0393882900",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "todo-persist",
+  "change": "1f9baf748f",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "csv",
+  "change": "fc16163c8c",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "regression"
+  ]
+ },
+ {
+  "task": "currency",
+  "change": "98ec2dd5de",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "todo-persist",
+  "change": "44eb23a77a",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "emitter",
+  "change": "8cc88651a8",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "duration",
+  "change": "8ded289bb2",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "emitter",
+  "change": "b574196501",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "currency",
+  "change": "ed15731587",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "cheat",
+   "checks_suspect"
+  ]
+ },
+ {
+  "task": "csv",
+  "change": "5df0139c4e",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "duration",
+  "change": "1f4952e815",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "emitter",
+  "change": "c2c11fdc35",
+  "correct": false,
+  "verdict": "ready",
+  "reasons": []
+ },
+ {
+  "task": "days-between",
+  "change": "b265aa98eb",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ },
+ {
+  "task": "duration",
+  "change": "842722a689",
+  "correct": false,
+  "verdict": "not_ready",
+  "reasons": [
+   "check_failed"
+  ]
+ }
+]

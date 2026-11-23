@@ -1,0 +1,38 @@
+{
+ "task": "real-windows-basename",
+ "change": {
+  "passed": 11,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: false does not treat backslash as separator :: Should not match backslash path when windows: false",
+   "matchBase option with windows: false does not treat backslash as separator :: Should not match backslash path when windows: false",
+   "picomatch.matchBase directly with windows: false :: Should not match backslash path when windows: false"
+  ]
+ },
+ "project": {
+  "passed": 6,
+  "failed": 8,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: true matches backslash paths :: Should match backslash path when windows: true",
+   "basename option with windows: false does not treat backslash as separator :: Should not match backslash path when windows: false",
+   "matchBase option with windows: true matches backslash paths :: Should match backslash path when windows: true",
+   "matchBase option with windows: false does not treat backslash as separator :: Should not match backslash path when windows: false",
+   "basename option with exact match and windows: true :: Should match exact basename when windows: true",
+   "basename option with trailing backslash and windows: true :: Should match exact basename ignoring trailing backslash when windows: true",
+   "picomatch.matchBase directly with windows: true :: Should match backslash path when windows: true",
+   "picomatch.matchBase directly with windows: false :: Should not match backslash path when windows: false"
+  ]
+ },
+ "reference": {
+  "passed": 11,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: false does not treat backslash as separator :: Should not match backslash path when windows: false",
+   "matchBase option with windows: false does not treat backslash as separator :: Should not match backslash path when windows: false",
+   "picomatch.matchBase directly with windows: false :: Should not match backslash path when windows: false"
+  ]
+ }
+}

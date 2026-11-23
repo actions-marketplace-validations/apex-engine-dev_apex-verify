@@ -1,0 +1,27 @@
+{
+ "task": "real-contentdisp-attrchar",
+ "change": {
+  "passed": 6,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "contentDisposition(filename) filename* parameter only contains valid attr-chars and percent-encodings :: should not contain invalid attr-chars, found: ,",
+   "contentDisposition(filename) escapes specific characters mentioned in the task :: \"should not contain literal ',' in filename*\""
+  ]
+ },
+ "project": {
+  "passed": 6,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "contentDisposition(filename) filename* parameter only contains valid attr-chars and percent-encodings :: should not contain invalid attr-chars, found: (),:;=?@",
+   "contentDisposition(filename) escapes specific characters mentioned in the task :: \"should not contain literal '(' in filename*\""
+  ]
+ },
+ "reference": {
+  "passed": 8,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

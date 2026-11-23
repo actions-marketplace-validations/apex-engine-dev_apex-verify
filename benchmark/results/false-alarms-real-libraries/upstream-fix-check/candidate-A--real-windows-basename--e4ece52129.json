@@ -1,0 +1,28 @@
+{
+ "task": "real-windows-basename",
+ "change": {
+  "passed": 10,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "edge case: picomatch.matchBase directly with windows: true :: Expected picomatch.matchBase to respect windows: true"
+  ]
+ },
+ "project": {
+  "passed": 7,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "With windows: true a path such as 'a\\\\b\\\\c.js' should match the pattern '*.js' with basename on :: Expected '*.js' to match 'a\\b\\c.js' when windows: true",
+   "edge case: matchBase alias with windows: true :: Expected matchBase alias to work with windows: true",
+   "edge case: mixed slashes with windows: true :: Expected mixed slashes to be treated as separators when windows: true",
+   "edge case: picomatch.matchBase directly with windows: true :: Expected picomatch.matchBase to respect windows: true"
+  ]
+ },
+ "reference": {
+  "passed": 11,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

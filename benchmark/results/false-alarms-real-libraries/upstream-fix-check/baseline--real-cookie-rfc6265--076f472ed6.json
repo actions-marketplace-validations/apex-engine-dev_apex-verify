@@ -1,0 +1,34 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 16,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "accepts valid cookie-octets wrapped in double quotes :: argument val is invalid",
+   "cookie.serialize value validation :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 9,
+  "failed": 9,
+  "loadError": null,
+  "fails": [
+   "rejects invalid token names :: Missing expected exception: should reject space",
+   "cookie.serialize name validation :: Missing expected exception: should reject space",
+   "rejects invalid cookie-octets :: Missing expected exception: should reject space",
+   "rejects invalid cookie-octets even when wrapped in double quotes :: Missing expected exception: should reject space in quotes",
+   "cookie.serialize value validation :: Missing expected exception: should reject space in quotes",
+   "rejects invalid domain :: Missing expected exception: should reject semicolon",
+   "cookie.serialize domain validation :: Missing expected exception: should reject semicolon",
+   "rejects invalid path :: Missing expected exception: should reject semicolon",
+   "cookie.serialize path validation :: Missing expected exception: should reject semicolon"
+  ]
+ },
+ "reference": {
+  "passed": 18,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

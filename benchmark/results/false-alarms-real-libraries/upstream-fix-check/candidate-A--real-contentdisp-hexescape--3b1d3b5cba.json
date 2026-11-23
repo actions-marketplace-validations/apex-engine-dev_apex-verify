@@ -1,0 +1,29 @@
+{
+ "task": "real-contentdisp-hexescape",
+ "change": {
+  "passed": 6,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "contentDisposition: ordinary ASCII names keep the simple form (no hex digits after %) :: should keep simple format for ordinary ASCII filenames that do not look like percent escapes"
+  ]
+ },
+ "project": {
+  "passed": 2,
+  "failed": 5,
+  "loadError": null,
+  "fails": [
+   "contentDisposition: something that looks like a percent escape (for example 'hello%41world.txt') :: should use extended format for ambiguous percent-escape-like filenames",
+   "contentDisposition: something that looks like a percent escape (e.g. %20) :: should use extended format for ambiguous percent-escape-like filenames",
+   "contentDisposition: something that looks like a percent escape with lowercase hex :: should use extended format for ambiguous percent-escape-like filenames",
+   "contentDisposition: something that looks like a percent escape at the beginning :: should use extended format for ambiguous percent-escape-like filenames",
+   "contentDisposition: something that looks like a percent escape at the end :: should use extended format for ambiguous percent-escape-like filenames"
+  ]
+ },
+ "reference": {
+  "passed": 7,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

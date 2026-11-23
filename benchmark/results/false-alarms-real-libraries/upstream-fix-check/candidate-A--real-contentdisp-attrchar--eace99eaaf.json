@@ -1,0 +1,33 @@
+{
+ "task": "real-contentdisp-attrchar",
+ "change": {
+  "passed": 13,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "encodes ',' : 'for example '(' ')' ',' ';' '=' '@' or brackets' :: \"Expected ',' to be encoded as %2C\""
+  ]
+ },
+ "project": {
+  "passed": 7,
+  "failed": 7,
+  "loadError": null,
+  "fails": [
+   "encodes '(' : 'for example '(' ')' ',' ';' '=' '@' or brackets' :: \"Expected '(' to be encoded as %28\"",
+   "encodes ')' : 'for example '(' ')' ',' ';' '=' '@' or brackets' :: \"Expected ')' to be encoded as %29\"",
+   "encodes ',' : 'for example '(' ')' ',' ';' '=' '@' or brackets' :: \"Expected ',' to be encoded as %2C\"",
+   "encodes ';' : 'for example '(' ')' ',' ';' '=' '@' or brackets' :: \"Expected ';' to be encoded as %3B\"",
+   "encodes '=' : 'for example '(' ')' ',' ';' '=' '@' or brackets' :: \"Expected '=' to be encoded as %3D\"",
+   "encodes '@' : 'for example '(' ')' ',' ';' '=' '@' or brackets' :: \"Expected '@' to be encoded as %40\"",
+   "encodes '?' : 'The value should be encoded so that only valid attr-chars remain unescaped' :: \"Expected '?' to be encoded as %3F\""
+  ]
+ },
+ "reference": {
+  "passed": 13,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "does not encode valid attr-chars: nearby behavior :: Expected valid attr-chars to remain unescaped"
+  ]
+ }
+}

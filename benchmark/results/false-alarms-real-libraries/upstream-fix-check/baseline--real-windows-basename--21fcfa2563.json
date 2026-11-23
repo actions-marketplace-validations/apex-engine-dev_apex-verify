@@ -1,0 +1,33 @@
+{
+ "task": "real-windows-basename",
+ "change": {
+  "passed": 5,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: false does not treat backslash as separator :: Expected *.js to NOT match a\\b\\c.js with windows: false and basename: true",
+   "matchBase option with windows: false does not treat backslash as separator :: Expected *.js to NOT match a\\b\\c.js with windows: false and matchBase: true"
+  ]
+ },
+ "project": {
+  "passed": 2,
+  "failed": 5,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: true matches backslash separated path :: Expected *.js to match a\\b\\c.js with windows: true and basename: true",
+   "basename option with windows: false does not treat backslash as separator :: Expected *.js to NOT match a\\b\\c.js with windows: false and basename: true",
+   "matchBase option with windows: true matches backslash separated path :: Expected *.js to match a\\b\\c.js with windows: true and matchBase: true",
+   "matchBase option with windows: false does not treat backslash as separator :: Expected *.js to NOT match a\\b\\c.js with windows: false and matchBase: true",
+   "picomatch.matchBase directly with windows: true :: Expected matchBase to return true for backslash path with windows: true"
+  ]
+ },
+ "reference": {
+  "passed": 5,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: false does not treat backslash as separator :: Expected *.js to NOT match a\\b\\c.js with windows: false and basename: true",
+   "matchBase option with windows: false does not treat backslash as separator :: Expected *.js to NOT match a\\b\\c.js with windows: false and matchBase: true"
+  ]
+ }
+}

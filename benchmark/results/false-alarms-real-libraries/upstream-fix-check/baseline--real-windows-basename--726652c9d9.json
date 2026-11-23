@@ -1,0 +1,29 @@
+{
+ "task": "real-windows-basename",
+ "change": {
+  "passed": 12,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "picomatch.matchBase directly with windows: true :: should match *.js against the last segment of a\\b\\c.js when windows: true"
+  ]
+ },
+ "project": {
+  "passed": 8,
+  "failed": 5,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: true :: should match *.js against the last segment of a\\b\\c.js when windows: true",
+   "matchBase option with windows: true :: should match *.js against the last segment of a\\b\\c.js when windows: true",
+   "picomatch.matchBase directly with windows: true :: should match *.js against the last segment of a\\b\\c.js when windows: true",
+   "picomatch.test with matchBase and windows: true :: should match *.js against a\\b\\c.js when windows: true",
+   "basename option with trailing slashes :: should match *.js against c.js when trailing backslash is present and windows: true"
+  ]
+ },
+ "reference": {
+  "passed": 13,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

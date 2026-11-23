@@ -1,0 +1,27 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 3,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize validates values as RFC 6265 cookie-octets :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 1,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize validates names as RFC 6265 tokens :: Missing expected exception (TypeError): invalid token name \"foo bar\" should throw",
+   "cookie.serialize validates values as RFC 6265 cookie-octets :: Missing expected exception (TypeError): invalid cookie-octet value \"foo bar\" should throw",
+   "cookie.serialize validates domain and path without breaking ordinary values :: Missing expected exception (TypeError): domain with semicolon should throw"
+  ]
+ },
+ "reference": {
+  "passed": 4,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

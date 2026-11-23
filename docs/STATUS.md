@@ -8,7 +8,7 @@ Honest state of the project. Updated with every release.
 |---|---|
 | `apex verify` (the product) | Built and tested (unit tests with a fake model, real temporary git repositories). Measured on 308 AI-written changes (108 to 17 small projects, 200 to 23 real open-source libraries) with hidden-test labels; numbers and caveats in the README. Preliminary: Gemini models wrote every change. |
 | Claude Code plugin | Stop hook, skill and MCP tool; the manifests pass `claude plugin validate`. The hook was run in a real Claude Code session and is tested with real hook input; not yet used by many people. |
-| Gemini CLI | `AfterAgent` hook run in a real session (a wrong change was blocked, the agent fixed it). |
+| Gemini CLI | `AfterAgent` hook run in real sessions (120 in one experiment). Until 0.2.8 a retry after a block was not checked; fixed, and covered by a test with the retry input Gemini sends. |
 | Codex / Cursor | Hook configuration written to their documented formats and tested with synthetic input; not run inside the apps (docs/INTEGRATIONS.md). |
 | GitHub Action | Tested on real pull requests and runs on this repository's own; fork pull requests run without a model by design. Needs trials on pull requests from other people. |
 | Engine (`apex-verify-engine`) | The verification engine `apex verify` uses, extracted from a larger project; the code `verify` cannot reach is removed before publishing. Tests green on Node 20 and 22. |

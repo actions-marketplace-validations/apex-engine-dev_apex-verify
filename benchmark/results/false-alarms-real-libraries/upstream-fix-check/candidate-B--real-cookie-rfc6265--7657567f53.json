@@ -1,0 +1,37 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 15,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "accepts valid cookie-octets wrapped in double quotes :: argument val is invalid",
+   "cookie.serialize value validation :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 8,
+  "failed": 9,
+  "loadError": null,
+  "fails": [
+   "throws on invalid characters in name (spaces, separators, CTLs) :: Missing expected exception: Should throw for name: foo bar",
+   "cookie.serialize name validation :: Missing expected exception: Should throw for name: foo bar",
+   "throws on invalid characters in unencoded value (spaces, quotes, commas, semicolons, backslashes, CTLs) :: Missing expected exception: Should throw for value: foo bar",
+   "throws on invalid characters inside double quotes :: Missing expected exception: Should throw for wrapped value: \"foo bar\"",
+   "cookie.serialize value validation :: Missing expected exception: Should throw for wrapped value: \"foo bar\"",
+   "throws on invalid characters in domain (semicolons, CTLs) :: Missing expected exception: Should throw for domain: example.com;",
+   "cookie.serialize domain validation :: Missing expected exception: Should throw for domain: example.com;",
+   "throws on invalid characters in path (semicolons, CTLs) :: Missing expected exception: Should throw for path: /;",
+   "cookie.serialize path validation :: Missing expected exception: Should throw for path: /;"
+  ]
+ },
+ "reference": {
+  "passed": 15,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "accepts valid domain :: option domain is invalid",
+   "cookie.serialize domain validation :: option domain is invalid"
+  ]
+ }
+}

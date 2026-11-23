@@ -1,0 +1,29 @@
+{
+ "task": "real-contentdisp-attrchar",
+ "change": {
+  "passed": 7,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "leaves valid attr-chars unescaped :: filename* should leave valid attr-chars unescaped",
+   "contentDisposition() RFC 5987 attr-char encoding :: filename* should leave valid attr-chars unescaped"
+  ]
+ },
+ "project": {
+  "passed": 5,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "encodes invalid attr-chars in filename* parameter :: filename* should exactly match the fully encoded string",
+   "handles repeated invalid attr-chars :: filename* should encode repeated invalid attr-chars",
+   "produces exact output format for mixed filename :: Expected values to be strictly equal:",
+   "contentDisposition() RFC 5987 attr-char encoding :: Expected values to be strictly equal:"
+  ]
+ },
+ "reference": {
+  "passed": 8,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

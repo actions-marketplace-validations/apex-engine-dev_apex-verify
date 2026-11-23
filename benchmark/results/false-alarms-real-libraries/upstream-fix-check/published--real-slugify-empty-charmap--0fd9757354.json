@@ -1,0 +1,28 @@
+{
+ "task": "real-slugify-empty-charmap",
+ "change": {
+  "passed": 4,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "slugify.extend() mapping to non-empty string still works (pin nearby behavior) :: slugify('x^y') should return 'x-caret-y'"
+  ]
+ },
+ "project": {
+  "passed": 3,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "slugify.extend() mapping to empty string works with remove option :: slugify('ъяъ', { remove: /[]/g }) should return 'ya'",
+   "slugify.extend() mapping to non-empty string still works (pin nearby behavior) :: slugify('x^y') should return 'x-caret-y'"
+  ]
+ },
+ "reference": {
+  "passed": 4,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "slugify.extend() mapping to non-empty string still works (pin nearby behavior) :: slugify('x^y') should return 'x-caret-y'"
+  ]
+ }
+}

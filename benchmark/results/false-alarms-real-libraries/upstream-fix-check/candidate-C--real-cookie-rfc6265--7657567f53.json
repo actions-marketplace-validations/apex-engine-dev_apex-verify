@@ -1,0 +1,57 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 35,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "accepts value wrapped in double quotes :: argument val is invalid",
+   "cookie.serialize value validation (unencoded) :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 5,
+  "failed": 32,
+  "loadError": null,
+  "fails": [
+   "throws on invalid character \" \" in name :: Missing expected exception: Expected to throw for name containing \" \"",
+   "throws on invalid character \"\\\\t\" in name :: Missing expected exception: Expected to throw for name containing \"\\\\t\"",
+   "throws on invalid character \"=\" in name :: Missing expected exception: Expected to throw for name containing \"=\"",
+   "throws on invalid character \",\" in name :: Missing expected exception: Expected to throw for name containing \",\"",
+   "throws on invalid character \";\" in name :: Missing expected exception: Expected to throw for name containing \";\"",
+   "throws on invalid character \"(\" in name :: Missing expected exception: Expected to throw for name containing \"(\"",
+   "throws on invalid character \")\" in name :: Missing expected exception: Expected to throw for name containing \")\"",
+   "throws on invalid character \"<\" in name :: Missing expected exception: Expected to throw for name containing \"<\"",
+   "throws on invalid character \">\" in name :: Missing expected exception: Expected to throw for name containing \">\"",
+   "throws on invalid character \"@\" in name :: Missing expected exception: Expected to throw for name containing \"@\"",
+   "throws on invalid character \":\" in name :: Missing expected exception: Expected to throw for name containing \":\"",
+   "throws on invalid character \"\\\\\\\\\" in name :: Missing expected exception: Expected to throw for name containing \"\\\\\\\\\"",
+   "throws on invalid character \"\\\\\"\" in name :: Missing expected exception: Expected to throw for name containing \"\\\\\"\"",
+   "throws on invalid character \"/\" in name :: Missing expected exception: Expected to throw for name containing \"/\"",
+   "throws on invalid character \"[\" in name :: Missing expected exception: Expected to throw for name containing \"[\"",
+   "throws on invalid character \"]\" in name :: Missing expected exception: Expected to throw for name containing \"]\"",
+   "throws on invalid character \"?\" in name :: Missing expected exception: Expected to throw for name containing \"?\"",
+   "throws on invalid character \"{\" in name :: Missing expected exception: Expected to throw for name containing \"{\"",
+   "throws on invalid character \"}\" in name :: Missing expected exception: Expected to throw for name containing \"}\"",
+   "cookie.serialize name validation :: Missing expected exception: Expected to throw for name containing \"}\"",
+   "throws on invalid character \" \" in value :: Missing expected exception: Expected to throw for value containing \" \"",
+   "throws on invalid character \"\\\\t\" in value :: Missing expected exception: Expected to throw for value containing \"\\\\t\"",
+   "throws on invalid character \",\" in value :: Missing expected exception: Expected to throw for value containing \",\"",
+   "throws on invalid character \";\" in value :: Missing expected exception: Expected to throw for value containing \";\"",
+   "throws on invalid character \"\\\\\\\\\" in value :: Missing expected exception: Expected to throw for value containing \"\\\\\\\\\"",
+   "throws on invalid character \"\\\\\"\" in value :: Missing expected exception: Expected to throw for value containing \"\\\\\"\"",
+   "throws if wrapped in double quotes but contains invalid inner chars :: Missing expected exception: Expected to throw for invalid inner characters even when wrapped in quotes",
+   "cookie.serialize value validation (unencoded) :: Missing expected exception: Expected to throw for invalid inner characters even when wrapped in quotes",
+   "throws on semicolon in domain :: Missing expected exception: Expected to throw for semicolon in domain",
+   "throws on space in domain :: Missing expected exception: Expected to throw for space in domain",
+   "throws on comma in domain :: Missing expected exception: Expected to throw for comma in domain",
+   "cookie.serialize domain validation :: Missing expected exception: Expected to throw for comma in domain"
+  ]
+ },
+ "reference": {
+  "passed": 37,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

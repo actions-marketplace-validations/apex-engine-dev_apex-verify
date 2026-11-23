@@ -1,0 +1,36 @@
+{
+ "task": "real-statuses-proto",
+ "change": {
+  "passed": 7,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "status.message['constructor']: \"similar lookups for inherited property names are mishandled for status codes as well\" :: Expected values to be strictly equal:",
+   "status.message['__proto__']: \"similar lookups for inherited property names are mishandled for status codes as well\" :: Expected values to be strictly equal:"
+  ]
+ },
+ "project": {
+  "passed": 3,
+  "failed": 6,
+  "loadError": null,
+  "fails": [
+   "status('constructor'): \"anything else must throw the usual invalid status error\" :: Missing expected exception.",
+   "status('__proto__'): \"anything else must throw the usual invalid status error\" :: Missing expected exception.",
+   "status.message['constructor']: \"similar lookups for inherited property names are mishandled for status codes as well\" :: Expected values to be strictly equal:",
+   "status.message['__proto__']: \"similar lookups for inherited property names are mishandled for status codes as well\" :: Expected values to be strictly equal:",
+   "status.code['constructor']: \"looks the value up in plain objects\" :: Expected values to be strictly equal:",
+   "status.code['__proto__']: \"looks the value up in plain objects\" :: Expected values to be strictly equal:"
+  ]
+ },
+ "reference": {
+  "passed": 5,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "status.message['constructor']: \"similar lookups for inherited property names are mishandled for status codes as well\" :: Expected values to be strictly equal:",
+   "status.message['__proto__']: \"similar lookups for inherited property names are mishandled for status codes as well\" :: Expected values to be strictly equal:",
+   "status.code['constructor']: \"looks the value up in plain objects\" :: Expected values to be strictly equal:",
+   "status.code['__proto__']: \"looks the value up in plain objects\" :: Expected values to be strictly equal:"
+  ]
+ }
+}

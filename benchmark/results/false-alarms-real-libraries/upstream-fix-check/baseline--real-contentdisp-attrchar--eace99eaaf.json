@@ -1,0 +1,39 @@
+{
+ "task": "real-contentdisp-attrchar",
+ "change": {
+  "passed": 16,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "encodes , in extended parameter :: should encode , as %2C",
+   "encodes multiple invalid attr-chars :: should encode all invalid attr-chars",
+   "contentDisposition() extended filename*= parameter encoding :: should encode all invalid attr-chars"
+  ]
+ },
+ "project": {
+  "passed": 9,
+  "failed": 10,
+  "loadError": null,
+  "fails": [
+   "encodes ( in extended parameter :: should encode ( as %28",
+   "encodes ) in extended parameter :: should encode ) as %29",
+   "encodes , in extended parameter :: should encode , as %2C",
+   "encodes ; in extended parameter :: should encode ; as %3B",
+   "encodes = in extended parameter :: should encode = as %3D",
+   "encodes @ in extended parameter :: should encode @ as %40",
+   "encodes ? in extended parameter :: should encode ? as %3F",
+   "encodes : in extended parameter :: should encode : as %3A",
+   "encodes multiple invalid attr-chars :: should encode all invalid attr-chars",
+   "contentDisposition() extended filename*= parameter encoding :: should encode all invalid attr-chars"
+  ]
+ },
+ "reference": {
+  "passed": 17,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "leaves valid attr-chars unescaped in extended parameter :: should leave valid attr-chars unescaped",
+   "contentDisposition() extended filename*= parameter encoding :: should leave valid attr-chars unescaped"
+  ]
+ }
+}

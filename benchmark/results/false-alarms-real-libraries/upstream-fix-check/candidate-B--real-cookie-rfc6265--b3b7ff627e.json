@@ -1,0 +1,32 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 2,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize validates unencoded value according to RFC 6265 :: argument val is invalid",
+   "cookie.serialize validates domain according to RFC 6265 :: Missing expected exception: Expected domain \"example.com;\" to be invalid",
+   "cookie.serialize validates path according to RFC 6265 :: Missing expected exception: Expected path \"/;\" to be invalid"
+  ]
+ },
+ "project": {
+  "passed": 1,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize validates name according to RFC 6265 :: Missing expected exception: Expected name \"foo bar\" to be invalid",
+   "cookie.serialize validates unencoded value according to RFC 6265 :: Missing expected exception: Expected value \"foo bar\" to be invalid",
+   "cookie.serialize validates domain according to RFC 6265 :: Missing expected exception: Expected domain \"example.com;\" to be invalid",
+   "cookie.serialize validates path according to RFC 6265 :: Missing expected exception: Expected path \"/;\" to be invalid"
+  ]
+ },
+ "reference": {
+  "passed": 4,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize validates domain according to RFC 6265 :: option domain is invalid"
+  ]
+ }
+}

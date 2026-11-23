@@ -1,0 +1,32 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 2,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize value validation :: argument val is invalid",
+   "cookie.serialize domain validation :: Missing expected exception: ; in domain should throw",
+   "cookie.serialize path validation :: Missing expected exception: ; in path should throw"
+  ]
+ },
+ "project": {
+  "passed": 1,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize name validation :: Missing expected exception: character \" \" in name should throw",
+   "cookie.serialize value validation :: Missing expected exception: character \" \" in value should throw",
+   "cookie.serialize domain validation :: Missing expected exception: ; in domain should throw",
+   "cookie.serialize path validation :: Missing expected exception: ; in path should throw"
+  ]
+ },
+ "reference": {
+  "passed": 4,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize domain validation :: option domain is invalid"
+  ]
+ }
+}

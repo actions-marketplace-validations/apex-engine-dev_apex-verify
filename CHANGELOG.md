@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.8 (2026-11-23)
+- **Stop hook with Gemini CLI: a retry after a block was not checked.** Gemini CLI calls the hook again with an empty prompt, so the hook had no task and stayed silent once the agent changed anything. It now keeps the session's task. Found by the experiment below.
+- **New measurement** (`benchmark/results/false-alarms-real-libraries`): three attempts to cut the generated checks' false alarms on real libraries; none beat the unchanged tool, so none ships. Of the blocks counted as false alarms, about 7 in 10 are changes that really miss the task text. Two runs of the same code disagree on 25 of 200 verdicts.
+- **New measurement** (`benchmark/results/hook-fix-or-game`): 120 real Gemini CLI sessions, with and without the hook. No blocked agent was seen gaming the check it was shown (0 of 12), which is too few to rule gaming out. 4 of 12 fixed the bug after the block. Two agents broke a correct change after a false block. End results with and without the hook (23 against 18 of 40) are within noise.
+
 ## 0.2.7 (2026-11-23)
 - **GitHub Action**: the release-bundle download announced in 0.2.6 never ran, because GitHub does not reliably set `GITHUB_ACTION_REF` inside a composite action; the Action kept building from source (which works, about 7 seconds). The ref is now passed in explicitly, and this repository's own workflow runs the released Action so the path stays tested.
 

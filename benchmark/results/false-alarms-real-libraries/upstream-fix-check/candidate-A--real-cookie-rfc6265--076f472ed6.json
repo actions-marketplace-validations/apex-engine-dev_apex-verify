@@ -1,0 +1,28 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 8,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "values valid cookie-octets (optionally wrapped in double quotes): valid when wrapped :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 5,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "Names should have to be valid tokens: 'foo bar' is not accepted :: Missing expected exception.",
+   "values valid cookie-octets: an unencoded value such as 'foo bar' is not accepted :: Missing expected exception.",
+   "values valid cookie-octets (optionally wrapped in double quotes): invalid when partially wrapped or containing invalid octets :: Missing expected exception.",
+   "the same strictness is expected for the domain and path options: invalid characters are rejected :: Missing expected exception."
+  ]
+ },
+ "reference": {
+  "passed": 9,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

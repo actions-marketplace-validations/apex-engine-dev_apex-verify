@@ -1,0 +1,27 @@
+{
+ "task": "real-windows-basename",
+ "change": {
+  "passed": 7,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "picomatch.matchBase directly: 'With windows: true a path such as a\\\\b\\\\c.js should match the pattern *.js with basename on' :: Expected picomatch.matchBase to return true for a\\b\\c.js and *.js with windows: true"
+  ]
+ },
+ "project": {
+  "passed": 5,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "basename option: 'With windows: true a path such as a\\\\b\\\\c.js should match the pattern *.js with basename on' :: Expected a\\b\\c.js to match *.js with windows: true and basename: true",
+   "matchBase alias: 'With windows: true a path such as a\\\\b\\\\c.js should match the pattern *.js with basename on' :: Expected a\\b\\c.js to match *.js with windows: true and matchBase: true",
+   "picomatch.matchBase directly: 'With windows: true a path such as a\\\\b\\\\c.js should match the pattern *.js with basename on' :: Expected picomatch.matchBase to return true for a\\b\\c.js and *.js with windows: true"
+  ]
+ },
+ "reference": {
+  "passed": 8,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

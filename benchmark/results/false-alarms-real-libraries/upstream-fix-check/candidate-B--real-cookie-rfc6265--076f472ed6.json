@@ -1,0 +1,29 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 3,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize name validation :: Missing expected exception: rejects \"{\" in name",
+   "cookie.serialize value validation :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 1,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "cookie.serialize name validation :: Missing expected exception: rejects \"(\" in name",
+   "cookie.serialize value validation :: Missing expected exception: rejects space in value",
+   "cookie.serialize domain validation :: Missing expected exception: rejects ; in domain",
+   "cookie.serialize path validation :: Missing expected exception: rejects ; in path"
+  ]
+ },
+ "reference": {
+  "passed": 5,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

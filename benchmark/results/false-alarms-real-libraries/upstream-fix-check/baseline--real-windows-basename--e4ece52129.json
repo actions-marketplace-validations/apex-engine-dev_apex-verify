@@ -1,0 +1,31 @@
+{
+ "task": "real-windows-basename",
+ "change": {
+  "passed": 15,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "picomatch.matchBase directly with windows: true :: Should match using picomatch.matchBase directly with windows: true",
+   "picomatch.test with basename and windows: true :: picomatch.test should match with basename and windows: true"
+  ]
+ },
+ "project": {
+  "passed": 11,
+  "failed": 6,
+  "loadError": null,
+  "fails": [
+   "basename/matchBase with windows: true matches backslash separated paths :: Should match c.js as basename of a\\b\\c.js when windows: true",
+   "task example: windows: true matches *.js with basename on :: Should match *.js with basename on when windows: true",
+   "matchBase option works the same as basename :: Should match c.js as basename of a\\b\\c.js when windows: true and matchBase: true",
+   "basename with windows: true handles trailing backslashes :: Should match c.js as basename of a\\b\\c.js\\ when windows: true",
+   "picomatch.matchBase directly with windows: true :: Should match using picomatch.matchBase directly with windows: true",
+   "picomatch.test with basename and windows: true :: picomatch.test should match with basename and windows: true"
+  ]
+ },
+ "reference": {
+  "passed": 17,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

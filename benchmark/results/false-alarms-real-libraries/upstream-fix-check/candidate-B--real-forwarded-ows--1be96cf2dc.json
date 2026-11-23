@@ -1,0 +1,30 @@
+{
+ "task": "real-forwarded-ows",
+ "change": {
+  "passed": 5,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "should handle header with only spaces :: Expected header with only spaces to yield no proxy addresses",
+   "forwarded(req) whitespace and empty entry handling :: Expected header with only spaces to yield no proxy addresses"
+  ]
+ },
+ "project": {
+  "passed": 2,
+  "failed": 5,
+  "loadError": null,
+  "fails": [
+   "should trim leading and trailing spaces from addresses :: Expected addresses to be trimmed of whitespace",
+   "should ignore empty entries and whitespace-only entries :: Expected empty and whitespace-only entries to be ignored",
+   "should handle single address with surrounding spaces :: Expected single address to be trimmed",
+   "should handle header with only spaces :: Expected header with only spaces to yield no proxy addresses",
+   "forwarded(req) whitespace and empty entry handling :: Expected header with only spaces to yield no proxy addresses"
+  ]
+ },
+ "reference": {
+  "passed": 7,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

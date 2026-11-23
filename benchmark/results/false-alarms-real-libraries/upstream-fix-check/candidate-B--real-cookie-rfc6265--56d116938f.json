@@ -1,0 +1,37 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 11,
+  "failed": 6,
+  "loadError": null,
+  "fails": [
+   "succeeds with valid cookie-octets wrapped in double quotes :: argument val is invalid",
+   "succeeds with empty double quotes :: argument val is invalid",
+   "cookie.serialize value validation (RFC 6265 cookie-octet) :: argument val is invalid",
+   "throws on semicolon in domain :: Missing expected exception: Should throw for semicolon in domain",
+   "throws on semicolon in path :: Missing expected exception: Should throw for semicolon in path",
+   "cookie.serialize domain and path validation :: Missing expected exception: Should throw for semicolon in path"
+  ]
+ },
+ "project": {
+  "passed": 9,
+  "failed": 8,
+  "loadError": null,
+  "fails": [
+   "throws on separators in name :: Missing expected exception: Should throw for separator: (",
+   "cookie.serialize name validation (RFC 6265 token) :: Missing expected exception: Should throw for separator: (",
+   "throws on invalid characters in unencoded value :: Missing expected exception: Should throw for invalid char:",
+   "throws on invalid characters inside double quotes :: Missing expected exception: Should throw for invalid char inside DQUOTE:",
+   "cookie.serialize value validation (RFC 6265 cookie-octet) :: Missing expected exception: Should throw for invalid char inside DQUOTE:",
+   "throws on semicolon in domain :: Missing expected exception: Should throw for semicolon in domain",
+   "throws on semicolon in path :: Missing expected exception: Should throw for semicolon in path",
+   "cookie.serialize domain and path validation :: Missing expected exception: Should throw for semicolon in path"
+  ]
+ },
+ "reference": {
+  "passed": 17,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

@@ -1,0 +1,31 @@
+{
+ "task": "real-contentdisp-hexescape",
+ "change": {
+  "passed": 6,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "ordinary ASCII: \"while ordinary ASCII names keep the simple form\" (percent without hex) :: Expected values to be strictly equal:",
+   "ordinary ASCII: \"while ordinary ASCII names keep the simple form\" (percent with invalid hex) :: Expected values to be strictly equal:",
+   "ordinary ASCII: \"while ordinary ASCII names keep the simple form\" (percent at end) :: Expected values to be strictly equal:",
+   "ordinary ASCII: \"while ordinary ASCII names keep the simple form\" (percent with one hex digit) :: Expected values to be strictly equal:"
+  ]
+ },
+ "project": {
+  "passed": 6,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "ambiguous percent escape: \"a file name that itself contains something that looks like a percent escape (for example 'hello%41world.txt') is ambiguous... Such names need to be sent in a form that is not ambiguous\" :: Expected filename* parameter to be present",
+   "ambiguous percent escape: \"a file name that itself contains something that looks like a percent escape... Such names need to be sent in a form that is not ambiguous\" (uppercase hex) :: Expected filename* parameter to be present",
+   "ambiguous percent escape: \"a file name that itself contains something that looks like a percent escape... Such names need to be sent in a form that is not ambiguous\" (lowercase hex) :: Expected filename* parameter to be present",
+   "ambiguous percent escape: \"a file name that itself contains something that looks like a percent escape... Such names need to be sent in a form that is not ambiguous\" (only percent escape) :: Expected filename* parameter to be present"
+  ]
+ },
+ "reference": {
+  "passed": 10,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

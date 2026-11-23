@@ -167,9 +167,14 @@ test("the stop hook speaks Cursor (workspace_roots, followup_message) and Gemini
   assert.equal(cursor.decision, "block");
   assert.match(cursor.followup_message, /NOT READY/);
   assert.equal(await run(JSON.stringify({ hook_event_name: "stop", status: "aborted", conversation_id: "cur-ab", workspace_roots: [repo("wrong")], transcript_path: t })), "", "an aborted run is not verified");
-  const gemini = JSON.parse(await run(JSON.stringify({ cwd: repo("wrong"), session_id: `gem-${process.pid}`, prompt: TASK, prompt_response: "done", stop_hook_active: false })));
+  const g = repo("wrong");
+  const gemini = JSON.parse(await run(JSON.stringify({ cwd: g, session_id: `gem-${process.pid}`, prompt: TASK, prompt_response: "done", stop_hook_active: false })));
   assert.equal(gemini.decision, "block");
   assert.ok(!("followup_message" in gemini), "only Cursor gets followup_message");
+  // After a block Gemini CLI calls the hook again with an empty prompt: the retry is judged on the session's task, not waved through.
+  fs.appendFileSync(path.join(g, "src/slug.js"), "// second try\n");
+  const retry = await run(JSON.stringify({ cwd: g, session_id: `gem-${process.pid}`, prompt: "", prompt_response: "done", stop_hook_active: true }));
+  assert.equal(JSON.parse(retry).decision, "block", "the changed retry gets its own verdict");
 });
 
 test("the MCP server answers initialize, lists verify_change and verifies a change", async () => {

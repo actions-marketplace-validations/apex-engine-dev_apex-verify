@@ -1,0 +1,68 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 80,
+  "failed": 8,
+  "loadError": null,
+  "fails": [
+   "throws on invalid name: \"foo{bar\" :: Missing expected exception: Expected serialize to throw for name \"foo{bar\"",
+   "throws on invalid name: \"foo}bar\" :: Missing expected exception: Expected serialize to throw for name \"foo}bar\"",
+   "cookie.serialize name validation :: Missing expected exception: Expected serialize to throw for name \"foo}bar\"",
+   "accepts valid value: \"\\\\\"foo\\\\\"\" :: argument val is invalid",
+   "accepts valid value: \"\\\\\"\\\\\"\" :: argument val is invalid",
+   "cookie.serialize value validation :: argument val is invalid",
+   "throws on invalid domain: \"example.com \" :: Missing expected exception: Expected serialize to throw for domain \"example.com \"",
+   "cookie.serialize domain validation :: Missing expected exception: Expected serialize to throw for domain \"example.com \""
+  ]
+ },
+ "project": {
+  "passed": 54,
+  "failed": 34,
+  "loadError": null,
+  "fails": [
+   "throws on invalid name: \"foo bar\" :: Missing expected exception: Expected serialize to throw for name \"foo bar\"",
+   "throws on invalid name: \"foo=bar\" :: Missing expected exception: Expected serialize to throw for name \"foo=bar\"",
+   "throws on invalid name: \"foo;bar\" :: Missing expected exception: Expected serialize to throw for name \"foo;bar\"",
+   "throws on invalid name: \"foo,bar\" :: Missing expected exception: Expected serialize to throw for name \"foo,bar\"",
+   "throws on invalid name: \"foo@bar\" :: Missing expected exception: Expected serialize to throw for name \"foo@bar\"",
+   "throws on invalid name: \"foo/bar\" :: Missing expected exception: Expected serialize to throw for name \"foo/bar\"",
+   "throws on invalid name: \"foo?bar\" :: Missing expected exception: Expected serialize to throw for name \"foo?bar\"",
+   "throws on invalid name: \"foo\\\\tbar\" :: Missing expected exception: Expected serialize to throw for name \"foo\\\\tbar\"",
+   "throws on invalid name: \"foo\\\\\"bar\" :: Missing expected exception: Expected serialize to throw for name \"foo\\\\\"bar\"",
+   "throws on invalid name: \"foo(bar\" :: Missing expected exception: Expected serialize to throw for name \"foo(bar\"",
+   "throws on invalid name: \"foo)bar\" :: Missing expected exception: Expected serialize to throw for name \"foo)bar\"",
+   "throws on invalid name: \"foo<bar\" :: Missing expected exception: Expected serialize to throw for name \"foo<bar\"",
+   "throws on invalid name: \"foo>bar\" :: Missing expected exception: Expected serialize to throw for name \"foo>bar\"",
+   "throws on invalid name: \"foo:bar\" :: Missing expected exception: Expected serialize to throw for name \"foo:bar\"",
+   "throws on invalid name: \"foo\\\\\\\\bar\" :: Missing expected exception: Expected serialize to throw for name \"foo\\\\\\\\bar\"",
+   "throws on invalid name: \"foo[bar\" :: Missing expected exception: Expected serialize to throw for name \"foo[bar\"",
+   "throws on invalid name: \"foo]bar\" :: Missing expected exception: Expected serialize to throw for name \"foo]bar\"",
+   "throws on invalid name: \"foo{bar\" :: Missing expected exception: Expected serialize to throw for name \"foo{bar\"",
+   "throws on invalid name: \"foo}bar\" :: Missing expected exception: Expected serialize to throw for name \"foo}bar\"",
+   "cookie.serialize name validation :: Missing expected exception: Expected serialize to throw for name \"foo}bar\"",
+   "throws on invalid value: \"foo bar\" :: Missing expected exception: Expected serialize to throw for value \"foo bar\"",
+   "throws on invalid value: \"foo;bar\" :: Missing expected exception: Expected serialize to throw for value \"foo;bar\"",
+   "throws on invalid value: \"foo,bar\" :: Missing expected exception: Expected serialize to throw for value \"foo,bar\"",
+   "throws on invalid value: \"foo\\\\\\\\bar\" :: Missing expected exception: Expected serialize to throw for value \"foo\\\\\\\\bar\"",
+   "throws on invalid value: \"foo\\\\\"bar\" :: Missing expected exception: Expected serialize to throw for value \"foo\\\\\"bar\"",
+   "throws on invalid value: \"\\\\\"foo bar\\\\\"\" :: Missing expected exception: Expected serialize to throw for value \"\\\\\"foo bar\\\\\"\"",
+   "throws on invalid value: \"foo\\\\tbar\" :: Missing expected exception: Expected serialize to throw for value \"foo\\\\tbar\"",
+   "throws on invalid value: \"\\\\\"\" :: Missing expected exception: Expected serialize to throw for value \"\\\\\"\"",
+   "cookie.serialize value validation :: Missing expected exception: Expected serialize to throw for value \"\\\\\"\"",
+   "throws on invalid domain: \"example.com;\" :: Missing expected exception: Expected serialize to throw for domain \"example.com;\"",
+   "throws on invalid domain: \"example.com \" :: Missing expected exception: Expected serialize to throw for domain \"example.com \"",
+   "cookie.serialize domain validation :: Missing expected exception: Expected serialize to throw for domain \"example.com \"",
+   "throws on invalid path: \"/;\" :: Missing expected exception: Expected serialize to throw for path \"/;\"",
+   "cookie.serialize path validation :: Missing expected exception: Expected serialize to throw for path \"/;\""
+  ]
+ },
+ "reference": {
+  "passed": 86,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "accepts valid domain: \"example.com.\" :: option domain is invalid",
+   "cookie.serialize domain validation :: option domain is invalid"
+  ]
+ }
+}

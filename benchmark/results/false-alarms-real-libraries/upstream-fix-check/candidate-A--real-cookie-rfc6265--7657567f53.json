@@ -1,0 +1,29 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 5,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "value validation: \"(optionally wrapped in double quotes)\" :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 1,
+  "failed": 5,
+  "loadError": null,
+  "fails": [
+   "name validation: \"Names should have to be valid tokens\" :: Missing expected exception: name with invalid character should throw: foo bar",
+   "value validation: \"values valid cookie-octets\" :: Missing expected exception: unencoded value with invalid character should throw: foo bar",
+   "value validation: \"(optionally wrapped in double quotes)\" :: Missing expected exception: value with internal double quotes should throw",
+   "domain validation: \"the same strictness is expected for the domain and path options without breaking ordinary values\" :: Missing expected exception: domain with semicolon should throw",
+   "path validation: \"the same strictness is expected for the domain and path options without breaking ordinary values\" :: Missing expected exception: path with semicolon should throw"
+  ]
+ },
+ "reference": {
+  "passed": 6,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

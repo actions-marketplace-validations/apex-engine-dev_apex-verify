@@ -1,0 +1,27 @@
+{
+ "baseline": {
+  "allPassOnUpstreamFix": 8,
+  "mixed": 1,
+  "allAlsoFailOnUpstreamFix": 1
+ },
+ "candidate-A": {
+  "allPassOnUpstreamFix": 14,
+  "mixed": 0,
+  "allAlsoFailOnUpstreamFix": 2
+ },
+ "candidate-B": {
+  "allPassOnUpstreamFix": 9,
+  "mixed": 1,
+  "allAlsoFailOnUpstreamFix": 2
+ },
+ "candidate-C": {
+  "allPassOnUpstreamFix": 7,
+  "mixed": 1,
+  "allAlsoFailOnUpstreamFix": 2
+ },
+ "published": {
+  "allPassOnUpstreamFix": 8,
+  "mixed": 2,
+  "allAlsoFailOnUpstreamFix": 1
+ }
+}

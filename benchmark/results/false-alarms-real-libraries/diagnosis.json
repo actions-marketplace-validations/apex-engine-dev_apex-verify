@@ -1,0 +1,30 @@
+{
+ "how": "Every right-by-label change that the generated checks blocked (project tests passing) in the published 0.2.4 run and in the baseline rerun. For each, the checks that run produced were run again on the project, on the upstream reference fix and on the change. A failing check that also fails on the upstream fix is a checker error. One that passes on the upstream fix and fails on the change was read against the task text. Classes: a = the check asserts something the task does not state; b = contradicts the task; c = bug in the test code; d = the change really does not do what the task text says, or breaks something that worked (label too narrow); e (run-to-run noise) is reported separately as how many blocks repeat.",
+ "published_run": [
+  {"task":"real-cookie-rfc6265","change":"b3b7ff627e","class":"d","evidence":"rejects a double-quoted value (task: 'optionally wrapped in double quotes'); accepts ';' in domain and path (task: 'the same strictness is expected for the domain and path')"},
+  {"task":"real-cookie-rfc6265","change":"7657567f53","class":"d","evidence":"rejects a double-quoted value; all 17 checks pass on the upstream fix"},
+  {"task":"real-cookie-rfc6265","change":"3f36f37521","class":"d","evidence":"rejects a valid cookie-octet value and an ordinary path (task: 'without breaking ordinary values'); one other check in the file was wrong (fails on the upstream fix)"},
+  {"task":"real-cookie-rfc6265","change":"076f472ed6","class":"d","evidence":"rejects a double-quoted value; accepts the name 'foo{bar}', not a token; all 18 checks pass on the upstream fix"},
+  {"task":"real-cookie-rfc6265","change":"56d116938f","class":"d","evidence":"rejects a double-quoted value, accepts ';' in domain, rejects an ordinary path"},
+  {"task":"real-contentdisp-hexescape","change":"5081c95e24","class":"a","evidence":"3 of the 4 failing checks also fail on the upstream fix: they demand that the plain filename= fallback never holds '%41', which the task does not say"},
+  {"task":"real-contentdisp-attrchar","change":"880df392b8","class":"a","evidence":"the check demands that valid attr-chars stay unescaped; the task only says that nothing else may stay unescaped (over-escaping is still a valid header)"},
+  {"task":"real-contentdisp-attrchar","change":"eace99eaaf","class":"d","evidence":"',' stays unescaped in filename*; the task lists ','"},
+  {"task":"real-windows-basename","change":"726652c9d9","class":"a","evidence":"only picomatch.matchBase(input, glob, {windows:true}) called directly fails; the task speaks of the basename option, not of calling matchBase directly (the upstream fix passes it, so this is borderline)"},
+  {"task":"real-slugify-strict-trim","change":"b75c23295b","class":"d","evidence":"slugify(x, {strict:true, replacement:''}) now throws 'Invalid regular expression: /^+|+$/'; it worked before the change. A real defect the hidden test does not cover"},
+  {"task":"real-slugify-empty-charmap","change":"0fd9757354","class":"c","evidence":"a 'pin nearby behaviour' check with a wrong expected value: it fails the same way on the old code, the upstream fix and the change"}
+ ],
+ "baseline_rerun": [
+  {"task":"real-cookie-rfc6265","change":"3f36f37521","class":"d","evidence":"rejects a valid value; all checks pass on the upstream fix"},
+  {"task":"real-cookie-rfc6265","change":"7657567f53","class":"d","evidence":"same"},
+  {"task":"real-cookie-rfc6265","change":"076f472ed6","class":"d","evidence":"rejects a double-quoted value"},
+  {"task":"real-cookie-rfc6265","change":"56d116938f","class":"d","evidence":"rejects a valid value, accepts ';' in domain, rejects an ordinary path"},
+  {"task":"real-contentdisp-hexescape","change":"3b1d3b5cba","class":"a","evidence":"'100% true.txt' no longer gets the simple form. The task says names that look like a percent escape change form and ordinary names keep it; whether a lone '%' is ordinary is not stated (the upstream fix keeps the simple form, so this is borderline d)"},
+  {"task":"real-contentdisp-attrchar","change":"eace99eaaf","class":"d","evidence":"',' stays unescaped (a second, wrong check in the same file also fails on the upstream fix)"},
+  {"task":"real-windows-basename","change":"726652c9d9","class":"a","evidence":"only the direct picomatch.matchBase call fails (borderline, as above)"},
+  {"task":"real-windows-basename","change":"21fcfa2563","class":"a","evidence":"the check expects isMatch('a\\\\b\\\\c.js','*.js',{basename:true,windows:false}) to be false; the upstream fix returns true (with no separator the whole name matches *.js). The check misreads 'must not be treated as a separator'"},
+  {"task":"real-windows-basename","change":"e4ece52129","class":"d","evidence":"picomatch.test(input, regex, {basename:true, windows:true}) does not match 'a\\\\b\\\\c.js'; the change added a 4th parameter and ignores options.windows on that path"},
+  {"task":"real-slugify-strict-trim","change":"c3cd6eacf0","class":"d","evidence":"strict mode with an empty replacement now throws 'Invalid regular expression'"}
+ ],
+ "counts": {"published_run": {"a":3,"b":0,"c":1,"d":7}, "baseline_rerun": {"a":3,"b":0,"c":0,"d":7}},
+ "run_to_run": "15 distinct right changes were blocked by checks in at least one of the two runs; 6 in both, 9 in only one. 25 of the 200 verdicts differ between the two runs of the same code."
+}

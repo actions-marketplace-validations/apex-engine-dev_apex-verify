@@ -1,0 +1,28 @@
+{
+ "task": "real-slugify-strict-trim",
+ "change": {
+  "passed": 6,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "strict mode with empty replacement string :: Invalid regular expression: /^+|+$/g: Nothing to repeat"
+  ]
+ },
+ "project": {
+  "passed": 3,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "strict mode removes leading and trailing replacement characters caused by stripped characters :: Should strip leading and trailing replacement characters",
+   "strict mode with custom replacement removes leading and trailing replacement characters :: Should strip leading and trailing custom replacement characters",
+   "strict mode handles string that becomes just replacement characters :: Should return empty string if only replacement characters remain",
+   "strict mode strips leading/trailing replacement characters mixed with stripped characters :: Should strip leading and trailing replacement characters"
+  ]
+ },
+ "reference": {
+  "passed": 7,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "task": "real-windows-basename",
+ "change": {
+  "passed": 6,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "picomatch.matchBase public API respects windows option :: picomatch.matchBase should respect windows: true"
+  ]
+ },
+ "project": {
+  "passed": 3,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: true treats backslash as separator :: should match *.js against the basename c.js",
+   "matchBase option works exactly like basename :: matchBase should respect windows: true",
+   "picomatch.matchBase public API respects windows option :: picomatch.matchBase should respect windows: true",
+   "edge cases: trailing slashes, repeated slashes, mixed slashes, missing input :: should handle trailing backslash in windows mode"
+  ]
+ },
+ "reference": {
+  "passed": 7,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

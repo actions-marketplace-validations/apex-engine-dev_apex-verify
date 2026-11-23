@@ -1,0 +1,37 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 13,
+  "failed": 5,
+  "loadError": null,
+  "fails": [
+   "throws on invalid tokens :: Missing expected exception: Expected to throw for name: foo{bar}",
+   "name validation :: Missing expected exception: Expected to throw for name: foo{bar}",
+   "accepts valid cookie-octets wrapped in double quotes :: argument val is invalid",
+   "value validation :: argument val is invalid",
+   "cookie.serialize(name, val, options) :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 9,
+  "failed": 9,
+  "loadError": null,
+  "fails": [
+   "throws on invalid tokens :: Missing expected exception: Expected to throw for name: foo bar",
+   "name validation :: Missing expected exception: Expected to throw for name: foo bar",
+   "throws on invalid cookie-octets :: Missing expected exception: Expected to throw for value: foo bar",
+   "value validation :: Missing expected exception: Expected to throw for value: foo bar",
+   "throws on invalid domain :: Missing expected exception: Expected to throw for domain: example.com;",
+   "domain validation :: Missing expected exception: Expected to throw for domain: example.com;",
+   "throws on invalid path :: Missing expected exception: Expected to throw for path: /;",
+   "path validation :: Missing expected exception: Expected to throw for path: /;",
+   "cookie.serialize(name, val, options) :: Missing expected exception: Expected to throw for path: /;"
+  ]
+ },
+ "reference": {
+  "passed": 18,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

@@ -1,0 +1,32 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 16,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "valid unencoded value wrapped in quotes: 'optionally wrapped in double quotes' :: argument val is invalid",
+   "empty value wrapped in quotes: 'optionally wrapped in double quotes' :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 11,
+  "failed": 7,
+  "loadError": null,
+  "fails": [
+   "invalid name with space: 'Names should have to be valid tokens' :: Missing expected exception: Expected space in name to throw",
+   "invalid name with separators: 'Names should have to be valid tokens' :: Missing expected exception: Expected = in name to throw",
+   "unencoded value with space: 'values valid cookie-octets' :: Missing expected exception: Expected space in unencoded value to throw",
+   "unencoded value with invalid characters: 'values valid cookie-octets' :: Missing expected exception: Expected ; in unencoded value to throw",
+   "invalid unencoded value wrapped in quotes: 'values valid cookie-octets' :: Missing expected exception: Expected space inside quotes to throw",
+   "invalid domain with newline or semicolon: 'the same strictness is expected for the domain and path options' :: Missing expected exception: Expected ; in domain to throw",
+   "invalid path with newline or semicolon: 'the same strictness is expected for the domain and path options' :: Missing expected exception: Expected ; in path to throw"
+  ]
+ },
+ "reference": {
+  "passed": 18,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

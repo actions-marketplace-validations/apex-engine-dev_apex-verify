@@ -1,0 +1,34 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 15,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "accepts valid cookie-octets wrapped in double quotes :: argument val is invalid",
+   "cookie.serialize value validation :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 8,
+  "failed": 9,
+  "loadError": null,
+  "fails": [
+   "throws on invalid token characters in name :: Missing expected exception: throws on \" \"",
+   "cookie.serialize name validation :: Missing expected exception: throws on \" \"",
+   "throws on invalid cookie-octets in value :: Missing expected exception: throws on \" \"",
+   "throws on invalid cookie-octets even when wrapped in double quotes :: Missing expected exception: throws on \" \" inside quotes",
+   "cookie.serialize value validation :: Missing expected exception: throws on \" \" inside quotes",
+   "throws on invalid characters in domain :: Missing expected exception: throws on \";\"",
+   "cookie.serialize domain validation :: Missing expected exception: throws on \";\"",
+   "throws on invalid characters in path :: Missing expected exception: throws on \";\"",
+   "cookie.serialize path validation :: Missing expected exception: throws on \";\""
+  ]
+ },
+ "reference": {
+  "passed": 17,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

@@ -1,0 +1,8 @@
+Protocol, written Mon Nov 23 19:00:00 IST 2026 before any candidate result existed (the baseline run was 71/200 through).
+Set: the 200 real-* changes of benchmark/changes/manifest.json (107 wrong, 93 right by hidden tests). One run per arm.
+Checker gemini-3.1-pro-preview, concurrency 4, fresh checks for every change, Apex verify 0.2.5 sources (+ the candidate).
+Arms: baseline (unchanged), A (check-writing prompt: each test names the task words it rests on), B (second look must quote the task; a quote not found in the task does not block), C (a review call removes tests the task does not decide, before any change is seen).
+Reported per arm: wrong blocked /107, wrong called ready, wrong unknown, right blocked /93 split into tests-caused (a regression or cheat reason in the report) and checks-caused, right ready, right unknown, errors.
+Noise: |baseline rerun - published run| on wrong blocked (published 97) and on checks-caused false alarms (published 11). A candidate "beats the baseline" only if its checks-caused false alarms fall by more than that noise AND wrong blocked does not fall by more than that noise. Otherwise: no winner.
+Winner (or, with no winner, the candidate with the fewest checks-caused false alarms whose wrong-blocked is within noise) and baseline are then run once on the non-real entries with --limit 80.
+No arm is rerun to get a better number; a crashed run is rerun whole and that is said.

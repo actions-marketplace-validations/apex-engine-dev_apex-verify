@@ -1,0 +1,28 @@
+{
+ "task": "real-contentdisp-hexescape",
+ "change": {
+  "passed": 6,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "US-ASCII with percent sign but not a percent escape uses simple form :: Expected simple form for filename with percent sign but no hex escape"
+  ]
+ },
+ "project": {
+  "passed": 3,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "US-ASCII with percent escape uses extended form :: Expected extended form for filename with percent escape",
+   "US-ASCII with another percent escape uses extended form :: Expected extended form for filename with percent escape",
+   "US-ASCII with uppercase hex percent escape uses extended form :: Expected extended form for filename with uppercase hex percent escape",
+   "US-ASCII with percent escape in path uses extended form for basename :: Expected extended form for basename with percent escape"
+  ]
+ },
+ "reference": {
+  "passed": 7,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

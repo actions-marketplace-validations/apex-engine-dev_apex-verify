@@ -1,0 +1,37 @@
+{
+ "task": "real-contentdisp-attrchar",
+ "change": {
+  "passed": 11,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "encodes / and ? and : in filename* :: should percent-encode /, ?, and :",
+   "encodes all invalid attr-chars mixed :: should percent-encode all invalid attr-chars",
+   "contentDisposition(filename) extended parameter encoding :: should percent-encode all invalid attr-chars"
+  ]
+ },
+ "project": {
+  "passed": 8,
+  "failed": 6,
+  "loadError": null,
+  "fails": [
+   "encodes ( and ) in filename* :: should percent-encode ( and )",
+   "encodes , and ; in filename* :: should percent-encode , and ;",
+   "encodes = and @ in filename* :: should percent-encode = and @",
+   "encodes / and ? and : in filename* :: should percent-encode /, ?, and :",
+   "encodes all invalid attr-chars mixed :: should percent-encode all invalid attr-chars",
+   "contentDisposition(filename) extended parameter encoding :: should percent-encode all invalid attr-chars"
+  ]
+ },
+ "reference": {
+  "passed": 10,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "encodes / and ? and : in filename* :: should percent-encode /, ?, and :",
+   "encodes all invalid attr-chars mixed :: should percent-encode all invalid attr-chars",
+   "leaves valid attr-chars unescaped :: should leave valid attr-chars unescaped",
+   "contentDisposition(filename) extended parameter encoding :: should leave valid attr-chars unescaped"
+  ]
+ }
+}

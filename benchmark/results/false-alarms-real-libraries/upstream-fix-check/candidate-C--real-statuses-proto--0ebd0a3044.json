@@ -1,0 +1,33 @@
+{
+ "task": "real-statuses-proto",
+ "change": {
+  "passed": 1,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "status() throws for inherited property names as messages :: invalid status message: \"constructor\"",
+   "status() throws for inherited property names in uppercase :: invalid status message: \"CONSTRUCTOR\"",
+   "status() throws for invalid status codes and messages :: invalid status code: 999"
+  ]
+ },
+ "project": {
+  "passed": 1,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "status() throws for inherited property names as messages :: Missing expected exception: should throw invalid status message for \"constructor\"",
+   "status() throws for inherited property names in uppercase :: Missing expected exception: should throw invalid status message for \"CONSTRUCTOR\"",
+   "status() throws for invalid status codes and messages :: invalid status code: 999"
+  ]
+ },
+ "reference": {
+  "passed": 1,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "status() throws for inherited property names as messages :: invalid status message: \"constructor\"",
+   "status() throws for inherited property names in uppercase :: invalid status message: \"CONSTRUCTOR\"",
+   "status() throws for invalid status codes and messages :: invalid status code: 999"
+  ]
+ }
+}

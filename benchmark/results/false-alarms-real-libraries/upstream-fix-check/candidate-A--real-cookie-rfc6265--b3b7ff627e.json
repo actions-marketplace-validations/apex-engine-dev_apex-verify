@@ -1,0 +1,37 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 19,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "(optionally wrapped in double quotes): accepts wrapped valid cookie-octets (unencoded) :: argument val is invalid",
+   "the same strictness is expected for the domain and path options: throws on domain with ; :: Missing expected exception.",
+   "the same strictness is expected for the domain and path options: throws on path with ; :: Missing expected exception."
+  ]
+ },
+ "project": {
+  "passed": 11,
+  "failed": 11,
+  "loadError": null,
+  "fails": [
+   "Names should have to be valid tokens: throws on 'foo bar' :: Missing expected exception.",
+   "Names should have to be valid tokens: throws on 'foo=bar' :: Missing expected exception.",
+   "Names should have to be valid tokens: throws on 'foo;bar' :: Missing expected exception.",
+   "values valid cookie-octets: throws on 'foo bar' (unencoded) :: Missing expected exception.",
+   "values valid cookie-octets: throws on 'foo;bar' (unencoded) :: Missing expected exception.",
+   "values valid cookie-octets: throws on 'foo,bar' (unencoded) :: Missing expected exception.",
+   "values valid cookie-octets: throws on 'foo\\\\bar' (unencoded) :: Missing expected exception.",
+   "values valid cookie-octets: throws on 'foo\"bar' (unencoded) :: Missing expected exception.",
+   "(optionally wrapped in double quotes): throws if wrapped contains invalid octets (unencoded) :: Missing expected exception.",
+   "the same strictness is expected for the domain and path options: throws on domain with ; :: Missing expected exception.",
+   "the same strictness is expected for the domain and path options: throws on path with ; :: Missing expected exception."
+  ]
+ },
+ "reference": {
+  "passed": 22,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

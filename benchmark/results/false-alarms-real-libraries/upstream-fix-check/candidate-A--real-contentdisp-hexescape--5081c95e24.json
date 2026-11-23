@@ -1,0 +1,27 @@
+{
+ "task": "real-contentdisp-hexescape",
+ "change": {
+  "passed": 5,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "contentDisposition: ordinary ASCII names keep the simple form :: must keep simple form for non-hex percent"
+  ]
+ },
+ "project": {
+  "passed": 3,
+  "failed": 3,
+  "loadError": null,
+  "fails": [
+   "contentDisposition: a file name that itself contains something that looks like a percent escape (for example 'hello%41world.txt') is ambiguous :: must include unambiguous filename* parameter",
+   "contentDisposition: a file name that itself contains something that looks like a percent escape: multiple :: must include unambiguous filename* parameter",
+   "contentDisposition: a file name that itself contains something that looks like a percent escape: lowercase hex :: must include unambiguous filename* parameter"
+  ]
+ },
+ "reference": {
+  "passed": 6,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

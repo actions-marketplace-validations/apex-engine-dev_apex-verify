@@ -1,0 +1,39 @@
+{
+ "task": "real-cookie-rfc6265",
+ "change": {
+  "passed": 22,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "passes with valid cookie-octets wrapped in double quotes :: argument val is invalid",
+   "cookie.serialize value validation (unencoded) :: argument val is invalid"
+  ]
+ },
+ "project": {
+  "passed": 10,
+  "failed": 14,
+  "loadError": null,
+  "fails": [
+   "throws on space in name :: Missing expected exception: Expected space in name to throw",
+   "throws on separators in name :: Missing expected exception: Expected \"=\" in name to throw",
+   "throws on control characters in name :: Missing expected exception: Expected tab in name to throw",
+   "cookie.serialize name validation :: Missing expected exception: Expected tab in name to throw",
+   "throws on space in value :: Missing expected exception: Expected space in unencoded value to throw",
+   "throws on invalid characters in value :: Missing expected exception: Expected \";\" in unencoded value to throw",
+   "throws on control characters in value :: Missing expected exception: Expected tab in unencoded value to throw",
+   "throws when wrapped in double quotes but contains invalid inner characters :: Missing expected exception: Expected invalid inner characters to throw",
+   "cookie.serialize value validation (unencoded) :: Missing expected exception: Expected invalid inner characters to throw",
+   "throws on space in domain :: Missing expected exception: Expected space in domain to throw",
+   "throws on semicolon in domain :: Missing expected exception: Expected \";\" in domain to throw",
+   "cookie.serialize domain validation :: Missing expected exception: Expected \";\" in domain to throw",
+   "throws on semicolon in path :: Missing expected exception: Expected \";\" in path to throw",
+   "cookie.serialize path validation :: Missing expected exception: Expected \";\" in path to throw"
+  ]
+ },
+ "reference": {
+  "passed": 24,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

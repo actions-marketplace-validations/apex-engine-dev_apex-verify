@@ -1,0 +1,26 @@
+{
+ "task": "real-contentdisp-hexescape",
+ "change": {
+  "passed": 5,
+  "failed": 1,
+  "loadError": null,
+  "fails": [
+   "ASCII names with percent but not a valid hex escape keep the simple form :: should keep simple form for single percent"
+  ]
+ },
+ "project": {
+  "passed": 4,
+  "failed": 2,
+  "loadError": null,
+  "fails": [
+   "ASCII names with something that looks like a percent escape use the unambiguous extended form :: should include filename* parameter for %41",
+   "edge cases: repeated, mixed, or path percent escapes :: should include filename* parameter for repeated escapes"
+  ]
+ },
+ "reference": {
+  "passed": 6,
+  "failed": 0,
+  "loadError": null,
+  "fails": []
+ }
+}

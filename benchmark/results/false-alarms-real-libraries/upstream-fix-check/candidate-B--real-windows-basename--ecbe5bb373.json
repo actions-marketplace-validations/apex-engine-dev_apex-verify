@@ -1,0 +1,41 @@
+{
+ "task": "real-windows-basename",
+ "change": {
+  "passed": 10,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: false should not treat backslash as separator :: Expected a\\b\\c.js to NOT match *.js with windows: false",
+   "matchBase option with windows: false should not treat backslash as separator :: Expected a\\b\\c.js to NOT match *.js with windows: false",
+   "picomatch.matchBase direct call with windows: false :: Expected direct matchBase call to respect windows: false",
+   "picomatch.test with matchBase and windows: false :: Expected picomatch.test to NOT match with windows: false"
+  ]
+ },
+ "project": {
+  "passed": 5,
+  "failed": 9,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: true should treat backslash as separator :: Expected a\\b\\c.js to match *.js with windows: true",
+   "basename option with windows: false should not treat backslash as separator :: Expected a\\b\\c.js to NOT match *.js with windows: false",
+   "matchBase option with windows: true should treat backslash as separator :: Expected a\\b\\c.js to match *.js with windows: true",
+   "matchBase option with windows: false should not treat backslash as separator :: Expected a\\b\\c.js to NOT match *.js with windows: false",
+   "picomatch.matchBase direct call with windows: true :: Expected direct matchBase call to respect windows: true",
+   "picomatch.matchBase direct call with windows: false :: Expected direct matchBase call to respect windows: false",
+   "picomatch.test with matchBase and windows: true :: Expected picomatch.test to match with windows: true",
+   "picomatch.test with matchBase and windows: false :: Expected picomatch.test to NOT match with windows: false",
+   "basename option with trailing backslash and windows: true :: Expected a\\b\\c.js\\ to match *.js with windows: true"
+  ]
+ },
+ "reference": {
+  "passed": 10,
+  "failed": 4,
+  "loadError": null,
+  "fails": [
+   "basename option with windows: false should not treat backslash as separator :: Expected a\\b\\c.js to NOT match *.js with windows: false",
+   "matchBase option with windows: false should not treat backslash as separator :: Expected a\\b\\c.js to NOT match *.js with windows: false",
+   "picomatch.matchBase direct call with windows: false :: Expected direct matchBase call to respect windows: false",
+   "picomatch.test with matchBase and windows: false :: Expected picomatch.test to NOT match with windows: false"
+  ]
+ }
+}
