@@ -91,7 +91,7 @@ Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what i
 - **It does not replace review or CI.** It runs next to them and gives a short, evidence-backed verdict.
 - **It sends your task and the relevant source files** (about 24 KB at most) to the checker model you configure, and nothing else. No telemetry.
 - **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort), Linux bubblewrap and Windows AppContainer, all tested in CI, with no network (localhost allowed on macOS and Linux). **Windows** uses an AppContainer (no network, writes only in the scratch copy, tested on a real Windows runner in CI), at about 30 seconds of startup per test run; see [docs/SANDBOX.md](docs/SANDBOX.md) for the limits.
-- **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`), and Go (`go test`).** For other stacks it still runs your tests and the cheating scan and says `unknown` rather than guessing ([#2](https://github.com/apex-engine-dev/apex-verify/issues/2)).
+- **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`), and Go (`go test`).** For other stacks it still runs your tests and the cheating scan and says `unknown` rather than guessing.
 
 ## What's left
 
