@@ -116,7 +116,7 @@ If it catches something for you, a ⭐ helps others find it. If it gets somethin
 
 | You can | Where |
 |---|---|
-| **Cut the false alarms on real libraries** | [issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20) |
+| **Cut the remaining checker false alarms on real libraries** (about 4 in 100) | [issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20) |
 | **Run the Codex or Cursor hook** inside the real app and tell us what you saw | a pull request or issue |
 | **Add a language or test runner** | issues labelled `good first issue` |
 | **Be a second maintainer** | [GOVERNANCE.md](GOVERNANCE.md) |
