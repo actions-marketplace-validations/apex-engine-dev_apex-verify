@@ -15,7 +15,9 @@ export const isTestFile = (p: string) => TEST_PATH.some((r) => r.test(p));
 const TEST_CONFIG = [/(^|\/)(jest|vitest|playwright|karma)\.config\.[cm]?[jt]s$/i, /(^|\/)\.mocharc(\.\w+)?$/i, /(^|\/)(pytest\.ini|tox\.ini|setup\.cfg|conftest\.py)$/i, /(^|\/)\.github\/workflows\//];
 const AGENT_CONFIG = [/^\.(claude|cursor|codex|gemini|aider|opencode|windsurf)\//i, /(^|\/)(AGENTS|CLAUDE|GEMINI)\.md$/i, /(^|\/)\.apex(\.\w+)?$/i];
 
-const count = (s: string | null, re: RegExp) => (s ? (s.match(re) ?? []).length : 0);
+/** Source without comments, so a test that was commented out stops counting as a test (and a commented-out skip is not a skip). */
+const stripComments = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:\w"'`])\/\/[^\n]*/g, "$1").replace(/^[ \t]*#[^\n]*/gm, "");
+const count = (s: string | null, re: RegExp) => (s ? (stripComments(s).match(re) ?? []).length : 0);
 const TESTS = /(?<![.\w$])(?:test|it)(?:\.\w+)?\s*\(|^\s*(?:async\s+)?def\s+test_|^\s*func\s+Test\w+\(|#\[test\]/gm;
 const ASSERTS = /\bassert\b|\bexpect\s*\(|\.(?:equal|deepEqual|strictEqual|deepStrictEqual|notEqual|ok|throws|rejects|toBe\w*|toEqual|toThrow\w*|toMatch\w*|toContain\w*)\s*\(|\bassert_\w+!?\(/g;
 const SKIPS = /\b(?:test|it|describe|suite|context)\.(?:skip|todo)\s*\(|\bx(?:it|describe|test)\s*\(|@pytest\.mark\.(?:skip|skipif|xfail)|\bpytest\.(?:skip|xfail)\s*\(|\bt\.Skip\w*\(|@unittest\.skip\w*|#\[ignore\]|\{\s*skip:\s*true/g;

@@ -6,3 +6,10 @@ In scope: a sandbox escape in the test runner, a write outside the project copy,
 Out of scope: the model producing bad code (that is what the proof is for).
 
 Include the version, a synthetic reproduction and the platform. Supported: the latest release.
+
+## What Apex verify does not defend against (threat model)
+
+- **A verdict is evidence, not a guarantee.** The checks are written by a model from the task text, so a task (or pull request description) written to mislead the checker can make a wrong change look `ready`. Treat `ready` on a change from an untrusted author as one signal next to review and CI, and run the Action from your base branch's workflow.
+- **The checker sees an excerpt of your project.** Up to about 24 KB of relevant files and the change go to the model you configure. Secret-looking files are not offered and key-shaped strings are redacted, but that is a safety net: do not point it at a project whose source you may not share with that provider.
+- **The sandboxes are best effort.** They limit writes and the network for generated checks and your tests (see docs/SANDBOX.md); reads are mostly open on macOS, and Windows has no localhost. For code you do not trust, use a container or VM.
+- **A shown failure can be gamed.** The stop hook returns the failing check to the agent, which may special-case it instead of fixing the cause; the 3-block cap and `--lock-tests` limit the damage, and measuring it is open (issue #22).

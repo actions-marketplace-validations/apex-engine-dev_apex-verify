@@ -67,3 +67,12 @@ test("RegExp.test and cursor.skip are not tests or skips; an echo before a real 
   const java = { path: "src/test/java/FooTest.java", before: "class FooTest {}", after: null };
   assert.ok(detectCheats([java], "x").some((c) => c.kind === "test_deleted"));
 });
+
+test("commenting a test out counts as removing it", () => {
+  const before = 'import { test } from "node:test";\ntest("a", () => {});\ntest("b", () => {});\ntest("c", () => {});\n';
+  const after = 'import { test } from "node:test";\ntest("a", () => {});\n// test("b", () => {});\n/* test("c", () => {}); */\n';
+  const c = detectCheats([{ path: "test/x.test.js", before, after }], "x");
+  assert.ok(c.some((x) => x.kind === "tests_removed" && x.severity === "high"), JSON.stringify(c));
+  const url = 'import { test } from "node:test";\ntest("a", () => { fetch("http://x.test/a"); });\n';
+  assert.deepEqual(detectCheats([{ path: "test/y.test.js", before: url, after: url }], "x"), []);
+});
