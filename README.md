@@ -141,7 +141,7 @@ How we know: we collected AI-written changes and knew which were wrong, using hi
 
 - **Where it helps most is where tests are thin.** On the small projects the visible tests caught almost nothing and the checks did the work. On the real libraries the tests are good, and the checks add a smaller step (75 to 91) at a real cost in false alarms.
 - **It still misses things**: about a third of wrong changes on the small projects; on the real libraries 1 wrong change was called `ready` and 9 were left `unknown`.
-- **The false alarms are the open problem.** 13 in 100 good changes that pass a real library's tests were stopped by a generated check. We looked at each one: in about 7 of 10 the change really did not do what the task text says (the hidden upstream test was too narrow), which leaves about 4 or 5 in 100 as the checker's own mistakes. That second figure rests on our reading of the task texts, so quote both. Three attempts to cut the number did not beat the unchanged tool, and two runs of the same code disagree on 25 of 200 verdicts ([details](benchmark/results/false-alarms-real-libraries), [issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20)). Use `APEX_MODE=warn` or `fail-on: never` if that is too many for you.
+- **The false alarms are the open problem.** 13 in 100 good changes that pass a real library's tests were stopped by a generated check. We looked at each one: in about 7 of 10 the change really did not do what the task text says (the hidden upstream test was too narrow), which leaves about 4 or 5 in 100 as the checker's own mistakes. That second figure rests on our reading of the task texts, so quote both. Three attempts to cut the number did not beat the unchanged tool, and two runs of the same code disagree on 25 of 200 verdicts ([details](benchmark/results/false-alarms-real-libraries), [issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20), closed as investigated). Use `APEX_MODE=warn` or `fail-on: never` if that is too many for you.
 - **A checker from another company works about as well** (Claude 55 in 100 vs Gemini 63 on the same changes), and **two checkers that must agree did not help** ([experiments, including what failed](docs/EXPERIMENTS.md)).
 - Limits: Gemini models wrote every change, one run each, the real-library set is lopsided. Everything is rerunnable: `node benchmark/run-gate.mjs`. **Please try to break it**: a wrong `ready`, or a `not ready` on a good change, is the most useful bug report we can get.
 
@@ -167,7 +167,8 @@ If it catches something for you, a ⭐ helps others find it. If it gets somethin
 
 | You can | Where |
 |---|---|
-| **Cut the checker's false alarms on real libraries** (13 in 100 good changes) | [issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20) |
+| **Send a change Apex verify wrongly blocked** (three attempts to cut false alarms failed; real examples are what would help) | [what was tried](benchmark/results/false-alarms-real-libraries), then an issue |
+| **Try the OpenAI or Anthropic checker once** and record what happened | [issue #30](https://github.com/apex-engine-dev/apex-verify/issues/30) |
 | **Run the Codex or Cursor hook** inside the real app and tell us what you saw | a pull request or issue |
 | **Add a language or test runner** | issues labelled `good first issue` |
 | **Be a second maintainer** | [GOVERNANCE.md](GOVERNANCE.md) |
