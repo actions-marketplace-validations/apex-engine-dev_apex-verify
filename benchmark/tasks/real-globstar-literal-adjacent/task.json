@@ -1,0 +1,11 @@
+{
+  "id": "real-globstar-literal-adjacent",
+  "kind": "fix",
+  "title": "A ** next to other characters in a segment matches across slashes",
+  "prompt": "In our picomatch, a double star only acts as a globstar when it is the whole path segment. When it sits next to other characters in the same segment, for example '**.thing.js' or '**.js', it should behave like a single star and must not match across path separators. Right now 'somepath/test.thing.js' wrongly matches '**.thing.js', and 'a/b/c.js' matches '**.js'. 'test.thing.js' should still match '**.thing.js' and 'somepath/test.thing.js' should still match '**/*.thing.js'. Please fix it.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/api.picomatch.js test/api.posix.js test/api.scan.js test/bash.js test/bash.spec.js test/brackets.js test/dotfiles.js test/dots-invalid.js test/extglobs-bash.js test/extglobs-minimatch.js test/extglobs-temp.js test/extglobs.js test/globstars.js test/issue-related.js test/malicious.js test/minimatch.js test/negation.js test/non-globs.js test/options.format.js test/options.ignore.js test/options.js test/options.maxExtglobRecursion.js test/options.noextglob.js test/options.noglobstar.js test/options.onMatch.js test/parens.js test/posix-classes.js test/qmarks.js test/regex-features.js test/slashes-posix.js test/slashes-windows.js test/special-characters.js test/stars.js test/wildmat.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-issue-related.test.js"
+  }
+}

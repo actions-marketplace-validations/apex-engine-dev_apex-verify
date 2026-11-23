@@ -1,0 +1,69 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:35
++++ b/humanize-duration.js	2026-11-23 10:20:35
+@@ -1289,17 +1289,6 @@
+ 
+     /**
+      * @internal
+-     * @template T
+-     * @param {T} obj
+-     * @param {keyof T} key
+-     * @returns {boolean}
+-     */
+-    function has(obj, key) {
+-      return Object.prototype.hasOwnProperty.call(obj, key);
+-    }
+-
+-    /**
+-     * @internal
+      * @param {Pick<NormalizedOptions, "language" | "fallbacks" | "languages">} options
+      * @throws {Error} Throws an error if language is not found.
+      * @returns {Language}
+@@ -1338,7 +1327,7 @@
+      */
+     function renderPiece(piece, language, options) {
+       var unitName = piece.unitName;
+-      var unitCount = piece.unitCount;
++      var originalUnitCount = piece.unitCount; // Keep original for pluralization
+ 
+       var spacer = options.spacer;
+       var maxDecimalPoints = options.maxDecimalPoints;
+@@ -1363,14 +1352,17 @@
+ 
+       /** @type {string} */
+       var formattedCount;
+-      var normalizedUnitCount =
++
++      // Determine the count to use for rounding and display
++      var roundedUnitCount =
+         maxDecimalPoints === void 0
+-          ? unitCount
+-          : Math.floor(unitCount * Math.pow(10, maxDecimalPoints)) /
++          ? originalUnitCount
++          : Math.floor(originalUnitCount * Math.pow(10, maxDecimalPoints)) /
+             Math.pow(10, maxDecimalPoints);
+-      var countStr = normalizedUnitCount.toString();
+ 
+-      if (language._hideCountIf2 && unitCount === 2) {
++      var countStr = roundedUnitCount.toString();
++
++      if (language._hideCountIf2 && originalUnitCount === 2) {
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+@@ -1393,7 +1385,14 @@
+       var languageWord = language[unitName];
+       var word;
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        // Use the rounded unit count for pluralization if maxDecimalPoints is set
++        // and the original count was not an integer. Otherwise, use the original count.
++        var countForPluralization =
++          maxDecimalPoints !== undefined &&
++          Math.floor(originalUnitCount) !== originalUnitCount
++            ? roundedUnitCount
++            : originalUnitCount;
++        word = languageWord(countForPluralization);
+       } else {
+         word = languageWord;
+       }

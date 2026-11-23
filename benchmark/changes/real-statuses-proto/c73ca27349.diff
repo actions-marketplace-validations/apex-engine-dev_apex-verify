@@ -1,0 +1,68 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:26
++++ b/index.js	2026-11-23 10:17:26
+@@ -22,6 +22,7 @@
+ module.exports = status
+ 
+ // status code to message map
++// Note: `codes` object has string keys (e.g., '200')
+ status.message = codes
+ 
+ // status message (lower-case) to code map
+@@ -61,7 +62,9 @@
+  */
+ 
+ function createMessageToStatusCodeMap (codes) {
+-  var map = {}
++  // Use Object.create(null) to create a map without a prototype,
++  // preventing inherited properties like 'constructor' from being accessible.
++  var map = Object.create(null)
+ 
+   Object.keys(codes).forEach(function forEachCode (code) {
+     var message = codes[code]
+@@ -101,7 +104,12 @@
+ 
+ function status (code) {
+   if (typeof code === 'number') {
+-    if (!status.message[code]) throw new Error('invalid status code: ' + code)
++    // Ensure the property is directly on the map, not inherited from the prototype chain.
++    // `status.message` keys are strings (e.g., '200'), so convert the number `code` to a string for `hasOwnProperty`.
++    if (!status.message.hasOwnProperty(String(code))) {
++      throw new Error('invalid status code: ' + code)
++    }
++    // Returns the message string (e.g., status(200) returns 'OK')
+     return status.message[code]
+   }
+ 
+@@ -109,14 +117,26 @@
+     throw new TypeError('code must be a number or string')
+   }
+ 
+-  // '403'
++  // Try to parse as a number (e.g., '403')
+   var n = parseInt(code, 10)
+   if (!isNaN(n)) {
+-    if (!status.message[n]) throw new Error('invalid status code: ' + n)
++    // Ensure the property is directly on the map, not inherited.
++    // `status.message` keys are strings, so convert the number `n` to a string for `hasOwnProperty`.
++    if (!status.message.hasOwnProperty(String(n))) {
++      throw new Error('invalid status code: ' + n)
++    }
++    // Returns the message string (e.g., status('200') returns 'OK')
+     return status.message[n]
+   }
+ 
+-  n = status.code[code.toLowerCase()]
+-  if (!n) throw new Error('invalid status message: "' + code + '"')
+-  return n
++  // Try to lookup by message (e.g., 'OK')
++  var lowerCaseCode = code.toLowerCase()
++  // Ensure the property is directly on the map, not inherited.
++  // `status.code` keys are already lower-cased strings.
++  if (!status.code.hasOwnProperty(lowerCaseCode)) {
++    throw new Error('invalid status message: "' + code + '"')
++  }
++  // Returns the numeric code (e.g., status('OK') returns 200)
++  return status.code[lowerCaseCode]
+ }
++

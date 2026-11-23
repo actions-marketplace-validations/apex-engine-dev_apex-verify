@@ -1,0 +1,20 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:13:43
++++ b/index.js	2026-11-23 10:13:43
+@@ -63,10 +63,14 @@
+  * <let-dig>         = <letter> | <digit>
+  * <letter>          = any one of the 52 alphabetic characters A through Z in
+  *                     upper case and a through z in lower case
+- * <digit>           = any one of the ten digits 0 through 9
++ * <digit>          = any one of the ten digits 0 through 9
++ *
++ * Note: RFC 6265 also explicitly allows a leading dot in the Domain attribute
++ * for historical reasons, which is not strictly covered by <subdomain>.
++ * The regex is adjusted to accommodate this.
+  */
+ 
+-var domainValueRegExp = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
++var domainValueRegExp = /^(\.)?([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
+ 
+ /**
+  * RegExp to match path-value in RFC 6265 sec 4.1.1

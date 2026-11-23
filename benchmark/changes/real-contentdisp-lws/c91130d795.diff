@@ -1,0 +1,21 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:15:47
++++ b/index.js	2026-11-23 10:15:47
+@@ -117,7 +117,7 @@
+  * ext-token        = <the characters in token, followed by "*">
+  */
+ 
+-var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *(?:$|;)/
++var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*;?/
+ 
+ /**
+  * Create an attachment Content-Disposition header.
+@@ -321,7 +321,7 @@
+   var value
+ 
+   // calculate index to start at
+-  index = PARAM_REGEXP.lastIndex = match[0].substr(-1) === ';'
++  index = match[0].substr(-1) === ';'
+     ? index - 1
+     : index
+ 

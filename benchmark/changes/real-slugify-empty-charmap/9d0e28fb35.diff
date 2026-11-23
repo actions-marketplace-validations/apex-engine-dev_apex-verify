@@ -1,0 +1,30 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:18:29
++++ b/slugify.js	2026-11-23 10:18:29
+@@ -37,6 +37,26 @@
+         if (appendChar === replacement) {
+           appendChar = ' ';
+         }
++        // The original character should be appended if the mapping is an empty string.
++        // If the mapping is found, it should be used. Otherwise, the original character is used.
++        var mappedChar = charMap[ch];
++        if (mappedChar !== undefined) {
++            appendChar = mappedChar;
++        } else {
++            appendChar = ch;
++        }
++
++        // If the mapping results in an empty string, we want to delete the character.
++        // This is achieved by not appending anything.
++        if (appendChar === '') {
++            return result;
++        }
++
++        // If the mapped character is the replacement character, replace it with a space.
++        if (appendChar === replacement) {
++          appendChar = ' ';
++        }
++
+         return result + appendChar
+           // remove not allowed characters
+           .replace(options.remove || /[^\w\s$*_+~.()'"!\-:@]+/g, '')

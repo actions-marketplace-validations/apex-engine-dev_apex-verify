@@ -1,0 +1,50 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:21:31
++++ b/lib/parse.js	2026-11-23 10:21:31
+@@ -1162,8 +1162,8 @@
+         prev.type = 'globstar';
+         prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
+         prev.value += value;
+-        state.globstar = true;
+         state.output += prior.output + prev.output;
++        state.globstar = true;
+         consume(value);
+         continue;
+       }
+diff -ruN a/lib/picomatch.js b/lib/picomatch.js
+--- a/lib/picomatch.js	2026-11-23 10:21:31
++++ b/lib/picomatch.js	2026-11-23 10:21:31
+@@ -159,7 +159,16 @@
+ 
+ picomatch.matchBase = (input, glob, options) => {
+   const regex = glob instanceof RegExp ? glob : picomatch.makeRe(glob, options);
+-  return regex.test(utils.basename(input));
++  const opts = options || {};
++  const { windows } = opts;
++
++  // With matchBase, we need to extract the last segment of the path
++  // and match it against the glob pattern.
++  // The basename function extracts the last segment, and we need to
++  // ensure it correctly handles different path separators based on the
++  // `windows` option.
++  const basename = utils.basename(input, { windows });
++  return regex.test(basename);
+ };
+ 
+ /**
+diff -ruN a/lib/utils.js b/lib/utils.js
+--- a/lib/utils.js	2026-11-23 10:21:31
++++ b/lib/utils.js	2026-11-23 10:21:31
+@@ -61,7 +61,11 @@
+ };
+ 
+ exports.basename = (path, { windows } = {}) => {
+-  const segs = path.split(windows ? /[\\/]/ : '/');
++  // Split the path by either backslash or forward slash, depending on the `windows` option.
++  // If `windows` is true, use a regex that matches both `\` and `/`.
++  // Otherwise, use only `/`.
++  const separatorRegex = windows ? /[\\/]/ : /\//;
++  const segs = path.split(separatorRegex);
+   const last = segs[segs.length - 1];
+ 
+   if (last === '') {

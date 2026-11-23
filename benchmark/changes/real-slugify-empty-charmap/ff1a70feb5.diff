@@ -1,0 +1,37 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:18:30
++++ b/slugify.js	2026-11-23 10:18:30
+@@ -33,10 +33,32 @@
+     var slug = string.normalize().split('')
+       // replace characters based on charMap
+       .reduce(function (result, ch) {
+-        var appendChar = locale[ch] || charMap[ch] || ch;
++        var appendChar;
++        // Check locale first
++        if (Object.prototype.hasOwnProperty.call(locale, ch)) {
++          appendChar = locale[ch];
++        }
++        // If not in locale, check global charMap
++        else if (Object.prototype.hasOwnProperty.call(charMap, ch)) {
++          appendChar = charMap[ch];
++        }
++        // If not found in either, use the original character
++        else {
++          appendChar = ch;
++        }
++
++        // Handle characters that map to the replacement character or an empty string
++        // The original logic `if (appendChar === replacement) { appendChar = ' '; }`
++        // was intended to treat characters that explicitly map to the replacement
++        // as whitespace, so they would be collapsed by `/\s+/g`.
++        // This also means that if a character maps to an empty string ('')
++        // and the replacement is also an empty string (''), it will convert '' to ' '.
++        // This behavior seems to be okay for the overall slugification process,
++        // as the ' ' would eventually be removed or replaced by the final replacement.
+         if (appendChar === replacement) {
+           appendChar = ' ';
+         }
++        
+         return result + appendChar
+           // remove not allowed characters
+           .replace(options.remove || /[^\w\s$*_+~.()'"!\-:@]+/g, '')

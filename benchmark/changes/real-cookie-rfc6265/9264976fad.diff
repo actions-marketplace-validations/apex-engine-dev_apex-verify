@@ -1,0 +1,106 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:35
++++ b/index.js	2026-11-23 10:14:35
+@@ -23,16 +23,53 @@
+ var __toString = Object.prototype.toString
+ 
+ /**
+- * RegExp to match field-content in RFC 7230 sec 3.2
++ * RegExp to match cookie-name (token) in RFC 6265 Sec 4.1.1
+  *
+- * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+- * field-vchar   = VCHAR / obs-text
+- * obs-text      = %x80-FF
++ * token          = 1*<any CHAR except CTLs or separators>
++ * CHAR           = %x01-7F / obs-text
++ * obs-text       = %x80-FF
++ * CTL            = %x00-1F / %x7F
++ * separators     = "(" | ")" | "<" | ">" | "@"
++ *                | "," | ";" | ":" | "\" | <">
++ *                | "/" | "[" | "]" | "?" | "="
++ *                | "{" | "}" | SP | HT
++ *
++ * This regex covers printable ASCII characters excluding CTLs and separators,
++ * plus obs-text (%x80-FF).
++ * Allowed: ! # $ % & ' * + - . 0-9 A-Z ^ _ ` a-z | ~
+  */
++var tokenRegExp = /^[\x21\x23-\x27\x2A-\x2B\x2D-\x2E\x30-\x39\x41-\x5A\x5F\x61-\x7A\x7E\x80-\xFF]+$/;
+ 
+-var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
++/**
++ * RegExp to match cookie-octet in RFC 6265 Sec 4.1.1
++ *
++ * cookie-octet   = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++ *                ; US-ASCII characters excluding CTLs,
++ *                ; whitespace, DQUOTE, comma, semicolon,
++ *                ; and backslash
++ *
++ * This regex covers printable ASCII characters excluding CTLs, SP, DQUOTE,
++ * comma, semicolon. Backslash is implicitly excluded from the ranges.
++ * Allowed: ! # $ % & ' ( ) * + - . / 0-9 : < = > ? @ A-Z [ ] ^ _ ` a-z { | } ~
++ */
++var cookieOctetRegExp = /^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]*$/;
+ 
+ /**
++ * RegExp to match field-value in RFC 7230 sec 3.2.4
++ *
++ * field-value    = *( field-vchar / " " / HTAB )
++ * field-vchar    = VCHAR / obs-text
++ * obs-text       = %x80-FF
++ * VCHAR          = %x21-7E
++ * SP             = %x20
++ * HTAB           = %x09
++ *
++ * This regex covers characters allowed in HTTP header field values,
++ * including spaces and tabs, and obs-text. It disallows CTLs.
++ */
++var fieldValueRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
++
++/**
+  * Parse a cookie header.
+  *
+  * Parse the given cookie header string into an object
+@@ -116,13 +153,16 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
++  // Validate cookie name against token RFC 6265 Sec 4.1.1
++  if (!tokenRegExp.test(name)) {
+     throw new TypeError('argument name is invalid');
+   }
+ 
+   var value = enc(val);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
++  // Validate cookie value against cookie-octet RFC 6265 Sec 4.1.1
++  // An empty value is allowed.
++  if (!cookieOctetRegExp.test(value)) {
+     throw new TypeError('argument val is invalid');
+   }
+ 
+@@ -139,7 +179,8 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!fieldContentRegExp.test(opt.domain)) {
++    // Validate domain against field-value RFC 7230 Sec 3.2.4
++    if (!fieldValueRegExp.test(opt.domain)) {
+       throw new TypeError('option domain is invalid');
+     }
+ 
+@@ -147,7 +188,8 @@
+   }
+ 
+   if (opt.path) {
+-    if (!fieldContentRegExp.test(opt.path)) {
++    // Validate path against field-value RFC 7230 Sec 3.2.4
++    if (!fieldValueRegExp.test(opt.path)) {
+       throw new TypeError('option path is invalid');
+     }
+ 
+@@ -272,3 +314,4 @@
+     return str;
+   }
+ }
++

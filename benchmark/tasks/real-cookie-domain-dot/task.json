@@ -1,0 +1,11 @@
+{
+  "id": "real-cookie-domain-dot",
+  "kind": "fix",
+  "title": "cookie.serialize rejects a valid leading-dot domain",
+  "prompt": "cookie.serialize(name, val, options) in index.js validates the Domain option strictly, so a domain with a leading dot such as '.example.com' (a form browsers and real sites still use) now throws 'option domain is invalid'. Leading-dot domains and 'localhost' should be accepted, while malformed domains (double dots, trailing dots, spaces, injected attributes) must still be rejected. Please fix it.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/serialize.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-serialize.test.js"
+  }
+}

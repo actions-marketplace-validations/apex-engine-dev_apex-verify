@@ -1,0 +1,56 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:16:30
++++ b/index.js	2026-11-23 10:16:30
+@@ -41,6 +41,12 @@
+ var quoteRegExp = /([\\"])/g
+ 
+ /**
++ * RegExp to match characters that need to be encoded for RFC 5987
++ */
++
++var encodeUriRegExp = /[\x00-\x20\x22\x27\(\)\*\+, \/:;<=>\?@\[\\\]\{\}\x7f]/g
++
++/**
+  * RegExp for various RFC 2616 grammar
+  *
+  * TEXT = <any OCTET except CTLs, but including LWS>
+@@ -68,7 +74,30 @@
+   // restrict to file base name
+   var name = basename(filename)
+ 
+-  if (asciiStringRegExp.test(name)) {
++  // RFC 2183: "The Content-Disposition: header-field MAY be used to guide the
++  // MIME user agent on how to present the existence of a message body to the
++  // user. This specification governs the use of the header-field in
++  // conjunction with messages that are represented by a message/rfc822
++  // payload. ... The "attachment" disposition-type is used to indicate that
++  // the response message is an attachment to be displayed or downloaded."
++  // RFC 5987: "If the filename parameter is to be used, the parameter value
++  // MUST be a MIME media-type parameter value, as defined in [RFC2045],
++  // Section 3.6. **However**, a parameter value that consists of a token is
++  // not allowed. **Therefore**, the filename parameter MUST be enclosed in
++  // double quotes if it contains characters other than characters in the
++  // ranges %x21-24, %x26, %x28-3A, %x3C-5B, %x5D-7E."
++
++  // If the filename contains percent escapes, it is ambiguous for clients that
++  // percent-decode the plain filename parameter. In such cases, the original
++  // name is not preserved. To avoid this, such names need to be sent in a
++  // form that is not ambiguous. RFC 5987 provides a mechanism for this.
++  //
++  // If the filename is US-ASCII, it can be sent as a simple filename parameter.
++  // If the filename contains non-US-ASCII characters or characters that could
++  // be misinterpreted as percent escapes, it should be sent as a filename*
++  // parameter.
++
++  if (asciiStringRegExp.test(name) && !/[%&=]/.test(name)) {
+     // simple header
+     // file name is always quoted and not a token for RFC 2616 compatibility
+     return 'attachment; filename=' + qstring(name)
+@@ -131,6 +160,7 @@
+   // percent encode as UTF-8
+   var encoded = encodeURIComponent(str)
+     .replace(encodeUriAttrCharRegExp, pencode)
++    .replace(encodeUriRegExp, pencode)
+ 
+   return 'UTF-8\'\'' + encoded
+ }

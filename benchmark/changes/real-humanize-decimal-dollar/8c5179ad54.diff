@@ -1,0 +1,14 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:22:21
++++ b/humanize-duration.js	2026-11-23 10:22:21
+@@ -1387,7 +1387,9 @@
+           }
+         }
+       } else {
+-        formattedCount = countStr.replace(".", decimal);
++        // Use split().join() to avoid issues with special replacement patterns
++        // like "$$" or "$&" in the `decimal` string when using String.prototype.replace().
++        formattedCount = countStr.split(".").join(decimal);
+       }
+ 
+       var languageWord = language[unitName];

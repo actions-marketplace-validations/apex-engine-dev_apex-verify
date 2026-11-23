@@ -1,0 +1,34 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:03
++++ b/index.js	2026-11-23 10:17:03
+@@ -18,10 +18,19 @@
+ 
+ /**
+  * RegExp to match non attr-char not handled by encodeURI.
++ *
++ * RFC 5987 `ext-value` allows `attr-char` and `pct-encoded`.
++ * `attr-char` = ALPHA / DIGIT / "!" / "#" / "$" / "&" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++ *
++ * `encodeURI` does not encode: `A-Z a-z 0-9 ; , / ? : @ & = + $ - _ . ! ~ * ' ( ) #`
++ *
++ * Characters that `encodeURI` does not encode but are *not* `attr-char` (and thus must be percent-encoded):
++ * `( ) , / : ; = ? @ * '`
++ *
++ * The regex targets these characters to ensure they are percent-encoded by `pencode`.
+  */
++var encodeUriAttrCharRegExp = /[*'()/:;=?@]/g
+ 
+-var encodeUriAttrCharRegExp = /[*']/g
+-
+ /**
+  * RegExp to match non-US-ASCII characters.
+  */
+@@ -123,6 +132,8 @@
+   var str = String(val)
+ 
+   // percent encode as UTF-8
++  // `encodeURI` encodes most characters but leaves some unencoded that are not `attr-char`.
++  // The `encodeUriAttrCharRegExp` catches those remaining characters for `pencode` to handle.
+   var encoded = encodeURI(str)
+     .replace(encodeUriAttrCharRegExp, pencode)
+ 

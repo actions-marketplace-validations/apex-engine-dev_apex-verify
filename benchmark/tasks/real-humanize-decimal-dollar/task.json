@@ -1,0 +1,11 @@
+{
+  "id": "real-humanize-decimal-dollar",
+  "kind": "fix",
+  "title": "custom decimal separator with $ characters is mangled",
+  "prompt": "With the decimal option, humanize-duration.js mangles separators that contain a dollar sign: humanizer()(1250, { decimal: '$$' }) gives '1$25 seconds' instead of '1$$25 seconds'. Other dollar sequences such as '$&', \"$`\" and \"$'\" are also expanded wrongly instead of being used literally. Please make any custom decimal string appear exactly as given.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/humanizer.js",
+    "hidden": "node --test test/hidden-humanizer.test.js"
+  }
+}

@@ -1,0 +1,121 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:09
++++ b/lib/parse.js	2026-11-23 10:19:09
+@@ -12,7 +12,9 @@
+   POSIX_REGEX_SOURCE,
+   REGEX_NON_SPECIAL_CHARS,
+   REGEX_SPECIAL_CHARS_BACKREF,
+-  REPLACEMENTS
++  REPLACEMENTS,
++  CHAR_LEFT_PARENTHESES, // Added for clarity in '?' logic
++  CHAR_RIGHT_PARENTHESES // Added for clarity in 'strictSlashes' logic
+ } = constants;
+ 
+ /**
+@@ -424,7 +426,9 @@
+     parens: 0,
+     quotes: 0,
+     globstar: false,
+-    tokens
++    tokens,
++    // NEW: Flag to indicate the next group should be optional due to a preceding '?'
++    nextGroupOptional: false
+   };
+ 
+   input = utils.removePrefix(input, state);
+@@ -441,7 +445,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || '';
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+@@ -516,6 +520,10 @@
+     }
+ 
+     tok.prev = prev;
++    // NEW: Store current parens depth on opening paren tokens
++    if (tok.type === 'paren' && tok.value === '(') {
++      tok.parensDepth = state.parens;
++    }
+     tokens.push(tok);
+     prev = tok;
+   };
+@@ -787,7 +795,12 @@
+ 
+     if (value === '(') {
+       increment('parens');
+-      push({ type: 'paren', value });
++      const parenToken = { type: 'paren', value };
++      if (state.nextGroupOptional) {
++        parenToken.optionalGroup = true;
++        state.nextGroupOptional = false;
++      }
++      push(parenToken);
+       continue;
+     }
+ 
+@@ -802,7 +815,38 @@
+         continue;
+       }
+ 
+-      push({ type: 'paren', value, output: state.parens ? ')' : '\\)' });
++      // NEW strictSlashes logic for globstar (**) at the end of a plain parenthesized group
++      if (opts.strictSlashes === true && prev.type === 'globstar') {
++          // If the globstar was the last content token before this closing paren,
++          // and strictSlashes is true, the globstar must not match an empty string.
++          // The `globstar` regex is `(${capture}(?:(?!START_ANCHOR etc.).)*?)`.
++          // We need to change `)*?` to `)+?)`.
++          // This ensures `test(/utils/**)` with strictSlashes does not match `test/utils`.
++          if (prev.output.endsWith(')*?')) {
++              prev.output = prev.output.slice(0, -2) + '+?)'; // Change `)*?` to `)+?)`
++              // Update state.output for this token immediately, will be fully rebuilt later anyway.
++              state.output = state.output.slice(0, -prev.output.length) + prev.output;
++              state.backtrack = true; // Ensure output is rebuilt from tokens
++          }
++      }
++
++      // Find the matching opening parenthesis token to check optionalGroup flag
++      let openParenToken;
++      const currentParensDepth = state.parens; // This is the depth of the group being closed
++      for (let i = tokens.length - 1; i >= 0; i--) {
++        if (tokens[i].type === 'paren' && tokens[i].value === '(' && tokens[i].parensDepth === currentParensDepth) {
++          openParenToken = tokens[i];
++          break;
++        }
++      }
++
++      let output = state.parens ? ')' : '\\)';
++      if (openParenToken && openParenToken.optionalGroup) {
++        output += '?';
++        state.backtrack = true; // Ensure output is rebuilt from tokens if optional ')' is added.
++      }
++
++      push({ type: 'paren', value, output });
+       decrement('parens');
+       continue;
+     }
+@@ -1019,9 +1063,19 @@
+      */
+ 
+     if (value === '?') {
+-      const isGroup = prev && prev.value === '(';
+-      if (!isGroup && opts.noextglob !== true && peek() === '(' && peek(2) !== '?') {
++      const isExtglobOpen = opts.noextglob !== true && peek() === '(' && peek(2) !== '?';
++      const isPlainParenOpenFollower = peek().charCodeAt(0) === CHAR_LEFT_PARENTHESES && !isExtglobOpen;
++
++      if (isExtglobOpen) {
+         extglobOpen('qmark', value);
++        continue;
++      }
++
++      // NEW: if '?' is followed by an opening parenthesis that is NOT an extglob,
++      // it should make the content of that parenthesis optional.
++      if (isPlainParenOpenFollower) {
++        state.nextGroupOptional = true; // Set a flag for the next '(' token
++        consume(value); // Consume the '?' character
+         continue;
+       }
+ 

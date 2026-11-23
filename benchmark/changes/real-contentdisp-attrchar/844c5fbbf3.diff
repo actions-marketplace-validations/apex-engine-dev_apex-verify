@@ -1,0 +1,31 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:03
++++ b/index.js	2026-11-23 10:17:03
+@@ -18,9 +18,26 @@
+ 
+ /**
+  * RegExp to match non attr-char not handled by encodeURI.
++ *
++ * RFC 5987 `attr-char` = ALPHA / DIGIT / "!" / "#" / "$" / "&" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++ *
++ * `encodeURI` does not encode the following characters:
++ * A-Z a-z 0-9 ; , / ? : @ & = + $ - _ . ! ~ * ' ( ) #
++ *
++ * Comparing these lists, characters that are not `attr-char` and are also not encoded by `encodeURI` are:
++ * - `*` (`%2A`)
++ * - `'` (`%27`)
++ * - `(` (`%28`)
++ * - `)` (`%29`)
++ * - `,` (`%2C`)
++ * - `;` (`%3B`)
++ * - `=` (`%3D`)
++ * - `@` (`%40`)
++ *
++ * These characters need to be explicitly percent-encoded for `filename*` as per RFC 5987.
+  */
+ 
+-var encodeUriAttrCharRegExp = /[*']/g
++var encodeUriAttrCharRegExp = /[*'(),;=@]/g
+ 
+ /**
+  * RegExp to match non-US-ASCII characters.

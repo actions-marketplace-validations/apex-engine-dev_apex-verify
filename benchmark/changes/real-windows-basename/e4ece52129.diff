@@ -1,0 +1,15 @@
+diff -ruN a/lib/picomatch.js b/lib/picomatch.js
+--- a/lib/picomatch.js	2026-11-23 10:21:32
++++ b/lib/picomatch.js	2026-11-23 10:21:32
+@@ -157,9 +157,9 @@
+  * @api public
+  */
+ 
+-picomatch.matchBase = (input, glob, options) => {
++picomatch.matchBase = (input, glob, options, isWindows) => {
+   const regex = glob instanceof RegExp ? glob : picomatch.makeRe(glob, options);
+-  return regex.test(utils.basename(input));
++  return regex.test(utils.basename(input, { windows: isWindows }));
+ };
+ 
+ /**

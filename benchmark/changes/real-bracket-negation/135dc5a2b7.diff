@@ -1,0 +1,33 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:49
++++ b/lib/parse.js	2026-11-23 10:22:49
+@@ -744,13 +744,26 @@
+         value = `\\${value}`;
+       }
+ 
+-      if (value === ']' && (prev.value === '[' || prev.value === '[^')) {
++      // If a ']' immediately follows '[' (e.g. `[]]`), it's a literal ']', so escape it.
++      // Do NOT escape if it follows '[^' (e.g. `[^]]`), as it's the closing bracket for the class.
++      if (value === ']' && prev.value === '[') {
+         value = `\\${value}`;
+       }
+ 
++      // POSIX bracket negation: [!abc] is equivalent to [^abc]
++      // This logic applies only when `!` is the first char after `[`
+       if (value === '!' && prev.value === '[') {
+-        // POSIX bracket negation: [!abc] is equivalent to [^abc]
+-        value = '^';
++        if (opts.literalBrackets === true) {
++          // If literalBrackets is true, always treat '!' as literal, escape it.
++          value = `\\${value}`;
++        } else if (peek() === ']' && peek(2) !== ']') {
++          // If it's `[!]` (where ']' is the immediate closing bracket, not
++          // a character in the set like `[!]]`), treat '!' as literal.
++          value = `\\${value}`;
++        } else {
++          // Otherwise, it's a negation: [!abc] or [!]] or [!a]
++          value = '^';
++        }
+       }
+ 
+       prev.value += value;

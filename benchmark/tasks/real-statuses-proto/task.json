@@ -1,0 +1,11 @@
+{
+  "id": "real-statuses-proto",
+  "kind": "fix",
+  "title": "status accepts keys inherited from Object.prototype",
+  "prompt": "status(value) in index.js looks the value up in plain objects, so status('constructor') or status('__proto__') returns a function or object instead of throwing 'invalid status message', and similar lookups for inherited property names are mishandled for status codes as well. Only real status codes and messages should ever be returned; anything else must throw the usual invalid status error. Please fix it.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/test.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-test.test.js"
+  }
+}

@@ -1,0 +1,12 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:14:49
++++ b/slugify.js	2026-11-23 10:14:49
+@@ -51,6 +51,8 @@
+         .replace(new RegExp('[^a-zA-Z0-9' + replacement + ']', 'g'), '')
+         // remove duplicates of the replacement character
+         .replace(new RegExp('[\\s' + replacement + ']+', 'g'), replacement)
++        // Trim leading/trailing replacement characters that might have resulted from stripping
++        .replace(new RegExp('^' + replacement + '|' + replacement + '$', 'g'), '')
+     }
+ 
+     return slug

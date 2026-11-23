@@ -1,0 +1,95 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:09
++++ b/lib/parse.js	2026-11-23 10:19:09
+@@ -392,8 +392,13 @@
+     START_ANCHOR
+   } = PLATFORM_CHARS;
+ 
+-  const globstar = opts => {
+-    return `(${capture}(?:(?!${START_ANCHOR}${opts.dot ? DOTS_SLASH : DOT_LITERAL}).)*?)`;
++  // Modified globstar to accept an `isTerminal` flag
++  const globstar = (opts, isTerminal = false) => {
++    // If strictSlashes is true and this globstar is terminal (end of pattern or extglob),
++    // it must match one or more characters (+?), otherwise zero or more (*?)
++    const quantifier = opts.strictSlashes && isTerminal ? `+?` : `*?`;
++    const innerPattern = `(?:(?!${START_ANCHOR}${opts.dot ? DOTS_SLASH : DOT_LITERAL}).)`;
++    return `(${capture}${innerPattern}${quantifier})`;
+   };
+ 
+   const nodot = opts.dot ? '' : NO_DOT;
+@@ -441,7 +446,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || '';
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+@@ -1153,6 +1158,9 @@
+       const isStart = prior.type === 'slash' || prior.type === 'bos';
+       const afterStar = before && (before.type === 'star' || before.type === 'globstar');
+ 
++      // Check if `**` is at the end of the pattern or an extglob.
++      const isTerminalExtglobGlobstar = extglobs.length > 0 && peek() === constants.CHAR_RIGHT_PARENTHESES;
++
+       if (opts.bash === true && (!isStart || (rest[0] && rest[0] !== '/'))) {
+         push({ type: 'star', value, output: '' });
+         continue;
+@@ -1178,7 +1186,7 @@
+       if (prior.type === 'bos' && eos()) {
+         prev.type = 'globstar';
+         prev.value += value;
+-        prev.output = globstar(opts);
++        prev.output = globstar(opts, true); // Pass true for isTerminal
+         state.output = prev.output;
+         state.globstar = true;
+         consume(value);
+@@ -1190,7 +1198,8 @@
+         prior.output = `(?:${prior.output}`;
+ 
+         prev.type = 'globstar';
+-        prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
++        // Pass true for isTerminal for the globstar at the end of the pattern
++        prev.output = globstar(opts, true) + (opts.strictSlashes ? ')' : '|$)');
+         prev.value += value;
+         state.globstar = true;
+         state.output += prior.output + prev.output;
+@@ -1205,7 +1214,8 @@
+         prior.output = `(?:${prior.output}`;
+ 
+         prev.type = 'globstar';
+-        prev.output = `${globstar(opts)}${SLASH_LITERAL}|${SLASH_LITERAL}${end})`;
++        // Not terminal here, as it's followed by a slash
++        prev.output = `${globstar(opts, false)}${SLASH_LITERAL}|${SLASH_LITERAL}${end})`;
+         prev.value += value;
+ 
+         state.output += prior.output + prev.output;
+@@ -1220,7 +1230,8 @@
+       if (prior.type === 'bos' && rest[0] === '/') {
+         prev.type = 'globstar';
+         prev.value += value;
+-        prev.output = `(?:^|${SLASH_LITERAL}|${globstar(opts)}${SLASH_LITERAL})`;
++        // Not terminal here, as it's followed by a slash
++        prev.output = `(?:^|${SLASH_LITERAL}|${globstar(opts, false)}${SLASH_LITERAL})`;
+         state.output = prev.output;
+         state.globstar = true;
+         consume(value + advance());
+@@ -1233,7 +1244,8 @@
+ 
+       // reset previous token to globstar
+       prev.type = 'globstar';
+-      prev.output = globstar(opts);
++      // Use the isTerminalExtglobGlobstar flag for this general globstar case
++      prev.output = globstar(opts, isTerminalExtglobGlobstar);
+       prev.value += value;
+ 
+       // reset output with globstar
+@@ -1360,6 +1372,7 @@
+     star = `(${star})`;
+   }
+ 
++  // Fastpaths globstar always refers to non-terminal globstar
+   const globstar = opts => {
+     if (opts.noglobstar === true) return star;
+     return `(${capture}(?:(?!${START_ANCHOR}${opts.dot ? DOTS_SLASH : DOT_LITERAL}).)*?)`;

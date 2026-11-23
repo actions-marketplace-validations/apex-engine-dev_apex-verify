@@ -1,0 +1,71 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:15:47
++++ b/index.js	2026-11-23 10:15:47
+@@ -77,7 +77,8 @@
+  * OCTET         = <any 8-bit sequence of data>
+  */
+ 
+-var PARAM_REGEXP = /; *([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *= *("(?:[ !\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+) */g
++// Use explicit whitespace characters for clarity and to handle tabs
++var PARAM_REGEXP = /;[ \t]*([!#$%&'*+.0-9A-Z^_`a-z|~-]+?)[ \t]*=[ \t]*("(?:[^"\\]|\\.)*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+?)?[ \t]*/g
+ var TEXT_REGEXP = /^[\x20-\x7e\x80-\xff]+$/
+ var TOKEN_REGEXP = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/
+ 
+@@ -114,10 +115,10 @@
+  *                  | "filename*" "=" ext-value
+  * disp-ext-parm    = token "=" value
+  *                  | ext-token "=" ext-value
+- * ext-token        = <the characters in token, followed by "*">
+  */
+ 
+-var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *(?:$|;)/
++// Allow for whitespace around the disposition type and semicolon separator
++var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+?)[ \t]*(?:$|;)/
+ 
+ /**
+  * Create an attachment Content-Disposition header.
+@@ -321,12 +322,13 @@
+   var value
+ 
+   // calculate index to start at
+-  index = PARAM_REGEXP.lastIndex = match[0].substr(-1) === ';'
+-    ? index - 1
+-    : index
++  // If the last character of the match is a semicolon, we start parsing parameters
++  // from the character after it. Otherwise, we start from the end of the matched type.
++  index = match[0].slice(-1) === ';' ? index : match[0].length
+ 
+   // match parameters
+   while ((match = PARAM_REGEXP.exec(string))) {
++    // Ensure the parameter is contiguous with the previous part of the header
+     if (match.index !== index) {
+       throw new TypeError('invalid parameter format')
+     }
+@@ -355,17 +357,25 @@
+       continue
+     }
+ 
+-    if (value[0] === '"') {
++    if (value && value[0] === '"') {
+       // remove quotes and escapes
+       value = value
+         .substr(1, value.length - 2)
+         .replace(QESC_REGEXP, '$1')
++    } else if (value === undefined) {
++      // parameter might be a token with no value if it's the last one and has no quotes
++      // or if it's malformed. For safety, if value is undefined, treat it as empty string.
++      value = ''
+     }
+ 
+     params[key] = value
+   }
+ 
+-  if (index !== -1 && index !== string.length) {
++  // Check if the entire string has been consumed.
++  // If index is -1 (meaning no parameters were matched at all) and string.length is not 0,
++  // it means there's trailing content after the type that wasn't parsed as a parameter.
++  // If index is not -1 and not equal to string.length, it means there's unparsed content.
++  if (index !== string.length) {
+     throw new TypeError('invalid parameter format')
+   }
+ 

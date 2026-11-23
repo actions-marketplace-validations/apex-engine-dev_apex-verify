@@ -1,0 +1,26 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:14:48
++++ b/slugify.js	2026-11-23 10:14:48
+@@ -46,11 +46,18 @@
+     }
+ 
+     if (options.strict) {
+-      // remove anything besides letters, numbers, and the replacement char
++      // Escape the replacement character for use in RegExp
++      var escapedReplacement = replacement.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++
+       slug = slug
+-        .replace(new RegExp('[^a-zA-Z0-9' + replacement + ']', 'g'), '')
+-        // remove duplicates of the replacement character
+-        .replace(new RegExp('[\\s' + replacement + ']+', 'g'), replacement)
++        // 1. Remove anything besides letters, numbers, and the replacement char
++        .replace(new RegExp('[^a-zA-Z0-9' + escapedReplacement + ']', 'g'), '')
++        // 2. Collapse sequences of whitespace or replacement characters into a single replacement character
++        .replace(new RegExp('[\\s' + escapedReplacement + ']+', 'g'), replacement);
++      
++      // 3. Remove leading/trailing replacement characters that might have been created by previous steps
++      //    (This handles cases like `!abc!` becoming `-abc-` after strict filtering)
++      slug = slug.replace(new RegExp('^' + escapedReplacement + '|' + escapedReplacement + '$', 'g'), '');
+     }
+ 
+     return slug

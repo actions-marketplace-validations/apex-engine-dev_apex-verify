@@ -1,0 +1,7 @@
+{
+  "name": "real-cookie-rfc6265",
+  "private": true,
+  "scripts": {
+    "test": "node --require ./test/mocha-shim.cjs --test test/serialize.js"
+  }
+}

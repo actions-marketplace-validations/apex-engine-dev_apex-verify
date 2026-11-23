@@ -1,0 +1,25 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:02
++++ b/index.js	2026-11-23 10:17:02
+@@ -17,10 +17,10 @@
+ var basename = require('path').basename
+ 
+ /**
+- * RegExp to match non attr-char not handled by encodeURI.
++ * RegExp to match characters that are not allowed in RFC 5987 attr-char.
+  */
+ 
+-var encodeUriAttrCharRegExp = /[*']/g
++var attrCharRegExp = /[^a-zA-Z0-9.!#$%&'*+\-^_`|~]/g
+ 
+ /**
+  * RegExp to match non-US-ASCII characters.
+@@ -124,7 +124,7 @@
+ 
+   // percent encode as UTF-8
+   var encoded = encodeURI(str)
+-    .replace(encodeUriAttrCharRegExp, pencode)
++    .replace(attrCharRegExp, pencode)
+ 
+   return 'UTF-8\'\'' + encoded
+ }

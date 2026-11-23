@@ -1,0 +1,248 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:10
++++ b/lib/parse.js	2026-11-23 10:19:10
+@@ -441,7 +441,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || '';
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+diff -ruN a/lib/scan.js b/lib/scan.js
+--- a/lib/scan.js	2026-11-23 10:19:10
++++ b/lib/scan.js	2026-11-23 10:19:10
+@@ -73,6 +73,7 @@
+   let prev;
+   let code;
+   let token = { value: '', depth: 0, isGlob: false };
++  let escaped = false; // Flag to track if the current character is escaped
+ 
+   const eos = () => index >= length;
+   const peek = () => str.charCodeAt(index + 1);
+@@ -83,27 +84,31 @@
+ 
+   while (index < length) {
+     code = advance();
+-    let next;
+ 
+     if (code === CHAR_BACKWARD_SLASH) {
+       backslashes = token.backslashes = true;
+-      code = advance();
+-
+-      if (code === CHAR_LEFT_CURLY_BRACE) {
+-        braceEscaped = true;
+-      }
++      escaped = true; // The next character is escaped
+       continue;
+     }
+ 
+-    if (braceEscaped === true || code === CHAR_LEFT_CURLY_BRACE) {
++    if (escaped) {
++      escaped = false; // Reset the flag after processing the escaped character
++      // If a character is escaped, it should not trigger any glob logic or path separation.
++      // So, we continue the loop, letting it be treated as a literal character
++      // as implicitly handled by the `input.slice()` calls later.
++    } else if (code === CHAR_LEFT_CURLY_BRACE) {
+       braces++;
+ 
+       while (eos() !== true && (code = advance())) {
+         if (code === CHAR_BACKWARD_SLASH) {
+           backslashes = token.backslashes = true;
+-          advance();
++          escaped = true;
+           continue;
+         }
++        if (escaped) {
++          escaped = false;
++          continue;
++        }
+ 
+         if (code === CHAR_LEFT_CURLY_BRACE) {
+           braces++;
+@@ -153,7 +158,7 @@
+       break;
+     }
+ 
+-    if (code === CHAR_FORWARD_SLASH) {
++    if (!escaped && code === CHAR_FORWARD_SLASH) {
+       slashes.push(index);
+       tokens.push(token);
+       token = { value: '', depth: 0, isGlob: false };
+@@ -175,7 +180,7 @@
+         || code === CHAR_QUESTION_MARK
+         || code === CHAR_EXCLAMATION_MARK;
+ 
+-      if (isExtglobChar === true && peek() === CHAR_LEFT_PARENTHESES) {
++      if (!escaped && isExtglobChar === true && peek() === CHAR_LEFT_PARENTHESES) {
+         isGlob = token.isGlob = true;
+         isExtglob = token.isExtglob = true;
+         finished = true;
+@@ -187,10 +192,13 @@
+           while (eos() !== true && (code = advance())) {
+             if (code === CHAR_BACKWARD_SLASH) {
+               backslashes = token.backslashes = true;
+-              code = advance();
++              escaped = true;
+               continue;
+             }
+-
++            if (escaped) {
++              escaped = false;
++              continue;
++            }
+             if (code === CHAR_RIGHT_PARENTHESES) {
+               isGlob = token.isGlob = true;
+               finished = true;
+@@ -203,7 +211,7 @@
+       }
+     }
+ 
+-    if (code === CHAR_ASTERISK) {
++    if (!escaped && code === CHAR_ASTERISK) {
+       if (prev === CHAR_ASTERISK) isGlobstar = token.isGlobstar = true;
+       isGlob = token.isGlob = true;
+       finished = true;
+@@ -214,7 +222,7 @@
+       break;
+     }
+ 
+-    if (code === CHAR_QUESTION_MARK) {
++    if (!escaped && code === CHAR_QUESTION_MARK) {
+       isGlob = token.isGlob = true;
+       finished = true;
+ 
+@@ -224,13 +232,17 @@
+       break;
+     }
+ 
+-    if (code === CHAR_LEFT_SQUARE_BRACKET) {
++    if (!escaped && code === CHAR_LEFT_SQUARE_BRACKET) {
+       while (eos() !== true && (next = advance())) {
+         if (next === CHAR_BACKWARD_SLASH) {
+           backslashes = token.backslashes = true;
+-          advance();
++          escaped = true;
+           continue;
+         }
++        if (escaped) {
++          escaped = false;
++          continue;
++        }
+ 
+         if (next === CHAR_RIGHT_SQUARE_BRACKET) {
+           isBracket = token.isBracket = true;
+@@ -258,12 +270,15 @@
+ 
+       if (scanToEnd === true) {
+         while (eos() !== true && (code = advance())) {
+-          if (code === CHAR_LEFT_PARENTHESES) {
++          if (code === CHAR_BACKWARD_SLASH) {
+             backslashes = token.backslashes = true;
+-            code = advance();
++            escaped = true;
+             continue;
+           }
+-
++          if (escaped) {
++            escaped = false;
++            continue;
++          }
+           if (code === CHAR_RIGHT_PARENTHESES) {
+             finished = true;
+             break;
+@@ -348,40 +363,66 @@
+   }
+ 
+   if (opts.parts === true || opts.tokens === true) {
+-    let prevIndex;
++    let currentPartStart = start;
+ 
+-    for (let idx = 0; idx < slashes.length; idx++) {
+-      const n = prevIndex ? prevIndex + 1 : start;
+-      const i = slashes[idx];
+-      const value = input.slice(n, i);
+-      if (opts.tokens) {
++    if (slashes.length === 0) {
++      // No unescaped slashes found. The whole pattern is one segment.
++      parts.push(input.slice(currentPartStart));
++    } else {
++      // First segment (before the first slash), could be empty for "/foo"
++      const firstSlashIndex = slashes[0];
++      parts.push(input.slice(currentPartStart, firstSlashIndex));
++
++      // Middle segments (between slashes)
++      for (let idx = 0; idx < slashes.length - 1; idx++) {
++        const slashIndex = slashes[idx];
++        const nextSlashIndex = slashes[idx + 1];
++        parts.push(input.slice(slashIndex + 1, nextSlashIndex));
++      }
++
++      // Last segment (after the last slash), could be empty for "foo/"
++      const lastSlashIndex = slashes[slashes.length - 1];
++      parts.push(input.slice(lastSlashIndex + 1));
++    }
++
++    // Populate tokens with parts if opts.tokens is true
++    if (opts.tokens) {
++      state.maxDepth = 0;
++      let tokenIndex = 0;
++      for (let idx = 0; idx < parts.length; idx++) {
++        const partValue = parts[idx];
+         if (idx === 0 && start !== 0) {
+-          tokens[idx].isPrefix = true;
+-          tokens[idx].value = prefix;
++          // If there's a prefix, the first token needs special handling
++          if (tokens[tokenIndex]) {
++            tokens[tokenIndex].isPrefix = true;
++            tokens[tokenIndex].value = prefix + partValue; // Combine prefix with the first part
++          } else {
++            // Handle cases like '!' where `tokens` might be empty initially
++            tokens.push({ value: prefix + partValue, depth: 0, isPrefix: true, isGlob: false });
++          }
+         } else {
+-          tokens[idx].value = value;
++          // Assign part to existing token or create a new one
++          if (tokens[tokenIndex]) {
++            tokens[tokenIndex].value = partValue;
++          } else {
++            tokens.push({ value: partValue, depth: 0, isGlob: false });
++          }
+         }
+-        depth(tokens[idx]);
+-        state.maxDepth += tokens[idx].depth;
++        depth(tokens[tokenIndex]);
++        state.maxDepth += tokens[tokenIndex].depth;
++        tokenIndex++;
++        // If there was a slash after this part, add a slash token
++        if (idx < parts.length - 1) {
++          if (!tokens[tokenIndex] || tokens[tokenIndex].value !== '/') {
++             tokens.splice(tokenIndex, 0, { value: '/', depth: 0, isSlash: true, isGlob: false });
++          }
++          tokenIndex++;
++        }
+       }
+-      if (idx !== 0 || value !== '') {
+-        parts.push(value);
+-      }
+-      prevIndex = i;
++      state.tokens = tokens;
+     }
+ 
+-    if (prevIndex && prevIndex + 1 < input.length) {
+-      const value = input.slice(prevIndex + 1);
+-      parts.push(value);
+-
+-      if (opts.tokens) {
+-        tokens[tokens.length - 1].value = value;
+-        depth(tokens[tokens.length - 1]);
+-        state.maxDepth += tokens[tokens.length - 1].depth;
+-      }
+-    }
+-
+-    state.slashes = slashes;
++    state.slashes = slashes; // Keep original slash indices for reference
+     state.parts = parts;
+   }
+ 

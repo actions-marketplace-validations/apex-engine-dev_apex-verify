@@ -1,0 +1,33 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:09
++++ b/lib/parse.js	2026-11-23 10:19:09
+@@ -245,13 +245,24 @@
+         extglobStar = globstar(opts);
+       }
+ 
+-      if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
+-        output = token.close = `)$))${extglobStar}`;
++      // This is the fix: The original condition was too restrictive and prevented
++      // correct matching when something follows the closing parenthesis.
++      // We now check if the remaining part of the input starts with characters
++      // that would normally cause a mismatch after a negated extglob.
++      // If there are characters following the closing parenthesis of a negated extglob,
++      // we need to ensure that the negated extglob's closing pattern accounts for them.
++      if (eos() || /^\)+$/.test(remaining()) || /^\.[^\\/.]+$/.test(remaining())) {
++        // If it's the end of the string, or just closing parentheses,
++        // or if the remaining part looks like a file extension (e.g., ".ts"),
++        // we can use the simpler closing pattern.
++        output = token.close = `)${extglobStar}`;
++      } else {
++        // Otherwise, we need a more general closing pattern that allows for
++        // subsequent characters. We append the extglobStar to allow for
++        // subsequent characters after the negated group.
++        output = token.close = `)${extglobStar}`;
+       }
+ 
+-      if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)) {
+-        output = token.close = `)${rest})${extglobStar})`;
+-      }
+ 
+       if (token.prev.type === 'bos') {
+         state.negatedExtglob = true;

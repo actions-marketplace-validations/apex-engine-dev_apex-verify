@@ -1,0 +1,11 @@
+{
+  "id": "real-scan-parts",
+  "kind": "fix",
+  "title": "picomatch.scan returns incomplete pattern parts",
+  "prompt": "Our picomatch.scan(pattern, { parts: true }) in lib/scan.js is supposed to return the path segments of a glob in its parts list. For several inputs the parts are incomplete: patterns with no path separator such as '*', '.*', '{1..9}', 'c!(.)z' or the empty string give an empty parts list instead of one part, a lone or leading slash like '/' or '/*' loses its empty first part, and an escaped slash inside a pattern like '/dev\\/@(tcp|udp)\\/*\\/*' must not be treated as a separator. Please make the parts list always cover the whole pattern.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/api.picomatch.js test/api.posix.js test/api.scan.js test/bash.js test/bash.spec.js test/brackets.js test/dotfiles.js test/dots-invalid.js test/extglobs-bash.js test/extglobs-minimatch.js test/extglobs-temp.js test/extglobs.js test/globstars.js test/issue-related.js test/malicious.js test/minimatch.js test/negation.js test/non-globs.js test/options.format.js test/options.ignore.js test/options.js test/options.maxExtglobRecursion.js test/options.noextglob.js test/options.noglobstar.js test/options.onMatch.js test/parens.js test/posix-classes.js test/qmarks.js test/regex-features.js test/slashes-posix.js test/slashes-windows.js test/special-characters.js test/stars.js test/wildmat.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-api.scan.test.js"
+  }
+}

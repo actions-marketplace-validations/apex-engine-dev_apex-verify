@@ -1,0 +1,7 @@
+Upstream: https://github.com/jshttp/content-disposition
+Fix commit: 894a53137aa7d8d2bf27065a062a642dd2dc3ab1
+Parent (project/): 775f752ec49d564eacd0ea6b508e3658f7c0d9b6
+Hidden tests: test file from the fix commit, copied unchanged (renamed hidden-*.test.js).
+Licence: see LICENSE (MIT).
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+

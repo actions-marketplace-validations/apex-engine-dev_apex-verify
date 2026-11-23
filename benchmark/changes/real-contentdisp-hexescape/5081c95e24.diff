@@ -1,0 +1,20 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:16:30
++++ b/index.js	2026-11-23 10:16:30
+@@ -68,7 +68,10 @@
+   // restrict to file base name
+   var name = basename(filename)
+ 
+-  if (asciiStringRegExp.test(name)) {
++  // if the filename is pure US-ASCII and does not contain characters that
++  // could be confused with percent encoding, use the simple form.
++  // RFC 2616: "any TEXT element can be represented by a quoted string"
++  if (asciiStringRegExp.test(name) && !/[%#]/.test(name)) {
+     // simple header
+     // file name is always quoted and not a token for RFC 2616 compatibility
+     return 'attachment; filename=' + qstring(name)
+@@ -134,3 +137,4 @@
+ 
+   return 'UTF-8\'\'' + encoded
+ }
++

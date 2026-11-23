@@ -1,0 +1,50 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:15:48
++++ b/index.js	2026-11-23 10:15:48
+@@ -77,8 +77,10 @@
+  * OCTET         = <any 8-bit sequence of data>
+  */
+ 
+-var PARAM_REGEXP = /; *([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *= *("(?:[ !\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+) */g
+-var TEXT_REGEXP = /^[\x20-\x7e\x80-\xff]+$/
++// Modified: added \t to the qdtext character class and replaced ' *' with '[ \t]*' for whitespace.
++var PARAM_REGEXP = /;[ \t]*([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*=[ \t]*("(?:[\t !\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*/g
++// Modified: added \x09 (HT) to the allowed characters.
++var TEXT_REGEXP = /^[\x09\x20-\x7e\x80-\xff]+$/
+ var TOKEN_REGEXP = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/
+ 
+ /**
+@@ -117,7 +119,8 @@
+  * ext-token        = <the characters in token, followed by "*">
+  */
+ 
+-var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *(?:$|;)/
++// Modified: replaced ' *' with '[ \t]*' for whitespace after type.
++var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*(?:$|;)/
+ 
+ /**
+  * Create an attachment Content-Disposition header.
+@@ -180,6 +183,7 @@
+   var name = basename(filename)
+ 
+   // determine if name is suitable for quoted string
++  // TEXT_REGEXP now includes \t
+   var isQuotedString = TEXT_REGEXP.test(name)
+ 
+   // generate fallback name
+@@ -320,10 +324,11 @@
+   var params = {}
+   var value
+ 
+-  // calculate index to start at
+-  index = PARAM_REGEXP.lastIndex = match[0].substr(-1) === ';'
+-    ? index - 1
+-    : index
++  // calculate index to start at for parameters
++  // DISPOSITION_TYPE_REGEXP now consumes all trailing LWS, so index points to the character
++  // immediately after the disposition type and its LWS. If parameters follow, string[index]
++  // will be the ';'.
++  PARAM_REGEXP.lastIndex = index
+ 
+   // match parameters
+   while ((match = PARAM_REGEXP.exec(string))) {

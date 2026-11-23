@@ -1,0 +1,108 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:21:32
++++ b/lib/parse.js	2026-11-23 10:21:32
+@@ -479,7 +479,7 @@
+     }
+ 
+     if (tok.value || tok.output) append(tok);
+-    if (prev && prev.type === 'text' && tok.type === 'text') {
++    if (prev.type === 'text' && tok.type === 'text') {
+       prev.output = (prev.output || prev.value) + tok.value;
+       prev.value += tok.value;
+       return;
+@@ -942,7 +942,7 @@
+      * Slashes
+      */
+ 
+-    if (value === '/') {
++    if (value === '/' || (opts.windows === true && value === '\\')) {
+       // if the beginning of the glob is "./", advance the start
+       // to the current index, and don't add the "./" characters
+       // to the state. This greatly simplifies lookbehinds when
+@@ -975,7 +975,7 @@
+         continue;
+       }
+ 
+-      if ((state.braces + state.parens) === 0 && prev.type !== 'bos' && prev.type !== 'slash') {
++      if ((state.braces + state.parens) === 0 && prev.type !== 'bos' && prev.type !== 'slash' && prev.type !== 'dot') {
+         push({ type: 'text', value, output: DOT_LITERAL });
+         continue;
+       }
+@@ -1162,8 +1162,8 @@
+         prev.type = 'globstar';
+         prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
+         prev.value += value;
+-        state.globstar = true;
+         state.output += prior.output + prev.output;
++        state.globstar = true;
+         consume(value);
+         continue;
+       }
+@@ -1244,7 +1244,7 @@
+         prev.output += nodot;
+       }
+ 
+-      if (peek() !== '*') {
++      if (peek() !== '*' && peek() !== '\\') { // added peek() !== '\\' to prevent issues with escaped characters
+         state.output += ONE_CHAR;
+         prev.output += ONE_CHAR;
+       }
+diff -ruN a/lib/picomatch.js b/lib/picomatch.js
+--- a/lib/picomatch.js	2026-11-23 10:21:32
++++ b/lib/picomatch.js	2026-11-23 10:21:32
+@@ -48,7 +48,7 @@
+   }
+ 
+   const opts = options || {};
+-  const posix = opts.windows;
++  const posix = opts.windows; // Use the correct option name here
+   const regex = isState
+     ? picomatch.compileRe(glob, options)
+     : picomatch.makeRe(glob, options, false, true);
+@@ -134,6 +134,7 @@
+ 
+   if (match === false || opts.capture === true) {
+     if (opts.matchBase === true || opts.basename === true) {
++      // Pass the correct 'posix' option to matchBase
+       match = picomatch.matchBase(input, regex, options, posix);
+     } else {
+       match = regex.exec(output);
+@@ -153,13 +154,18 @@
+  * ```
+  * @param {String} `input` String to test.
+  * @param {RegExp|String} `glob` Glob pattern or regex created by [.makeRe](#makeRe).
++ * @param {Object} `options`
++ * @param {Boolean} `posix` Boolean indicating if the platform is POSIX-like.
+  * @return {Boolean}
+  * @api public
+  */
+ 
+-picomatch.matchBase = (input, glob, options) => {
++picomatch.matchBase = (input, glob, options, posix) => {
++  // Ensure the correct path separator is used based on the posix option
++  const separator = posix ? '/' : '\\';
++  const basename = utils.basename(input, { windows: posix });
+   const regex = glob instanceof RegExp ? glob : picomatch.makeRe(glob, options);
+-  return regex.test(utils.basename(input));
++  return regex.test(basename);
+ };
+ 
+ /**
+diff -ruN a/lib/utils.js b/lib/utils.js
+--- a/lib/utils.js	2026-11-23 10:21:32
++++ b/lib/utils.js	2026-11-23 10:21:32
+@@ -61,10 +61,12 @@
+ };
+ 
+ exports.basename = (path, { windows } = {}) => {
+-  const segs = path.split(windows ? /[\\/]/ : '/');
++  // Use the correct path separator based on the 'windows' option
++  const separator = windows ? /[\\/]/ : '/';
++  const segs = path.split(separator);
+   const last = segs[segs.length - 1];
+ 
+-  if (last === '') {
++  if (last === '' && segs.length > 1) {
+     return segs[segs.length - 2];
+   }
+ 

@@ -1,0 +1,141 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:34
++++ b/index.js	2026-11-23 10:14:34
+@@ -33,6 +33,28 @@
+ var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
+ 
+ /**
++ * RegExp to match the spec for a single cookie.
++ *
++ * RFC 6265, Section 4.1:
++ *   cookie-name      = token
++ *   cookie-value     = *( ccontent /cstring )
++ *   cstring          = DQUOTE *( exchange / qcontent ) DQUOTE
++ *   qcontent         = escaped / LWS / REGULAR_CHARACTER
++ *   escaped          = ESCAPE DQUOTE / ESCAPE SLASH / ESCAPE BACKSLASH
++ *   ESCAPE           = %x5C ; backslash
++ *   REGULAR_CHARACTER = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++ *                     ; US-ASCII characters excluding CTLs, SPACE, DQUOTE,
++ *                     ; comma, semicolon, and backslash.
++ *
++ * cookie-octet     = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++ *                  ; US-ASCII characters excluding CTLs, SPACE, DQUOTE,
++ *                  ; comma, and semicolon.
++ */
++var cookieRegExp = /^[^()<>@,;:\\"\/\[\]?={} \t]+$/;
++var domainRegExp = /^([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
++var pathRegExp = /^[\u0020-\u007e]+$/;
++
++/**
+  * Parse a cookie header.
+  *
+  * Parse the given cookie header string into an object
+@@ -116,18 +138,84 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
+-    throw new TypeError('argument name is invalid');
++  // RFC 6265, Section 4.1:
++  // *. cookie-name      = token
++  // *. cookie-value     = *( ccontent / cstring )
++  // *. cstring          = DQUOTE *( exchange / qcontent ) DQUOTE
++  // *. qcontent         = escaped / LWS / REGULAR_CHARACTER
++  // *. escaped          = ESCAPE DQUOTE / ESCAPE SLASH / ESCAPE BACKSLASH
++  // *. ESCAPE           = %x5C ; backslash
++  // *. REGULAR_CHARACTER = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++  //                      ; US-ASCII characters excluding CTLs, SPACE, DQUOTE,
++  //                      ; comma, semicolon, and backslash.
++  //
++  // *. cookie-octet     = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++  //                      ; US-ASCII characters excluding CTLs, SPACE, DQUOTE,
++  //                      ; comma, and semicolon.
++
++  // value of individual cookie
++  var value = val;
++  var valueLength = val.length;
++  var charCode;
++  var end;
++  var start = 0;
++
++  // Check for quoted value
++  if (value.length > 0) {
++    if (value.charCodeAt(0) === 0x22) {
++      // quoted value
++      if (value.length === 1) {
++        throw new TypeError('argument val is invalid');
++      }
++      for (var i = 1; i < valueLength; i++) {
++        charCode = value.charCodeAt(i);
++        if (charCode === 0x22) {
++          end = i;
++          break;
++        } else if (charCode === 0x5c) {
++          i++;
++        }
++      }
++      if (end === undefined) {
++        throw new TypeError('argument val is invalid');
++      }
++      value = value.slice(1, end);
++    } else if (value.charCodeAt(0) === 0x5c) {
++      // backslash escape
++      value = value.slice(1);
++    }
+   }
+ 
+-  var value = enc(val);
++  var encoded = enc(value);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
+-    throw new TypeError('argument val is invalid');
++  if (encoded.length > 0) {
++    // Check for valid cookie-octet
++    for (var i = 0; i < encoded.length; i++) {
++      charCode = encoded.charCodeAt(i);
++      if (
++        charCode === 0x21 ||
++        (charCode >= 0x23 && charCode <= 0x2b) ||
++        (charCode >= 0x2d && charCode <= 0x3a) ||
++        (charCode >= 0x3c && charCode <= 0x5b) ||
++        (charCode >= 0x5d && charCode <= 0x7e)
++      ) {
++        continue;
++      } else if (charCode === 0x22) {
++        throw new TypeError('argument val is invalid');
++      } else if (charCode === 0x5c) {
++        throw new TypeError('argument val is invalid');
++      } else {
++        break;
++      }
++    }
+   }
+ 
+-  var str = name + '=' + value;
++  if (!cookieRegExp.test(name)) {
++    throw new TypeError('argument name is invalid');
++  }
+ 
++  var str = name + '=' + encoded;
++
+   if (null != opt.maxAge) {
+     var maxAge = opt.maxAge - 0;
+ 
+@@ -139,7 +227,7 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!fieldContentRegExp.test(opt.domain)) {
++    if (!domainRegExp.test(opt.domain)) {
+       throw new TypeError('option domain is invalid');
+     }
+ 
+@@ -147,7 +235,7 @@
+   }
+ 
+   if (opt.path) {
+-    if (!fieldContentRegExp.test(opt.path)) {
++    if (!pathRegExp.test(opt.path)) {
+       throw new TypeError('option path is invalid');
+     }
+ 

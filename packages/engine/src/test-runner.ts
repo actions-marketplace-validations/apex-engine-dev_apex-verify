@@ -1,4 +1,5 @@
-import { execFile, spawn } from "node:child_process";
+import { execFile, spawn, spawnSync } from "node:child_process";
+import { inWindowsSandbox, winSandboxSpec, WIN_PREFIX } from "./sandbox-windows.js";
 import { constants as fsConstants, existsSync, mkdirSync, promises as fs, realpathSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -333,6 +334,7 @@ export function runCommand(file: string, args: string[], o: { cwd: string; env?:
     const killAll = () => {
       // The group (negative pid): the command and everything it started. A group that is already gone throws ESRCH.
       if (group && child.pid) { try { process.kill(-child.pid, "SIGKILL"); return; } catch { /* gone, or not a group leader */ } }
+      if (process.platform === "win32" && child.pid) { try { spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true }); return; } catch { /* gone */ } }
       try { child.kill("SIGKILL"); } catch { /* gone */ }
     };
     const take = (which: "out" | "err") => (chunk: Buffer | string) => {
@@ -375,6 +377,7 @@ export function runCommand(file: string, args: string[], o: { cwd: string; env?:
  */
 export function testSandboxProfile(o: { writable: string[]; readable?: string[]; home?: string; env?: NodeJS.ProcessEnv }): string {
   if (process.platform === "linux") return linuxSandboxSpec(o);
+  if (process.platform === "win32") return winSandboxSpec(o);
   const env = o.env ?? process.env;
   const real = (p: string) => { try { return realpathSync(p); } catch { return path.resolve(p); } };
   const q = (v: string) => `"${v.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`;
@@ -445,6 +448,21 @@ function inLinuxSandbox(spec: string, file: string, args: string[]): { file: str
   return { file: "bwrap", args: [...a, file, ...args] };
 }
 
+/** A trial run of Node inside the AppContainer: exits cleanly, can write in its own folder, cannot write outside it. */
+async function windowsSandboxProbe(): Promise<boolean> {
+  try {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "apex-wsb-"));
+    const outside = path.join(os.homedir(), `.apex-sandbox-probe-${process.pid}.txt`);
+    const js = `require("fs").writeFileSync("inside.txt","x");try{require("fs").writeFileSync(${JSON.stringify(outside)},"x");process.exit(3)}catch(e){process.exit(0)}`;
+    const { file, args } = inWindowsSandbox(winSandboxSpec({ writable: [dir] }), process.execPath, ["-e", js]);
+    const r = await runCommand(file, args, { cwd: dir, env: { ...process.env }, timeoutMs: 60_000 });
+    await fs.rm(outside, { force: true }).catch(() => undefined);
+    const ok = !r.failed && existsSync(path.join(dir, "inside.txt"));
+    await fs.rm(dir, { recursive: true, force: true }).catch(() => undefined);
+    return ok;
+  } catch { return false; }
+}
+
 const SANDBOX_EXEC = "/usr/bin/sandbox-exec";
 let sandboxProbe: Promise<boolean> | null = null;
 /**
@@ -454,6 +472,7 @@ let sandboxProbe: Promise<boolean> | null = null;
 export function testSandboxAvailable(): Promise<boolean> {
   if (process.env.APEX_TEST_SANDBOX === "0") return Promise.resolve(false);
   if (process.platform === "linux") return linuxSandboxAvailable();
+  if (process.platform === "win32") return (sandboxProbe ??= windowsSandboxProbe());
   if (process.platform !== "darwin" || !existsSync(SANDBOX_EXEC)) return Promise.resolve(false);
   return (sandboxProbe ??= runCommand(SANDBOX_EXEC, ["-p", testSandboxProfile({ writable: [] }), process.execPath, "-e", "process.exit(0)"], { cwd: os.tmpdir(), env: { PATH: process.env.PATH ?? "", HOME: process.env.HOME ?? "", ...(process.env.ELECTRON_RUN_AS_NODE ? { ELECTRON_RUN_AS_NODE: process.env.ELECTRON_RUN_AS_NODE } : {}) }, timeoutMs: 10_000 })
     .then((r) => !r.failed, () => false));
@@ -462,5 +481,6 @@ export function testSandboxAvailable(): Promise<boolean> {
 /** `file args` as a command inside the test sandbox. */
 export function inTestSandbox(profile: string, file: string, args: string[]): { file: string; args: string[] } {
   if (profile.startsWith(BWRAP_PREFIX)) return inLinuxSandbox(profile, file, args);
+  if (profile.startsWith(WIN_PREFIX)) return inWindowsSandbox(profile, file, args);
   return { file: SANDBOX_EXEC, args: ["-p", profile, file, ...args] };
 }

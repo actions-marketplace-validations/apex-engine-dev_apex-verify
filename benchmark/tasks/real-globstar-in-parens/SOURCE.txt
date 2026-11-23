@@ -1,0 +1,7 @@
+Upstream: https://github.com/micromatch/picomatch
+Fix commit: e279bd7f34c4f8b5f9d0490cf7810a1f0c2de178
+Parent (project/): 4f41a8edade7a5ab19832f7b40ecce46b288767f
+Hidden tests: test files from the fix commit, copied unchanged (renamed hidden-*.test.js).
+Licence: see LICENSE (MIT).
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+Issue: https://github.com/micromatch/picomatch/issues/142

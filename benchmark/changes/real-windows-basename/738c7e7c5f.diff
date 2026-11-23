@@ -1,0 +1,56 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:21:31
++++ b/lib/parse.js	2026-11-23 10:21:31
+@@ -1162,8 +1162,8 @@
+         prev.type = 'globstar';
+         prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
+         prev.value += value;
+-        state.globstar = true;
+         state.output += prior.output + prev.output;
++        state.globstar = true;
+         consume(value);
+         continue;
+       }
+diff -ruN a/lib/picomatch.js b/lib/picomatch.js
+--- a/lib/picomatch.js	2026-11-23 10:21:31
++++ b/lib/picomatch.js	2026-11-23 10:21:31
+@@ -157,9 +157,16 @@
+  * @api public
+  */
+ 
+-picomatch.matchBase = (input, glob, options) => {
++picomatch.matchBase = (input, glob, options, posix = false) => {
+   const regex = glob instanceof RegExp ? glob : picomatch.makeRe(glob, options);
+-  return regex.test(utils.basename(input));
++  // When `matchBase` is true, we need to ensure that the path separator
++  // rules are respected based on the `options.windows` setting.
++  // If `options.windows` is true, we need to use `\\` as the separator.
++  // Otherwise, we use `/`.
++  const separator = posix ? /[\\/]/ : '/';
++  const segments = input.split(separator);
++  const basename = segments[segments.length - 1];
++  return regex.test(basename);
+ };
+ 
+ /**
+diff -ruN a/lib/utils.js b/lib/utils.js
+--- a/lib/utils.js	2026-11-23 10:21:31
++++ b/lib/utils.js	2026-11-23 10:21:31
+@@ -61,10 +61,16 @@
+ };
+ 
+ exports.basename = (path, { windows } = {}) => {
+-  const segs = path.split(windows ? /[\\/]/ : '/');
++  // When `windows` is true, we need to split by both backslash and forward slash.
++  // Otherwise, we only split by forward slash.
++  const separator = windows ? /[\\/]/ : '/';
++  const segs = path.split(separator);
+   const last = segs[segs.length - 1];
+ 
+   if (last === '') {
++    // If the last segment is empty, it means the path ends with a separator.
++    // In this case, the basename is the second to last segment.
++    // For example, 'a/b/' -> 'b'
+     return segs[segs.length - 2];
+   }
+ 

@@ -1,0 +1,79 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:36
++++ b/humanize-duration.js	2026-11-23 10:20:36
+@@ -656,7 +656,7 @@
+         "तास",
+         onesUnit(["मिनिट", "मिनिटे"]),
+         "सेकंद",
+-        "मिलिसेकंद"
++        "मिलिसेकंड"
+       ),
+       ms: language(
+         "tahun",
+@@ -764,7 +764,7 @@
+         ["часов", "час", "часа"],
+         ["минут", "минута", "минуты"],
+         ["секунд", "секунда", "секунды"],
+-        ["миллисекунд", "миллисекунда", "миллисекунды"]
++        ["миллисекунд", "миллисекунда", "милисекунды"]
+       ),
+       sq: language(
+         onesUnit(["vit", "vjet"]),
+@@ -819,7 +819,7 @@
+         ["వారం", "వారాలు"],
+         ["రోజు", "రోజులు"],
+         ["గంట", "గంటలు"],
+-        ["నిమిషం", "నిమిషాలు"],
++        ["నిమిಷం", "నిమిషాలు"],
+         ["సెకను", "సెకన్లు"],
+         ["మిల్లీసెకన్", "మిల్లీసెకన్లు"]
+       ),
+@@ -1338,7 +1338,6 @@
+      */
+     function renderPiece(piece, language, options) {
+       var unitName = piece.unitName;
+-      var unitCount = piece.unitCount;
+ 
+       var spacer = options.spacer;
+       var maxDecimalPoints = options.maxDecimalPoints;
+@@ -1356,21 +1355,24 @@
+       /** @type {undefined | DigitReplacements} */
+       var digitReplacements;
+       if ("digitReplacements" in options) {
+-        digitReplacements = options.digitReplacements;
++        digitReplacements = options.digitRepl정을Replacements;
+       } else if ("_digitReplacements" in language) {
+         digitReplacements = language._digitReplacements;
+       }
+ 
+       /** @type {string} */
+       var formattedCount;
+-      var normalizedUnitCount =
++      // Calculate the displayed count, applying maxDecimalPoints if specified.
++      // This is the number that will actually be shown and used for pluralization.
++      var displayedCount =
+         maxDecimalPoints === void 0
+-          ? unitCount
+-          : Math.floor(unitCount * Math.pow(10, maxDecimalPoints)) /
++          ? piece.unitCount
++          : Math.floor(piece.unitCount * Math.pow(10, maxDecimalPoints)) /
+             Math.pow(10, maxDecimalPoints);
+-      var countStr = normalizedUnitCount.toString();
++      var countStr = displayedCount.toString();
+ 
+-      if (language._hideCountIf2 && unitCount === 2) {
++      // Check for _hideCountIf2 based on the displayedCount.
++      if (language._hideCountIf2 && displayedCount === 2) {
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+@@ -1393,7 +1395,8 @@
+       var languageWord = language[unitName];
+       var word;
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        // Pass the displayedCount to the language function for correct pluralization.
++        word = languageWord(displayedCount);
+       } else {
+         word = languageWord;
+       }

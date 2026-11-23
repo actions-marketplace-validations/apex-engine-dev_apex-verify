@@ -1,0 +1,11 @@
+{
+  "id": "real-slugify-extend-replacement",
+  "kind": "fix",
+  "title": "slugify.extend() mapping to the replacement char is not collapsed",
+  "prompt": "After slugify.extend({'+': '-'}), slugify('day + night') returns 'day---night' instead of 'day-night': characters that are mapped (via extend) to the same character as the replacement end up as separate dashes next to the dashes made from spaces. Please make slugify() collapse them so that the result is 'day-night'. A fresh instance without the extension must still return 'day-+-night'.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/slugify.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-slugify.test.js"
+  }
+}

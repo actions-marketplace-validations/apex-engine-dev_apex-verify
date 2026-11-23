@@ -1,0 +1,67 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:10
++++ b/lib/parse.js	2026-11-23 10:19:10
+@@ -441,7 +441,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || ''; // Ensure peek returns empty string for EOS
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+@@ -1126,10 +1126,17 @@
+      */
+ 
+     if (prev && (prev.type === 'globstar' || prev.star === true)) {
+-      prev.type = 'star';
++      prev.type = 'globstar'; // Fix: set prev.type to 'globstar' for proper `**` handling
+       prev.star = true;
+       prev.value += value;
+-      prev.output = star;
++      // Fix: `prev.output` should be `globstar(opts)` for `**`, not `star`
++      prev.output = globstar(opts);
++
++      // Fix: Apply ONE_CHAR for strictSlashes if `**` is at end of pattern or extglob
++      if (opts.strictSlashes === true && (eos() || peek() === constants.CHAR_RIGHT_PARENTHESES)) {
++        prev.output = ONE_CHAR + prev.output;
++      }
++
+       state.backtrack = true;
+       state.globstar = true;
+       consume(value);
+@@ -1179,6 +1186,10 @@
+         prev.type = 'globstar';
+         prev.value += value;
+         prev.output = globstar(opts);
++        // Fix: Apply ONE_CHAR for strictSlashes at EOS
++        if (opts.strictSlashes === true) {
++          prev.output = ONE_CHAR + prev.output;
++        }
+         state.output = prev.output;
+         state.globstar = true;
+         consume(value);
+@@ -1190,7 +1201,12 @@
+         prior.output = `(?:${prior.output}`;
+ 
+         prev.type = 'globstar';
+-        prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
++        let globstarOutput = globstar(opts);
++        // Fix: Apply ONE_CHAR for strictSlashes if `**` is at end of pattern
++        if (opts.strictSlashes === true) {
++          globstarOutput = ONE_CHAR + globstarOutput;
++        }
++        prev.output = globstarOutput + (opts.strictSlashes ? ')' : '|$)');
+         prev.value += value;
+         state.globstar = true;
+         state.output += prior.output + prev.output;
+@@ -1301,7 +1317,8 @@
+     decrement('braces');
+   }
+ 
+-  if (opts.strictSlashes !== true && (prev.type === 'star' || prev.type === 'bracket')) {
++  // Fix: Add prev.type === 'globstar' to maybe_slash condition
++  if (opts.strictSlashes !== true && (prev.type === 'star' || prev.type === 'bracket' || prev.type === 'globstar')) {
+     push({ type: 'maybe_slash', value: '', output: `${SLASH_LITERAL}?` });
+   }
+ 

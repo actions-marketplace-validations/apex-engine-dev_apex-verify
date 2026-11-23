@@ -1,0 +1,19 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:16:30
++++ b/index.js	2026-11-23 10:16:30
+@@ -69,8 +69,13 @@
+   var name = basename(filename)
+ 
+   if (asciiStringRegExp.test(name)) {
+-    // simple header
+-    // file name is always quoted and not a token for RFC 2616 compatibility
++    // If the filename is purely US-ASCII, we need to check if it contains
++    // characters that could be misinterpreted as percent-escapes by clients
++    // that blindly percent-decode the plain filename parameter.
++    // Such characters are '%', '"', '\', and characters that are not
++    // allowed in RFC 2616 tokens (i.e. CTLs and LWS).
++    // For simplicity and robustness, we will always quote the filename
++    // parameter when it's US-ASCII, to avoid ambiguity with percent-escapes.
+     return 'attachment; filename=' + qstring(name)
+   }
+ 

@@ -1,0 +1,19 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:50
++++ b/lib/parse.js	2026-11-23 10:22:50
+@@ -748,9 +748,13 @@
+         value = `\\${value}`;
+       }
+ 
++      // Only convert '!' to '^' for negation if literalBrackets is false.
++      // This allows '!' to be treated as a literal character when literalBrackets is true,
++      // and preserves POSIX negation behavior when literalBrackets is false.
+       if (value === '!' && prev.value === '[') {
+-        // POSIX bracket negation: [!abc] is equivalent to [^abc]
+-        value = '^';
++        if (opts.literalBrackets === false) {
++          value = '^';
++        }
+       }
+ 
+       prev.value += value;

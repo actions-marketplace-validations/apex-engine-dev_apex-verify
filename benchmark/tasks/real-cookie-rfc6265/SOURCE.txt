@@ -1,0 +1,7 @@
+Upstream: https://github.com/jshttp/cookie
+Fix commit: e10042845354fea83bd8f34af72475eed1dadf5c
+Parent (project/): 26031e362d8473112b24a76c7c03b45ef7576d61
+Hidden tests: test file from the fix commit, copied unchanged (renamed hidden-*.test.js).
+Licence: see LICENSE (MIT).
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+Also needs safe-buffer: mocha-shim.cjs maps it to the built-in Buffer.

@@ -38,7 +38,24 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      # The general suite runs unsandboxed here (as before); the sandbox has its own steps below.
       - run: npm test
+        env:
+          APEX_TEST_SANDBOX: "0"
+      - name: AppContainer sandbox tests (an unusable sandbox fails here, it is not skipped)
+        env:
+          APEX_REQUIRE_SANDBOX: "1"
+        run: node --test packages/engine/dist/sandbox-windows.test.js
+      - name: A real verify run through the AppContainer sandbox
+        shell: bash
+        run: |
+          set +e
+          cd examples/said-done
+          git init -q project && cd project && git add -A && git -c user.name=ci -c user.email=ci@example.com commit -qm base && cd ..
+          cp agent-change.diff "$RUNNER_TEMP/agent-change.diff"
+          node ../../dist/apex.mjs "$(cat task.txt)" --dir project --diff "$RUNNER_TEMP/agent-change.diff" --no-model > "$RUNNER_TEMP/out.txt"
+          echo "exit=$?"; cat "$RUNNER_TEMP/out.txt"
+          grep -q "sandbox: Windows AppContainer" "$RUNNER_TEMP/out.txt"
   # Real Jest and Vitest projects (npm install, then a verify run). Slow, so it has its own job.
   frameworks:
     runs-on: ubuntu-latest

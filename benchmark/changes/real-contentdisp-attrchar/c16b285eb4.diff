@@ -1,0 +1,16 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:02
++++ b/index.js	2026-11-23 10:17:02
+@@ -123,8 +123,12 @@
+   var str = String(val)
+ 
+   // percent encode as UTF-8
++  // encodeURI does not encode all characters that are necessary for RFC 5987
++  // attr-char set, so we need to encode them manually.
+   var encoded = encodeURI(str)
++    .replace(/[\(\)\[\]\s!\"#$%&'\*\+,:;<=>\?@\\\^`\{\|\}~]/g, pencode)
+     .replace(encodeUriAttrCharRegExp, pencode)
+ 
+   return 'UTF-8\'\'' + encoded
+ }
++

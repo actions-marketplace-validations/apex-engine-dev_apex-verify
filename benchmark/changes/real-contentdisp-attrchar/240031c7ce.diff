@@ -1,0 +1,93 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:02
++++ b/index.js	2026-11-23 10:17:02
+@@ -17,19 +17,21 @@
+ var basename = require('path').basename
+ 
+ /**
+- * RegExp to match non attr-char not handled by encodeURI.
++ * RegExp to match characters that are not allowed in RFC 5987 attr-char.
++ *
++ * attr-char = ALPHA / DIGIT / "!" / "#" / "$" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
+  */
+ 
+-var encodeUriAttrCharRegExp = /[*']/g
++var attrCharRegExp = /^[a-zA-Z0-9!#$&'*.^`~+-]+$/
+ 
+ /**
+- * RegExp to match non-US-ASCII characters.
++ * RegExp to match non US-ASCII characters.
+  */
+ 
+ var nonAsciiRegExp = /[^\x00-\x7f]/g
+ 
+ /**
+- * RegExp to match chars that must be quoted-pair in RFC 2616
++ * RegExp to match characters that must be quoted-pair in RFC 2616
+  */
+ 
+ var quoteRegExp = /([\\"])/g
+@@ -76,7 +78,7 @@
+ }
+ 
+ /**
+- * Percent encode a single character.
++ * Percent encode a single character for RFC 5987.
+  *
+  * @param {string} char
+  * @return {string}
+@@ -88,9 +90,7 @@
+     .charCodeAt(0)
+     .toString(16)
+     .toUpperCase()
+-  return hex.length === 1
+-    ? '%0' + hex
+-    : '%' + hex
++  return '%' + (hex.length === 1 ? '0' + hex : hex)
+ }
+ 
+ /**
+@@ -121,10 +121,40 @@
+ 
+ function ustring(val) {
+   var str = String(val)
++  var encoded = ''
++  var segment = ''
+ 
+   // percent encode as UTF-8
+-  var encoded = encodeURI(str)
+-    .replace(encodeUriAttrCharRegExp, pencode)
++  var utf8Str = encodeURI(str)
+ 
+-  return 'UTF-8\'\'' + encoded
++  // iterate over the encoded string, creating segments of valid attr-chars
++  for (var i = 0; i < utf8Str.length; i++) {
++    var char = utf8Str[i]
++
++    if (char === '%') {
++      var hex = utf8Str.slice(i + 1, i + 3)
++      i += 2
++      char = String.fromCharCode(parseInt(hex, 16))
++    }
++
++    // check if character is an attr-char
++    if (attrCharRegExp.test(char)) {
++      segment += char
++    } else {
++      // if not an attr-char, push the current segment and encode the character
++      if (segment.length > 0) {
++        encoded += encodeURI(segment)
++        segment = ''
++      }
++      encoded += pencode(char)
++    }
++  }
++
++  // push the remaining segment
++  if (segment.length > 0) {
++    encoded += encodeURI(segment)
++  }
++
++  return 'UTF-8\'' + encoded
+ }
++

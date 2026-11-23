@@ -1,0 +1,53 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:26
++++ b/index.js	2026-11-23 10:17:26
+@@ -22,7 +22,12 @@
+ module.exports = status
+ 
+ // status code to message map
+-status.message = codes
++// Fix: Create status.message as a prototype-less object (Object.create(null))
++// to prevent lookup of inherited properties like 'constructor'.
++status.message = Object.keys(codes).reduce(function (map, key) {
++  map[key] = codes[key]
++  return map
++}, Object.create(null))
+ 
+ // status message (lower-case) to code map
+ status.code = createMessageToStatusCodeMap(codes)
+@@ -61,7 +66,9 @@
+  */
+ 
+ function createMessageToStatusCodeMap (codes) {
+-  var map = {}
++  // Fix: Create map as a prototype-less object (Object.create(null))
++  // to prevent lookup of inherited properties like 'constructor'.
++  var map = Object.create(null)
+ 
+   Object.keys(codes).forEach(function forEachCode (code) {
+     var message = codes[code]
+@@ -101,6 +108,8 @@
+ 
+ function status (code) {
+   if (typeof code === 'number') {
++    // With `status.message` now being a prototype-less object,
++    // `!status.message[code]` correctly checks for the presence of an own property.
+     if (!status.message[code]) throw new Error('invalid status code: ' + code)
+     return status.message[code]
+   }
+@@ -112,10 +121,15 @@
+   // '403'
+   var n = parseInt(code, 10)
+   if (!isNaN(n)) {
++    // With `status.message` now being a prototype-less object,
++    // `!status.message[n]` correctly checks for the presence of an own property.
+     if (!status.message[n]) throw new Error('invalid status code: ' + n)
+     return status.message[n]
+   }
+ 
++  // With `status.code` now being a prototype-less object,
++  // `status.code[code.toLowerCase()]` will correctly return `undefined` for any non-existent key,
++  // including inherited property names like 'constructor' or '__proto__'.
+   n = status.code[code.toLowerCase()]
+   if (!n) throw new Error('invalid status message: "' + code + '"')
+   return n

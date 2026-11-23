@@ -1,0 +1,74 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:10
++++ b/lib/parse.js	2026-11-23 10:19:10
+@@ -141,7 +141,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || '';
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+@@ -235,28 +235,30 @@
+   };
+ 
+   const extglobClose = token => {
+-    let output = token.close + (opts.capture ? ')' : '');
+-    let rest;
++    // Default output is the original `token.close` from `EXTGLOB_CHARS`
++    let output = token.close;
+ 
+     if (token.type === 'negate') {
+       let extglobStar = star;
+ 
++      // If the inner pattern contains a slash, use globstar for matching across segments
+       if (token.inner && token.inner.length > 1 && token.inner.includes('/')) {
+         extglobStar = globstar(opts);
+       }
+ 
+-      if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
+-        output = token.close = `)$))${extglobStar}`;
+-      }
++      // Replace the `STAR` constant in `token.close` with the determined `extglobStar`.
++      // This ensures the correct `star` (segment-wide) or `globstar` (across segments)
++      // is used for the matching part of the negated extglob, while preserving
++      // the balanced parenthesis structure.
++      output = token.close.replace(STAR, extglobStar);
+ 
+-      if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)) {
+-        output = token.close = `)${rest})${extglobStar})`;
+-      }
+-
+       if (token.prev.type === 'bos') {
+         state.negatedExtglob = true;
+       }
+     }
++
++    // Add capture group if `opts.capture` is true
++    output = (opts.capture ? ')' : '') + output;
+ 
+     push({ type: 'paren', extglob: true, value, output });
+     decrement('parens');
+diff -ruN a/lib/scan.js b/lib/scan.js
+--- a/lib/scan.js	2026-11-23 10:19:10
++++ b/lib/scan.js	2026-11-23 10:19:10
+@@ -47,7 +47,7 @@
+  */
+ 
+ const scan = (input, options) => {
+-  const opts = options || {};
++  const opts = options || opts;
+ 
+   const length = input.length - 1;
+   const scanToEnd = opts.parts === true || opts.scanToEnd === true;
+@@ -358,7 +358,8 @@
+         if (idx === 0 && start !== 0) {
+           tokens[idx].isPrefix = true;
+           tokens[idx].value = prefix;
+-        } else {
++        }
++        else {
+           tokens[idx].value = value;
+         }
+         depth(tokens[idx]);

@@ -1,0 +1,35 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:49
++++ b/lib/parse.js	2026-11-23 10:22:49
+@@ -543,7 +543,7 @@
+ 
+     if ((token.type === 'plus' || token.type === 'star') && analysis.risky) {
+       const safeOutput = analysis.safeOutput
+-        ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${analysis.safeOutput})` : analysis.safeOutput)
++        ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${safeOutput})` : safeOutput)
+         : undefined;
+       const open = tokens[token.tokensIndex];
+ 
+@@ -748,9 +748,20 @@
+         value = `\\${value}`;
+       }
+ 
++      // Handle the case where '!' is the first character inside a bracket
++      // and it's not escaped. Treat it as negation.
++      // Otherwise, treat '!' as a literal character.
+       if (value === '!' && prev.value === '[') {
+-        // POSIX bracket negation: [!abc] is equivalent to [^abc]
+-        value = '^';
++        if (opts.literalBrackets === true) {
++          // If literalBrackets is true, always treat '!' as a literal.
++          value = '\\!';
++        } else {
++          // Otherwise, treat it as negation.
++          value = '^';
++        }
++      } else if (value === '!' && prev.value.startsWith('[^')) {
++        // If we already have a negation, '!' is literal.
++        value = '\\!';
+       }
+ 
+       prev.value += value;

@@ -1,0 +1,90 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:34
++++ b/index.js	2026-11-23 10:14:34
+@@ -22,16 +22,31 @@
+ 
+ var __toString = Object.prototype.toString
+ 
+-/**
+- * RegExp to match field-content in RFC 7230 sec 3.2
+- *
+- * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+- * field-vchar   = VCHAR / obs-text
+- * obs-text      = %x80-FF
+- */
++// RFC 6265, Section 4.1.1: cookie-name = token
++// RFC 7230, Section 3.2.6: token = 1*tchar
++// RFC 7230, Section 3.2.6: tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
++// This regex matches a string of one or more tchar characters.
++var nameRegExp = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+ 
+-var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
++// RFC 6265, Section 4.1.1: cookie-value = *cookie-octet / ( DQUOTE *qdtext DQUOTE )
++// For serialization, we enforce the *cookie-octet format.
++// cookie-octet = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++// This is VCHAR excluding SP (%x20), COMMA (%x2C), SEMICOLON (%x3B), BACKSLASH (%x5C), DOUBLE_QUOTE (%x22).
++// Allows zero or more cookie-octets.
++var valueRegExp = /^[\x21\x23-\x2B\x2D-\x3A\x3C-\x5B\x5D-\x7E]*$/;
+ 
++// RFC 6265, Section 4.1.2.3: domain-value = subdomain
++// RFC 6265, Section 4.1.2.3: The user agent MUST ignore the Domain attribute if the value contains a character that is not a `domain-character`.
++// domain-character = ALPHA / DIGIT / "-" / "."
++// This regex matches a string of one or more domain-characters.
++var domainRegExp = /^[a-zA-Z0-9\-\.]+$/;
++
++// RFC 6265, Section 4.1.2.4: path-value = path-av
++// RFC 6265, Section 4.1.2.4: path-av = VCHAR except SEMICOLON
++// VCHAR = %x21-7E (printable ASCII)
++// This regex matches a string of one or more VCHARs, excluding SEMICOLON (%x3B).
++var pathRegExp = /^[\x21-\x3A\x3C-\x7E]+$/;
++
+ /**
+  * Parse a cookie header.
+  *
+@@ -116,13 +131,19 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
++  // Validate cookie name against RFC 6265 token rules.
++  if (!nameRegExp.test(name)) {
+     throw new TypeError('argument name is invalid');
+   }
+ 
+   var value = enc(val);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
++  // Validate cookie value against RFC 6265 cookie-octet rules.
++  // The default encodeURIComponent will convert characters like spaces to %20,
++  // making them conform to cookie-octet. Custom encoders must also produce
++  // cookie-octet compliant strings (or quoted-strings, but this library does not
++  // automatically add quotes for serialization).
++  if (value && !valueRegExp.test(value)) {
+     throw new TypeError('argument val is invalid');
+   }
+ 
+@@ -139,7 +160,8 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!fieldContentRegExp.test(opt.domain)) {
++    // Validate domain against RFC 6265 domain-character rules.
++    if (!domainRegExp.test(opt.domain)) {
+       throw new TypeError('option domain is invalid');
+     }
+ 
+@@ -147,7 +169,8 @@
+   }
+ 
+   if (opt.path) {
+-    if (!fieldContentRegExp.test(opt.path)) {
++    // Validate path against RFC 6265 path-av rules (VCHAR except SEMICOLON).
++    if (!pathRegExp.test(opt.path)) {
+       throw new TypeError('option path is invalid');
+     }
+ 
+@@ -272,3 +295,4 @@
+     return str;
+   }
+ }
++

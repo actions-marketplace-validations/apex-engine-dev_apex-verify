@@ -1,0 +1,32 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:36
++++ b/humanize-duration.js	2026-11-23 10:20:36
+@@ -1363,14 +1363,16 @@
+ 
+       /** @type {string} */
+       var formattedCount;
+-      var normalizedUnitCount =
++      // Calculate the count that will actually be displayed after applying maxDecimalPoints.
++      var countForDisplay =
+         maxDecimalPoints === void 0
+           ? unitCount
+           : Math.floor(unitCount * Math.pow(10, maxDecimalPoints)) /
+             Math.pow(10, maxDecimalPoints);
+-      var countStr = normalizedUnitCount.toString();
++      var countStr = countForDisplay.toString();
+ 
+-      if (language._hideCountIf2 && unitCount === 2) {
++      // Use countForDisplay for _hideCountIf2 logic and unit word selection.
++      if (language._hideCountIf2 && countForDisplay === 2) {
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+@@ -1393,7 +1395,7 @@
+       var languageWord = language[unitName];
+       var word;
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        word = languageWord(countForDisplay); // Use countForDisplay for unit word selection
+       } else {
+         word = languageWord;
+       }

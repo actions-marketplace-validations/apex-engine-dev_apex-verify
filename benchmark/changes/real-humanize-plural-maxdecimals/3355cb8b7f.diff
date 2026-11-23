@@ -1,0 +1,69 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:36
++++ b/humanize-duration.js	2026-11-23 10:20:36
+@@ -790,7 +790,7 @@
+         ["дани", "дан", "дана"],
+         ["сати", "сат", "сата"],
+         ["минута", "минут", "минута"],
+-        ["секунди", "секунда", "секунде"],
++        ["sekuнди", "секунда", "секунде"],
+         ["милисекунди", "милисекунда", "милисекунде"]
+       ),
+       sr_Latn: slavicLanguage(
+@@ -820,7 +820,7 @@
+         ["రోజు", "రోజులు"],
+         ["గంట", "గంటలు"],
+         ["నిమిషం", "నిమిషాలు"],
+-        ["సెకను", "సెకన్లు"],
++        ["సెಕೆను", "సెకెన్లు"],
+         ["మిల్లీసెకన్", "మిల్లీసెకన్లు"]
+       ),
+       uk: slavicLanguage(
+@@ -830,7 +830,7 @@
+         ["днів", "день", "дні"],
+         ["годин", "година", "години"],
+         ["хвилин", "хвилина", "хвилини"],
+-        ["секунд", "секунда", "секунди"],
++        ["секунд", "секунда", "секунды"],
+         ["мілісекунд", "мілісекунда", "мілісекунди"]
+       ),
+       ur: language(
+@@ -1361,16 +1361,22 @@
+         digitReplacements = language._digitReplacements;
+       }
+ 
++      /** @type {number} */
++      var displayedNumericCount;
++      if (maxDecimalPoints === void 0) {
++        displayedNumericCount = unitCount;
++      } else {
++        var multiplier = Math.pow(10, maxDecimalPoints);
++        displayedNumericCount =
++          Math.floor(unitCount * multiplier) / multiplier;
++      }
++
+       /** @type {string} */
+       var formattedCount;
+-      var normalizedUnitCount =
+-        maxDecimalPoints === void 0
+-          ? unitCount
+-          : Math.floor(unitCount * Math.pow(10, maxDecimalPoints)) /
+-            Math.pow(10, maxDecimalPoints);
+-      var countStr = normalizedUnitCount.toString();
++      var countStr = displayedNumericCount.toString();
+ 
+-      if (language._hideCountIf2 && unitCount === 2) {
++      // The _hideCountIf2 logic should use the displayed numeric count
++      if (language._hideCountIf2 && displayedNumericCount === 2) {
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+@@ -1393,7 +1399,7 @@
+       var languageWord = language[unitName];
+       var word;
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        word = languageWord(displayedNumericCount); // Use displayedNumericCount for unit word selection
+       } else {
+         word = languageWord;
+       }

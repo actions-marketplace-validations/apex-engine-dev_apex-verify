@@ -1,0 +1,33 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:18:30
++++ b/slugify.js	2026-11-23 10:18:30
+@@ -33,10 +33,27 @@
+     var slug = string.normalize().split('')
+       // replace characters based on charMap
+       .reduce(function (result, ch) {
+-        var appendChar = locale[ch] || charMap[ch] || ch;
+-        if (appendChar === replacement) {
++        var localeChar = locale[ch];
++        var charMapChar = charMap[ch];
++        var appendChar;
++
++        // Determine the character to append, prioritizing locale, then charMap, else original char.
++        // We explicitly check for 'undefined' to allow empty string mappings ('') to be honored.
++        if (localeChar !== undefined) {
++            appendChar = localeChar;
++        } else if (charMapChar !== undefined) {
++            appendChar = charMapChar;
++        } else {
++            appendChar = ch;
++        }
++
++        // If a character maps to the replacement string (and isn't explicitly mapped to an empty string),
++        // treat it as a space for consolidation purposes. This prevents 'foo---bar' from becoming 'foo--bar'
++        // when '-' is the replacement, instead making it 'foo-bar'.
++        if (appendChar !== '' && appendChar === replacement) {
+           appendChar = ' ';
+         }
++        
+         return result + appendChar
+           // remove not allowed characters
+           .replace(options.remove || /[^\w\s$*_+~.()'"!\-:@]+/g, '')

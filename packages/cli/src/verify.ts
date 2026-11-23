@@ -1,4 +1,4 @@
-import { promises as fs } from "node:fs";
+import { existsSync, promises as fs } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import os from "node:os";
@@ -136,6 +136,8 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
       await fs.mkdir(orig, { recursive: true });
       const tar = execFileSync("git", ["-C", o.dir, "archive", "--format=tar", prefix ? `${base}:${prefix.replace(/\/$/, "")}` : base], { maxBuffer: 1024 * 1024 * 1024 });
       execFileSync("tar", ["-x", "-C", orig], { input: tar });
+      // The same dependencies as the working copy gets (copyProject links them): without them the baseline test run cannot start.
+      try { if (existsSync(path.join(o.dir, "node_modules")) && !existsSync(path.join(orig, "node_modules"))) await fs.symlink(path.join(o.dir, "node_modules"), path.join(orig, "node_modules"), "dir"); } catch { /* none */ }
       await copyProject(o.dir, next);
       mode = "git";
     }
@@ -177,7 +179,7 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       change: { mode: c.mode, base: c.base, files },
       tests: { command: null, before: null, after: null, newlyFailing: [] },
       checks: { writtenBy: o.checker?.model ?? null, written: false, passed: 0, failed: 0, failedOnOldCode: false, failures: "", failedChecks: [] },
-      cheats: [], sandbox: (await testSandboxAvailable().catch(() => false)) ? (process.platform === "darwin" ? "macOS Seatbelt (best effort)" : process.platform === "linux" ? "Linux bubblewrap" : "sandbox") : (process.platform === "win32" ? "none on Windows: API keys and tokens are removed from the environment, but files and network are not isolated (use WSL2 or a container for code you do not trust)" : "none (run in CI or a container for code you do not trust)"), usage: { modelCalls: 0, seconds: 0 }, proof: "",
+      cheats: [], sandbox: (await testSandboxAvailable().catch(() => false)) ? (process.platform === "darwin" ? "macOS Seatbelt (best effort)" : process.platform === "linux" ? "Linux bubblewrap" : process.platform === "win32" ? "Windows AppContainer (no network, writes only in the scratch copy)" : "sandbox") : (process.platform === "win32" ? "none on Windows: API keys and tokens are removed from the environment, but files and network are not isolated (use WSL2 or a container for code you do not trust)" : "none (run in CI or a container for code you do not trust)"), usage: { modelCalls: 0, seconds: 0 }, proof: "",
     };
     const finish = (verdict: Verdict, checksCode = ""): VerifyReport => {
       report.verdict = verdict;
@@ -228,7 +230,10 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
         const fresh = aOut.failedNames.filter((n) => !was.has(n));
         report.tests.newlyFailing = fresh;
         const couldNotRun = after.passed + after.failed === 0 && before.passed > 0;
-        if (fresh.length || after.failed > before.failed || couldNotRun) {
+        // The original code's tests did not run (nothing passed, something failed: a missing build or dependency): then there is no baseline to call a failure new.
+        const baselineBroken = before.passed === 0 && before.failed > 0;
+        if (baselineBroken && !couldNotRun) warnings.push(`the project's tests could not run on the original code (0 passed, ${before.failed} failed), so a regression cannot be told from a failure that was already there; run the tests on a clean checkout to check`);
+        else if (fresh.length || after.failed > before.failed || couldNotRun) {
           reasons.push({
             kind: "regression",
             summary: couldNotRun ? "the project's tests no longer run" : `${fresh.length || after.failed - before.failed} test${(fresh.length || after.failed - before.failed) === 1 ? "" : "s"} that passed before now fail${fresh.length ? `: ${fresh.slice(0, 3).join(", ")}` : ""}`,

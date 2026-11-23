@@ -1,0 +1,59 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:15:47
++++ b/index.js	2026-11-23 10:15:47
+@@ -117,7 +117,7 @@
+  * ext-token        = <the characters in token, followed by "*">
+  */
+ 
+-var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *(?:$|;)/
++var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *;? *($|;)/
+ 
+ /**
+  * Create an attachment Content-Disposition header.
+@@ -305,6 +305,7 @@
+     throw new TypeError('argument string is required')
+   }
+ 
++  // match the disposition type
+   var match = DISPOSITION_TYPE_REGEXP.exec(string)
+ 
+   if (!match) {
+@@ -320,13 +321,16 @@
+   var params = {}
+   var value
+ 
+-  // calculate index to start at
+-  index = PARAM_REGEXP.lastIndex = match[0].substr(-1) === ';'
+-    ? index - 1
+-    : index
++  // determine start index for parameters
++  // the regex matches leading whitespace and optional semicolon
++  var paramStartIndex = match[2] === ';' ? index - 1 : index
+ 
++  // reset lastIndex for PARAM_REGEXP
++  PARAM_REGEXP.lastIndex = paramStartIndex
++
+   // match parameters
+   while ((match = PARAM_REGEXP.exec(string))) {
++    // ensure parameter starts at the expected position
+     if (match.index !== index) {
+       throw new TypeError('invalid parameter format')
+     }
+@@ -351,6 +355,7 @@
+       continue
+     }
+ 
++    // ignore subsequent parameters of the same name if already parsed
+     if (typeof params[key] === 'string') {
+       continue
+     }
+@@ -365,7 +370,8 @@
+     params[key] = value
+   }
+ 
+-  if (index !== -1 && index !== string.length) {
++  // check if there are any trailing characters that were not parsed
++  if (index !== string.length) {
+     throw new TypeError('invalid parameter format')
+   }
+ 

@@ -1,0 +1,36 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:02
++++ b/index.js	2026-11-23 10:17:02
+@@ -18,9 +18,10 @@
+ 
+ /**
+  * RegExp to match non attr-char not handled by encodeURI.
++ * RFC 5987 attr-char = ALPHA / DIGIT / "!" / "#" / "$" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
+  */
+ 
+-var encodeUriAttrCharRegExp = /[*']/g
++var attrCharRegExp = /[a-zA-Z0-9!#$&'*.^_`|~-]/
+ 
+ /**
+  * RegExp to match non-US-ASCII characters.
+@@ -124,7 +125,19 @@
+ 
+   // percent encode as UTF-8
+   var encoded = encodeURI(str)
+-    .replace(encodeUriAttrCharRegExp, pencode)
++    .split('')
++    .map(function (c) {
++      // RFC 5987 attr-char
++      // ALPHA / DIGIT / "!" / "#" / "$" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++      if (attrCharRegExp.test(c)) {
++        return c
++      }
++      // encodeURI only encodes spaces and other characters that are not ASCII alphanumeric
++      // so we need to encode characters that are attr-chars but not handled by encodeURI,
++      // and characters that are not attr-chars
++      return pencode(c)
++    })
++    .join('')
+ 
+   return 'UTF-8\'\'' + encoded
+ }

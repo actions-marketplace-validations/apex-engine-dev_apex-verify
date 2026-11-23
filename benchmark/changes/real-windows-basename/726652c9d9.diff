@@ -1,0 +1,114 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:21:32
++++ b/lib/parse.js	2026-11-23 10:21:32
+@@ -479,7 +479,7 @@
+     }
+ 
+     if (tok.value || tok.output) append(tok);
+-    if (prev && prev.type === 'text' && tok.type === 'text') {
++    if (prev.type === 'text' && tok.type === 'text') {
+       prev.output = (prev.output || prev.value) + tok.value;
+       prev.value += tok.value;
+       return;
+@@ -942,7 +942,7 @@
+      * Slashes
+      */
+ 
+-    if (value === '/') {
++    if (value === '/' || (opts.windows === true && value === '\\')) {
+       // if the beginning of the glob is "./", advance the start
+       // to the current index, and don't add the "./" characters
+       // to the state. This greatly simplifies lookbehinds when
+@@ -1162,8 +1162,8 @@
+         prev.type = 'globstar';
+         prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
+         prev.value += value;
+-        state.globstar = true;
+         state.output += prior.output + prev.output;
++        state.globstar = true;
+         consume(value);
+         continue;
+       }
+@@ -1244,7 +1244,10 @@
+         prev.output += nodot;
+       }
+ 
+-      if (peek() !== '*') {
++      if (peek() !== '*' && opts.windows !== true) {
++        state.output += ONE_CHAR;
++        prev.output += ONE_CHAR;
++      } else if (peek() !== '*' && opts.windows === true) {
+         state.output += ONE_CHAR;
+         prev.output += ONE_CHAR;
+       }
+diff -ruN a/lib/picomatch.js b/lib/picomatch.js
+--- a/lib/picomatch.js	2026-11-23 10:21:32
++++ b/lib/picomatch.js	2026-11-23 10:21:32
+@@ -134,7 +134,16 @@
+ 
+   if (match === false || opts.capture === true) {
+     if (opts.matchBase === true || opts.basename === true) {
+-      match = picomatch.matchBase(input, regex, options, posix);
++      const { basename, windows } = opts;
++      const pathSeparator = windows ? /[\\/]/ : '/';
++      const segments = input.split(pathSeparator);
++      const lastSegment = segments.pop();
++
++      if (lastSegment === '' && segments.length > 0) {
++        match = regex.exec(segments.pop());
++      } else {
++        match = regex.exec(lastSegment);
++      }
+     } else {
+       match = regex.exec(output);
+     }
+diff -ruN a/lib/scan.js b/lib/scan.js
+--- a/lib/scan.js	2026-11-23 10:21:32
++++ b/lib/scan.js	2026-11-23 10:21:32
+@@ -16,11 +16,12 @@
+   CHAR_QUESTION_MARK,        /* ? */
+   CHAR_RIGHT_CURLY_BRACE,    /* } */
+   CHAR_RIGHT_PARENTHESES,    /* ) */
+-  CHAR_RIGHT_SQUARE_BRACKET  /* ] */
++  CHAR_RIGHT_SQUARE_BRACKET, /* ] */
++  WIN_SLASH
+ } = require('./constants');
+ 
+ const isPathSeparator = code => {
+-  return code === CHAR_FORWARD_SLASH || code === CHAR_BACKWARD_SLASH;
++  return code === CHAR_FORWARD_SLASH || code === CHAR_BACKWARD_SLASH || (WIN_SLASH && WIN_SLASH.includes(String.fromCharCode(code)));
+ };
+ 
+ const depth = token => {
+@@ -153,7 +154,7 @@
+       break;
+     }
+ 
+-    if (code === CHAR_FORWARD_SLASH) {
++    if (isPathSeparator(code)) {
+       slashes.push(index);
+       tokens.push(token);
+       token = { value: '', depth: 0, isGlob: false };
+diff -ruN a/lib/utils.js b/lib/utils.js
+--- a/lib/utils.js	2026-11-23 10:21:32
++++ b/lib/utils.js	2026-11-23 10:21:32
+@@ -5,7 +5,8 @@
+   REGEX_BACKSLASH,
+   REGEX_REMOVE_BACKSLASH,
+   REGEX_SPECIAL_CHARS,
+-  REGEX_SPECIAL_CHARS_GLOBAL
++  REGEX_SPECIAL_CHARS_GLOBAL,
++  WIN_SLASH
+ } = require('./constants');
+ 
+ exports.isObject = val => val !== null && typeof val === 'object' && !Array.isArray(val);
+@@ -61,7 +62,8 @@
+ };
+ 
+ exports.basename = (path, { windows } = {}) => {
+-  const segs = path.split(windows ? /[\\/]/ : '/');
++  const separators = windows ? /[\\/]/ : '/';
++  const segs = path.split(separators);
+   const last = segs[segs.length - 1];
+ 
+   if (last === '') {

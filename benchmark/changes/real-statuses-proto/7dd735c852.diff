@@ -1,0 +1,44 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:26
++++ b/index.js	2026-11-23 10:17:26
+@@ -61,7 +61,9 @@
+  */
+ 
+ function createMessageToStatusCodeMap (codes) {
+-  var map = {}
++  // Use Object.create(null) to create a map without a prototype,
++  // preventing accidental lookups of inherited properties like 'constructor'.
++  var map = Object.create(null)
+ 
+   Object.keys(codes).forEach(function forEachCode (code) {
+     var message = codes[code]
+@@ -101,7 +103,10 @@
+ 
+ function status (code) {
+   if (typeof code === 'number') {
+-    if (!status.message[code]) throw new Error('invalid status code: ' + code)
++    // Ensure the property is an own property of status.message
++    if (!Object.prototype.hasOwnProperty.call(status.message, code)) {
++      throw new Error('invalid status code: ' + code)
++    }
+     return status.message[code]
+   }
+ 
+@@ -112,11 +117,16 @@
+   // '403'
+   var n = parseInt(code, 10)
+   if (!isNaN(n)) {
+-    if (!status.message[n]) throw new Error('invalid status code: ' + n)
++    // Ensure the property is an own property of status.message
++    if (!Object.prototype.hasOwnProperty.call(status.message, n)) {
++      throw new Error('invalid status code: ' + n)
++    }
+     return status.message[n]
+   }
+ 
++  // Lookup in the message-to-code map, which is now prototype-less
+   n = status.code[code.toLowerCase()]
+   if (!n) throw new Error('invalid status message: "' + code + '"')
+   return n
+ }
++

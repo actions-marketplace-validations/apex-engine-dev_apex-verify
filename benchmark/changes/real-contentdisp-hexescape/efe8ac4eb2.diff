@@ -1,0 +1,56 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:16:30
++++ b/index.js	2026-11-23 10:16:30
+@@ -68,17 +68,48 @@
+   // restrict to file base name
+   var name = basename(filename)
+ 
++  // RFC 6266 Section 4.3.1
++  // A recipient must ignore parameters where the value is not
++  // of the form "charset'langtag'value".
++  // If a parameter is repeated, servers SHOULD NOT generate the
++  // parameter more than once.
++  //
++  // If a filename is provided, and it contains percent-encoded characters
++  // that are not percent-encoded in the original string, and the original
++  // string is not US-ASCII, then the original filename MUST be provided.
++  var asciiName = ''
++  var encodedName = ''
++  var useFilenameStar = false
++
+   if (asciiStringRegExp.test(name)) {
+-    // simple header
+     // file name is always quoted and not a token for RFC 2616 compatibility
+     return 'attachment; filename=' + qstring(name)
+   }
+ 
+   // simple Unicode -> US-ASCII transliteration
+-  var asciiFilename = name.replace(nonAsciiRegExp, '?')
++  asciiName = name.replace(nonAsciiRegExp, '?')
++  encodedName = ustring(name)
+ 
+-  return 'attachment; filename=' + qstring(asciiFilename)
+-    + '; filename*=' + ustring(name)
++  if (encodedName.length < asciiName.length) {
++    useFilenameStar = true
++  } else {
++    // check for characters that require percent-encoding in filename*
++    // when they are not percent-encoded in filename
++    var encodedAsciiName = encodeURIComponent(asciiName)
++      .replace(encodeUriAttrCharRegExp, pencode)
++
++    if (encodedName !== 'UTF-8\'\'' + encodedAsciiName) {
++      useFilenameStar = true
++    }
++  }
++
++  if (useFilenameStar) {
++    return 'attachment; filename=' + qstring(asciiName)
++      + '; filename*=' + encodedName
++  }
++
++  // file name is always quoted and not a token for RFC 2616 compatibility
++  return 'attachment; filename=' + qstring(name)
+ }
+ 
+ /**

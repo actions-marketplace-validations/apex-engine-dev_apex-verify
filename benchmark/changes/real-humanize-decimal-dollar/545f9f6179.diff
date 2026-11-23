@@ -1,0 +1,35 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:22:21
++++ b/humanize-duration.js	2026-11-23 10:22:21
+@@ -836,9 +836,9 @@
+       ur: language(
+         "سال",
+         onesUnit(["مہینہ", "مہینے"]),
+-        onesUnit(["ہفتہ", "ہفتے"]),
++        onesUnit(["ہفتہ", "हफ्ते"]),
+         "دن",
+-        onesUnit(["گھنٹہ", "گھنٹے"]),
++        onesUnit(["گھنٹہ", "घंटे"]),
+         "منٹ",
+         "سیکنڈ",
+         "ملی سیکنڈ"
+@@ -1353,6 +1353,10 @@
+         decimal = ".";
+       }
+ 
++      // Escape the decimal string for use in String.prototype.replace()
++      // so that characters like '$' are treated literally.
++      var escapedDecimal = decimal.replace(/[$]/g, '$$$$');
++
+       /** @type {undefined | DigitReplacements} */
+       var digitReplacements;
+       if ("digitReplacements" in options) {
+@@ -1387,7 +1391,7 @@
+           }
+         }
+       } else {
+-        formattedCount = countStr.replace(".", decimal);
++        formattedCount = countStr.replace(".", escapedDecimal);
+       }
+ 
+       var languageWord = language[unitName];

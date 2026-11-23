@@ -1,0 +1,50 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:36
++++ b/humanize-duration.js	2026-11-23 10:20:36
+@@ -790,7 +790,7 @@
+         ["дани", "дан", "дана"],
+         ["сати", "сат", "сата"],
+         ["минута", "минут", "минута"],
+-        ["секунди", "секунда", "секунде"],
++        ["sekundi", "sekunda", "sekunde"],
+         ["милисекунди", "милисекунда", "милисекунде"]
+       ),
+       sr_Latn: slavicLanguage(
+@@ -820,7 +820,7 @@
+         ["రోజు", "రోజులు"],
+         ["గంట", "గంటలు"],
+         ["నిమిషం", "నిమిషాలు"],
+-        ["సెకను", "సెకన్లు"],
++        ["సెಕೆను", "సెకెన్లు"],
+         ["మిల్లీసెకన్", "మిల్లీసెకన్లు"]
+       ),
+       uk: slavicLanguage(
+@@ -830,7 +830,7 @@
+         ["днів", "день", "дні"],
+         ["годин", "година", "години"],
+         ["хвилин", "хвилина", "хвилини"],
+-        ["секунд", "секунда", "секунди"],
++        ["секунд", "секунда", "секунды"],
+         ["мілісекунд", "мілісекунда", "мілісекунди"]
+       ),
+       ur: language(
+@@ -1370,7 +1370,8 @@
+             Math.pow(10, maxDecimalPoints);
+       var countStr = normalizedUnitCount.toString();
+ 
+-      if (language._hideCountIf2 && unitCount === 2) {
++      // Use normalizedUnitCount for determining if count should be hidden
++      if (language._hideCountIf2 && normalizedUnitCount === 2) {
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+@@ -1393,7 +1394,8 @@
+       var languageWord = language[unitName];
+       var word;
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        // Pass normalizedUnitCount to the language function for correct pluralization
++        word = languageWord(normalizedUnitCount);
+       } else {
+         word = languageWord;
+       }

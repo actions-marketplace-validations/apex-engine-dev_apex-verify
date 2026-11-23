@@ -1,0 +1,547 @@
+diff -ruN a/lib/scan.js b/lib/scan.js
+--- a/lib/scan.js	2026-11-23 10:19:10
++++ b/lib/scan.js	2026-11-23 10:19:10
+@@ -19,16 +19,6 @@
+   CHAR_RIGHT_SQUARE_BRACKET  /* ] */
+ } = require('./constants');
+ 
+-const isPathSeparator = code => {
+-  return code === CHAR_FORWARD_SLASH || code === CHAR_BACKWARD_SLASH;
+-};
+-
+-const depth = token => {
+-  if (token.isPrefix !== true) {
+-    token.depth = token.isGlobstar ? Infinity : 1;
+-  }
+-};
+-
+ /**
+  * Quickly scans a glob pattern and returns an object with a handful of
+  * useful properties, like `isGlob`, `path` (the leading non-glob, if it exists),
+@@ -48,286 +38,246 @@
+ 
+ const scan = (input, options) => {
+   const opts = options || {};
+-
+-  const length = input.length - 1;
++  const length = input.length;
+   const scanToEnd = opts.parts === true || opts.scanToEnd === true;
++
+   const slashes = [];
+-  const tokens = [];
+-  const parts = [];
++  const tokens = []; // Stores token objects for each segment
++  const parts = []; // Stores string values of each segment
+ 
+-  let str = input;
+   let index = -1;
+-  let start = 0;
+-  let lastIndex = 0;
++  let start = 0; // index in original `input` after prefix and negation
++  let globStartIndex = -1; // index of the first glob character in `input`
++  let lastUnescapedSlashBeforeGlob = -1; // index of the last unescaped '/' before `globStartIndex`
++
+   let isBrace = false;
+   let isBracket = false;
+   let isGlob = false;
+   let isExtglob = false;
+   let isGlobstar = false;
+-  let braceEscaped = false;
+-  let backslashes = false;
++  let backslashes = false; // set if the *current* token contains backslashes
+   let negated = false;
+   let negatedExtglob = false;
+-  let finished = false;
+-  let braces = 0;
+-  let prev;
+-  let code;
+-  let token = { value: '', depth: 0, isGlob: false };
++  let finished = false; // Flag indicating a glob character has been encountered and we should stop scanning for base
++  let braces = 0; // for tracking nested braces
++  let parens = 0; // for tracking nested parens (extglobs/non-extglobs)
++  let prevCode; // previous character's code
++  let code; // current character's code
++  let escaped = false; // true if the *current* char is escaped by a preceding backslash
++  let partStart = 0; // Start index for the current part being accumulated
+ 
+-  const eos = () => index >= length;
+-  const peek = () => str.charCodeAt(index + 1);
++  // Represents the current segment's properties. Cloned and pushed to `tokens` on each slash.
++  let currentSegmentToken = { value: '', depth: 0, isGlob: false };
++
++  const peek = (n = 1) => input.charCodeAt(index + n);
+   const advance = () => {
+-    prev = code;
+-    return str.charCodeAt(++index);
++    prevCode = code;
++    return (code = input.charCodeAt(++index));
+   };
+ 
+-  while (index < length) {
+-    code = advance();
+-    let next;
++  // 1. Handle prefix and negation FIRST, before the loop starts
++  let tempIndex = 0;
++  if (opts.nonegate !== true && input.charCodeAt(0) === CHAR_EXCLAMATION_MARK) {
++    negated = true;
++    tempIndex++;
++  }
++  if (input.slice(tempIndex, tempIndex + 2) === './') {
++    start = tempIndex + 2;
++  } else {
++    start = tempIndex;
++  }
++  partStart = start; // Initialize partStart after handling prefix/negation
+ 
+-    if (code === CHAR_BACKWARD_SLASH) {
+-      backslashes = token.backslashes = true;
+-      code = advance();
+-
+-      if (code === CHAR_LEFT_CURLY_BRACE) {
+-        braceEscaped = true;
+-      }
+-      continue;
++  while (index < length - 1) {
++    // Reset `escaped` from previous iteration if it wasn't a backslash
++    // (i.e. the previous character was not a backslash that escaped this `code`)
++    if (prevCode !== CHAR_BACKWARD_SLASH) {
++      escaped = false;
+     }
+ 
+-    if (braceEscaped === true || code === CHAR_LEFT_CURLY_BRACE) {
+-      braces++;
++    code = advance();
+ 
+-      while (eos() !== true && (code = advance())) {
+-        if (code === CHAR_BACKWARD_SLASH) {
+-          backslashes = token.backslashes = true;
+-          advance();
+-          continue;
+-        }
+-
+-        if (code === CHAR_LEFT_CURLY_BRACE) {
+-          braces++;
+-          continue;
+-        }
+-
+-        if (braceEscaped !== true && code === CHAR_DOT && (code = advance()) === CHAR_DOT) {
+-          isBrace = token.isBrace = true;
+-          isGlob = token.isGlob = true;
+-          finished = true;
+-
+-          if (scanToEnd === true) {
+-            continue;
+-          }
+-
+-          break;
+-        }
+-
+-        if (braceEscaped !== true && code === CHAR_COMMA) {
+-          isBrace = token.isBrace = true;
+-          isGlob = token.isGlob = true;
+-          finished = true;
+-
+-          if (scanToEnd === true) {
+-            continue;
+-          }
+-
+-          break;
+-        }
+-
+-        if (code === CHAR_RIGHT_CURLY_BRACE) {
+-          braces--;
+-
+-          if (braces === 0) {
+-            braceEscaped = false;
+-            isBrace = token.isBrace = true;
+-            finished = true;
+-            break;
+-          }
+-        }
+-      }
+-
+-      if (scanToEnd === true) {
+-        continue;
+-      }
+-
+-      break;
++    // 1a. Handle backslashes for escaping the *next* character
++    if (code === CHAR_BACKWARD_SLASH) {
++      backslashes = currentSegmentToken.backslashes = true; // Mark current segment as having backslashes
++      escaped = true; // The *next* char will be escaped
++      continue; // Skip further processing of the backslash itself
+     }
+ 
+-    if (code === CHAR_FORWARD_SLASH) {
++    // 2. Path separator handling (problem 3: escaped slash)
++    // Only split on UNESCAPED forward slashes
++    if (code === CHAR_FORWARD_SLASH && !escaped) {
+       slashes.push(index);
+-      tokens.push(token);
+-      token = { value: '', depth: 0, isGlob: false };
++      
++      // Store the current segment's token and reset for the next segment
++      currentSegmentToken.value = input.slice(partStart, index);
++      tokens.push({ ...currentSegmentToken }); // Push a clone
++      currentSegmentToken = { value: '', depth: 0, isGlob: false }; // Reset for next segment
+ 
+-      if (finished === true) continue;
+-      if (prev === CHAR_DOT && index === (start + 1)) {
+-        start += 2;
+-        continue;
+-      }
++      // Push the current part (string value of segment before the slash)
++      parts.push(input.slice(partStart, index));
++      partStart = index + 1; // Start the next part after the slash
+ 
+-      lastIndex = index + 1;
+-      continue;
+-    }
+-
+-    if (opts.noext !== true) {
+-      const isExtglobChar = code === CHAR_PLUS
+-        || code === CHAR_AT
+-        || code === CHAR_ASTERISK
+-        || code === CHAR_QUESTION_MARK
+-        || code === CHAR_EXCLAMATION_MARK;
+-
+-      if (isExtglobChar === true && peek() === CHAR_LEFT_PARENTHESES) {
+-        isGlob = token.isGlob = true;
+-        isExtglob = token.isExtglob = true;
+-        finished = true;
+-        if (code === CHAR_EXCLAMATION_MARK && index === start) {
+-          negatedExtglob = true;
+-        }
+-
+-        if (scanToEnd === true) {
+-          while (eos() !== true && (code = advance())) {
+-            if (code === CHAR_BACKWARD_SLASH) {
+-              backslashes = token.backslashes = true;
+-              code = advance();
+-              continue;
+-            }
+-
+-            if (code === CHAR_RIGHT_PARENTHESES) {
+-              isGlob = token.isGlob = true;
+-              finished = true;
+-              break;
+-            }
+-          }
+-          continue;
+-        }
+-        break;
++      // If we encounter a slash *before* any glob char, this slash is part of the base path.
++      // We record its index as a potential boundary for the base.
++      if (!finished) {
++        lastUnescapedSlashBeforeGlob = index;
+       }
++      continue; // Move to the next character
+     }
+ 
+-    if (code === CHAR_ASTERISK) {
+-      if (prev === CHAR_ASTERISK) isGlobstar = token.isGlobstar = true;
+-      isGlob = token.isGlob = true;
+-      finished = true;
+-
+-      if (scanToEnd === true) {
+-        continue;
+-      }
+-      break;
++    // 3. Detect glob characters
++    // If `finished` is true, we've already found a glob, so we just continue scanning if `scanToEnd` is true
++    if (finished && !scanToEnd) {
++        break; // Stop scanning if a glob was found and not scanning to end
+     }
+ 
+-    if (code === CHAR_QUESTION_MARK) {
+-      isGlob = token.isGlob = true;
+-      finished = true;
++    // If a glob char is detected and `finished` is false, this is the start of the glob pattern
++    // (The order of checks here is important, as some glob patterns like extglobs start with a normal char)
++    const currentIsGlobChar = (
++        code === CHAR_ASTERISK ||
++        code === CHAR_QUESTION_MARK ||
++        code === CHAR_LEFT_SQUARE_BRACKET ||
++        (code === CHAR_LEFT_CURLY_BRACE && opts.nobrace !== true) ||
++        (opts.noext !== true && (code === CHAR_PLUS || code === CHAR_AT || code === CHAR_EXCLAMATION_MARK || code === CHAR_ASTERISK || code === CHAR_QUESTION_MARK) && peek() === CHAR_LEFT_PARENTHESES) ||
++        (opts.noparen !== true && code === CHAR_LEFT_PARENTHESES)
++    );
+ 
+-      if (scanToEnd === true) {
+-        continue;
++    if (currentIsGlobChar && !escaped) { // Only count as glob if not escaped
++      if (!finished) { // This is the first glob character encountered
++        isGlob = true;
++        finished = true; // No more updates to `lastUnescapedSlashBeforeGlob` after this
++        globStartIndex = index;
+       }
+-      break;
+-    }
+ 
+-    if (code === CHAR_LEFT_SQUARE_BRACKET) {
+-      while (eos() !== true && (next = advance())) {
+-        if (next === CHAR_BACKWARD_SLASH) {
+-          backslashes = token.backslashes = true;
+-          advance();
+-          continue;
+-        }
++      // Set specific glob type flags on the current `currentSegmentToken`
++      currentSegmentToken.isGlob = true; // Mark the segment containing this glob char as a glob segment
+ 
+-        if (next === CHAR_RIGHT_SQUARE_BRACKET) {
+-          isBracket = token.isBracket = true;
+-          isGlob = token.isGlob = true;
+-          finished = true;
+-          break;
++      if (code === CHAR_ASTERISK) {
++        if (prevCode === CHAR_ASTERISK) currentSegmentToken.isGlobstar = true;
++        isGlobstar = true; // overall pattern has a globstar
++      } else if (code === CHAR_QUESTION_MARK) {
++        // isGlob already true
++      } else if (code === CHAR_LEFT_SQUARE_BRACKET) {
++        isBracket = currentSegmentToken.isBracket = true;
++        // Scan until closing bracket, consuming characters
++        while (index < length - 1 && (advance() !== CHAR_RIGHT_SQUARE_BRACKET || escaped)) {
++            if (code === CHAR_BACKWARD_SLASH) { escaped = true; } else { escaped = false; }
+         }
+-      }
+-
+-      if (scanToEnd === true) {
+-        continue;
+-      }
+-
+-      break;
+-    }
+-
+-    if (opts.nonegate !== true && code === CHAR_EXCLAMATION_MARK && index === start) {
+-      negated = token.negated = true;
+-      start++;
+-      continue;
+-    }
+-
+-    if (opts.noparen !== true && code === CHAR_LEFT_PARENTHESES) {
+-      isGlob = token.isGlob = true;
+-
+-      if (scanToEnd === true) {
+-        while (eos() !== true && (code = advance())) {
+-          if (code === CHAR_LEFT_PARENTHESES) {
+-            backslashes = token.backslashes = true;
++      } else if (code === CHAR_LEFT_CURLY_BRACE && opts.nobrace !== true) {
++        isBrace = currentSegmentToken.isBrace = true;
++        // Scan until closing brace, consuming characters
++        braces++;
++        while (index < length - 1) {
+             code = advance();
+-            continue;
+-          }
+-
+-          if (code === CHAR_RIGHT_PARENTHESES) {
+-            finished = true;
+-            break;
+-          }
++            if (code === CHAR_BACKWARD_SLASH) { escaped = true; continue; }
++            if (code === CHAR_LEFT_CURLY_BRACE && !escaped) { braces++; }
++            if (code === CHAR_RIGHT_CURLY_BRACE && !escaped) { braces--; }
++            if (braces === 0 && code === CHAR_RIGHT_CURLY_BRACE && !escaped) break; // Found matching closing brace
++            escaped = false;
+         }
+-        continue;
++      } else if (opts.noext !== true && (code === CHAR_PLUS || code === CHAR_AT || code === CHAR_EXCLAMATION_MARK || code === CHAR_ASTERISK || code === CHAR_QUESTION_MARK) && peek() === CHAR_LEFT_PARENTHESES && !escaped) {
++        isExtglob = currentSegmentToken.isExtglob = true;
++        if (code === CHAR_EXCLAMATION_MARK && globStartIndex === start) { // Check if it's a leading negated extglob
++            negatedExtglob = true;
++        }
++        // Scan until matching closing parenthesis for extglob
++        parens = 1;
++        advance(); // consume '('
++        while (index < length - 1) {
++            code = advance();
++            if (code === CHAR_BACKWARD_SLASH) { escaped = true; continue; }
++            if (code === CHAR_LEFT_PARENTHESES && !escaped) { parens++; }
++            if (code === CHAR_RIGHT_PARENTHESES && !escaped) { parens--; }
++            if (parens === 0 && code === CHAR_RIGHT_PARENTHESES && !escaped) break;
++            escaped = false;
++        }
++      } else if (opts.noparen !== true && code === CHAR_LEFT_PARENTHESES && !escaped) {
++        // Non-extglob parentheses, treat as glob but don't set isExtglob
++        parens = 1;
++        while (index < length - 1) {
++            code = advance();
++            if (code === CHAR_BACKWARD_SLASH) { escaped = true; continue; }
++            if (code === CHAR_LEFT_PARENTHESES && !escaped) { parens++; }
++            if (code === CHAR_RIGHT_PARENTHESES && !escaped) { parens--; }
++            if (parens === 0 && code === CHAR_RIGHT_PARENTHESES && !escaped) break;
++            escaped = false;
++        }
+       }
+-      break;
+-    }
+ 
+-    if (isGlob === true) {
+-      finished = true;
+-
+-      if (scanToEnd === true) {
+-        continue;
++      if (!scanToEnd) {
++        break; // Stop scanning if not asked to scan to end
+       }
+-
+-      break;
+     }
+   }
+ 
+-  if (opts.noext === true) {
+-    isExtglob = false;
+-    isGlob = false;
++  // After the loop, push the last part (or the only part if no slashes)
++  // Problem 1: Ensure patterns with no slashes or empty string are covered.
++  if (opts.parts === true || opts.tokens === true) {
++    if (partStart <= length) { // This covers empty string, or any remaining part
++      // Store the last segment's token
++      currentSegmentToken.value = input.slice(partStart, length);
++      tokens.push({ ...currentSegmentToken });
++      
++      // Push the last part string
++      parts.push(input.slice(partStart, length));
++    }
+   }
+ 
+-  let base = str;
+-  let prefix = '';
++  // Final determination of base and glob
++  let base = '';
+   let glob = '';
++  const actualStart = start;
+ 
+-  if (start > 0) {
+-    prefix = str.slice(0, start);
+-    str = str.slice(start);
+-    lastIndex -= start;
+-  }
+-
+-  if (base && isGlob === true && lastIndex > 0) {
+-    base = str.slice(0, lastIndex);
+-    glob = str.slice(lastIndex);
+-  } else if (isGlob === true) {
+-    base = '';
+-    glob = str;
++  if (!isGlob) {
++    // If no glob character was found, the whole pattern (after prefix) is the base
++    base = input.slice(actualStart);
+   } else {
+-    base = str;
++    // Determine the end of the base path. This is the last unescaped slash *before* the globStartIndex.
++    let effectiveBaseEnd = actualStart;
++    for (let i = actualStart; i < globStartIndex; i++) {
++        if (input.charCodeAt(i) === CHAR_FORWARD_SLASH && (i === 0 || input.charCodeAt(i - 1) !== CHAR_BACKWARD_SLASH)) {
++            effectiveBaseEnd = i;
++        }
++    }
++
++    if (effectiveBaseEnd === actualStart && input.charCodeAt(actualStart) === CHAR_FORWARD_SLASH && globStartIndex > actualStart) {
++        // Special case: if glob starts right after a leading slash (e.g., '/*'), base should be '/'
++        base = input.slice(actualStart, actualStart + 1); // just the leading slash
++        glob = input.slice(actualStart + 1);
++    } else if (effectiveBaseEnd === actualStart) {
++        // No unescaped slash found before globStartIndex, and it's not a leading slash case.
++        // e.g., "foo*", "foo[a-z]"
++        base = '';
++        glob = input.slice(actualStart);
++    } else {
++        // Unescaped slash found before globStartIndex. e.g., "foo/bar/*.js"
++        base = input.slice(actualStart, effectiveBaseEnd);
++        glob = input.slice(effectiveBaseEnd + 1);
++    }
+   }
+ 
+-  if (base && base !== '' && base !== '/' && base !== str) {
+-    if (isPathSeparator(base.charCodeAt(base.length - 1))) {
++  // Original base cleanup logic
++  if (base && base !== '') {
++    // Remove trailing slash if present AND if it's not the root directory '/'
++    if (base.charCodeAt(base.length - 1) === CHAR_FORWARD_SLASH && base !== '/') {
+       base = base.slice(0, -1);
+     }
+   }
+ 
+   if (opts.unescape === true) {
+     if (glob) glob = utils.removeBackslashes(glob);
+-
+-    if (base && backslashes === true) {
++    // Check if base contains any backslashes that need unescaping
++    if (base.includes('\\')) {
+       base = utils.removeBackslashes(base);
+     }
+   }
+ 
++  // Final state object construction
+   const state = {
+-    prefix,
++    prefix: input.slice(0, actualStart),
+     input,
+-    start,
++    start: actualStart,
+     base,
+     glob,
+     isBrace,
+@@ -341,48 +291,22 @@
+ 
+   if (opts.tokens === true) {
+     state.maxDepth = 0;
+-    if (!isPathSeparator(code)) {
+-      tokens.push(token);
++    // The `tokens` array now contains token objects with `value` and segment-specific glob flags.
++    // Calculate maxDepth from tokens.
++    for (const token of tokens) {
++      if (token.isPrefix) {
++        token.depth = 0; // Prefix doesn't count towards depth
++      } else {
++        token.depth = token.isGlobstar ? Infinity : 1;
++      }
++      state.maxDepth += token.depth;
+     }
+     state.tokens = tokens;
+   }
+ 
+-  if (opts.parts === true || opts.tokens === true) {
+-    let prevIndex;
+-
+-    for (let idx = 0; idx < slashes.length; idx++) {
+-      const n = prevIndex ? prevIndex + 1 : start;
+-      const i = slashes[idx];
+-      const value = input.slice(n, i);
+-      if (opts.tokens) {
+-        if (idx === 0 && start !== 0) {
+-          tokens[idx].isPrefix = true;
+-          tokens[idx].value = prefix;
+-        } else {
+-          tokens[idx].value = value;
+-        }
+-        depth(tokens[idx]);
+-        state.maxDepth += tokens[idx].depth;
+-      }
+-      if (idx !== 0 || value !== '') {
+-        parts.push(value);
+-      }
+-      prevIndex = i;
+-    }
+-
+-    if (prevIndex && prevIndex + 1 < input.length) {
+-      const value = input.slice(prevIndex + 1);
+-      parts.push(value);
+-
+-      if (opts.tokens) {
+-        tokens[tokens.length - 1].value = value;
+-        depth(tokens[tokens.length - 1]);
+-        state.maxDepth += tokens[tokens.length - 1].depth;
+-      }
+-    }
+-
+-    state.slashes = slashes;
+-    state.parts = parts;
++  if (opts.parts === true) {
++    state.slashes = slashes; // Indices of unescaped slashes
++    state.parts = parts; // String segments between slashes
+   }
+ 
+   return state;

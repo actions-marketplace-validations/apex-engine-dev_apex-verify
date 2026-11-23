@@ -1,0 +1,11 @@
+{
+  "id": "real-bracket-negation",
+  "kind": "fix",
+  "title": "Bracket negation rewrite breaks incomplete brackets and literalBrackets",
+  "prompt": "Our picomatch turns a leading '!' in a bracket expression into a negation, so '[!abc]' acts like '[^abc]'. That rewrite is too eager. A pattern with an incomplete bracket such as '*x[!]y' (there is no closing bracket after the '!') should still match the literal text 'zx[!]y' and 'zx!y' as before, while '[!]]' must still negate a closing bracket. With the option literalBrackets: true, '*x[!a]y' must keep matching the literal text 'zx[!a]y' and 'x[!a]y' must not match 'xby'. Please fix it in lib/parse.js.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/api.picomatch.js test/api.posix.js test/api.scan.js test/bash.js test/bash.spec.js test/brackets.js test/dotfiles.js test/dots-invalid.js test/extglobs-bash.js test/extglobs-minimatch.js test/extglobs-temp.js test/extglobs.js test/globstars.js test/issue-related.js test/malicious.js test/minimatch.js test/negation.js test/non-globs.js test/options.format.js test/options.ignore.js test/options.js test/options.maxExtglobRecursion.js test/options.noextglob.js test/options.noglobstar.js test/options.onMatch.js test/parens.js test/posix-classes.js test/qmarks.js test/regex-features.js test/slashes-posix.js test/slashes-windows.js test/special-characters.js test/stars.js test/wildmat.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-brackets.test.js"
+  }
+}

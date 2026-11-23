@@ -1,0 +1,58 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:36
++++ b/humanize-duration.js	2026-11-23 10:20:36
+@@ -789,9 +789,9 @@
+         ["недељи", "недеља", "недеље"],
+         ["дани", "дан", "дана"],
+         ["сати", "сат", "сата"],
+-        ["минута", "минут", "минута"],
+-        ["секунди", "секунда", "секунде"],
+-        ["милисекунди", "милисекунда", "милисекунде"]
++        ["minuta", "minut", "minuta"],
++        ["sekundi", "sekunda", "sekunde"],
++        ["милисекунди", "milisekunda", "milisekunde"]
+       ),
+       sr_Latn: slavicLanguage(
+         ["godini", "godina", "godine"],
+@@ -830,8 +830,8 @@
+         ["днів", "день", "дні"],
+         ["годин", "година", "години"],
+         ["хвилин", "хвилина", "хвилини"],
+-        ["секунд", "секунда", "секунди"],
+-        ["мілісекунд", "мілісекунда", "мілісекунди"]
++        ["секунд", "секунда", "секунды"],
++        ["мілісекунд", "мілісекунда", "мілісекунды"]
+       ),
+       ur: language(
+         "سال",
+@@ -1363,6 +1363,8 @@
+ 
+       /** @type {string} */
+       var formattedCount;
++      // normalizedUnitCount represents the count value that will actually be displayed,
++      // after applying maxDecimalPoints (which truncates).
+       var normalizedUnitCount =
+         maxDecimalPoints === void 0
+           ? unitCount
+@@ -1370,7 +1372,9 @@
+             Math.pow(10, maxDecimalPoints);
+       var countStr = normalizedUnitCount.toString();
+ 
+-      if (language._hideCountIf2 && unitCount === 2) {
++      // The _hideCountIf2 logic and the unit word selection should use the normalizedUnitCount.
++      // This ensures that the unit word matches the number that is actually displayed.
++      if (language._hideCountIf2 && normalizedUnitCount === 2) {
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+@@ -1393,7 +1397,9 @@
+       var languageWord = language[unitName];
+       var word;
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        // Pass normalizedUnitCount to the pluralization function
++        // so the unit word matches the displayed number.
++        word = languageWord(normalizedUnitCount);
+       } else {
+         word = languageWord;
+       }

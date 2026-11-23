@@ -1,0 +1,98 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:34
++++ b/index.js	2026-11-23 10:14:34
+@@ -23,16 +23,51 @@
+ var __toString = Object.prototype.toString
+ 
+ /**
+- * RegExp to match field-content in RFC 7230 sec 3.2
++ * RFC 6265 cookie-name validation
++ * cookie-name = token
++ * token = 1*tchar
++ * tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA
++ *       ; any VCHAR except separators, but also excluding "()<>@,;:\/"[]?={} "
+  *
+- * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+- * field-vchar   = VCHAR / obs-text
+- * obs-text      = %x80-FF
++ * This regex excludes space, control characters, and specific separators.
+  */
++var NAME_REG_EXP = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
+ 
+-var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
++/**
++ * RFC 6265 cookie-value validation
++ * cookie-value = *cookie-octet / ( DQUOTE *cookie-octet DQUOTE )
++ * cookie-octet = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++ *              ; US-ASCII characters excluding CTLs, DQUOTE, comma, semicolon, and backslash
++ *
++ * This regex covers `cookie-octet` characters. Note that the library does not
++ * automatically wrap values in DQUOTE. If a custom encoder produces a value
++ * with disallowed characters like space, it will fail this validation.
++ * The default encodeURIComponent will encode such characters (e.g., space to %20)
++ * which are themselves valid `cookie-octet` components.
++ */
++var VALUE_REG_EXP = /^[\u0021\u0023-\u002B\u002D-\u003A\u003C-\u005B\u005D-\u007E]*$/;
+ 
+ /**
++ * RFC 6265 Domain attribute validation
++ * Domain attribute value = host-name / IP-literal
++ * host-name (simplified from RFC 1034/1123) = *alphanum / "-" / "."
++ *
++ * This regex allows alphanumeric characters, hyphens, and dots. It is a
++ * simplified validation for hostnames/IP-literals, prohibiting common invalid
++ * characters like spaces or semicolons, but not enforcing all nuances of RFCs.
++ */
++var DOMAIN_REG_EXP = /^[A-Za-z0-9.-]+$/;
++
++/**
++ * RFC 6265 Path attribute validation
++ * Path attribute value = path-value
++ * path-value = <any CHAR except CTLs or ";" >
++ *
++ * This regex allows all printable US-ASCII characters except for semicolon.
++ */
++var PATH_REG_EXP = /^[\u0020-\u003A\u003C-\u007E]+$/;
++
++/**
+  * Parse a cookie header.
+  *
+  * Parse the given cookie header string into an object
+@@ -116,13 +151,15 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
++  // Validate name against RFC 6265 cookie-name (token)
++  if (!NAME_REG_EXP.test(name)) {
+     throw new TypeError('argument name is invalid');
+   }
+ 
+   var value = enc(val);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
++  // Validate encoded value against RFC 6265 cookie-octet
++  if (value && !VALUE_REG_EXP.test(value)) {
+     throw new TypeError('argument val is invalid');
+   }
+ 
+@@ -139,7 +176,8 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!fieldContentRegExp.test(opt.domain)) {
++    // Validate domain against RFC 6265 host-name / IP-literal (simplified)
++    if (!DOMAIN_REG_EXP.test(opt.domain)) {
+       throw new TypeError('option domain is invalid');
+     }
+ 
+@@ -147,7 +185,8 @@
+   }
+ 
+   if (opt.path) {
+-    if (!fieldContentRegExp.test(opt.path)) {
++    // Validate path against RFC 6265 path-value
++    if (!PATH_REG_EXP.test(opt.path)) {
+       throw new TypeError('option path is invalid');
+     }
+ 

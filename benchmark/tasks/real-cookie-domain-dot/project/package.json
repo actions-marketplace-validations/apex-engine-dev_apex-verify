@@ -1,0 +1,7 @@
+{
+  "name": "real-cookie-domain-dot",
+  "private": true,
+  "scripts": {
+    "test": "node --require ./test/mocha-shim.cjs --test test/serialize.js"
+  }
+}

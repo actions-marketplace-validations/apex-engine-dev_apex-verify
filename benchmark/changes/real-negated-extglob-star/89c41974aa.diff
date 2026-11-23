@@ -1,0 +1,41 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:10
++++ b/lib/parse.js	2026-11-23 10:19:10
+@@ -141,7 +141,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || '';
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+@@ -236,22 +236,22 @@
+ 
+   const extglobClose = token => {
+     let output = token.close + (opts.capture ? ')' : '');
+-    let rest;
++    // let rest; // 'rest' is no longer needed after removing the problematic block
+ 
+     if (token.type === 'negate') {
+-      let extglobStar = star;
++      let extglobStar = star; // `star` is `[^/]*?`
+ 
+       if (token.inner && token.inner.length > 1 && token.inner.includes('/')) {
+-        extglobStar = globstar(opts);
++        extglobStar = globstar(opts); // `globstar(opts)` is `((?:(?!(?:^|\/).).*?))`
+       }
+ 
++      // This condition handles `!(foo)` (eos), `!(foo)))` (/^\)+$/), or `!(foo/bar)` (extglobStar !== star)
+       if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
+         output = token.close = `)$))${extglobStar}`;
+       }
+ 
+-      if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)) {
+-        output = token.close = `)${rest})${extglobStar})`;
+-      }
++      // The problematic block that was merging 'rest' into token.close has been removed.
++      // This ensures that trailing literals like '.ts' are processed as separate tokens.
+ 
+       if (token.prev.type === 'bos') {
+         state.negatedExtglob = true;

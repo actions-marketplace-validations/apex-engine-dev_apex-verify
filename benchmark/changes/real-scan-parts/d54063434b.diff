@@ -1,0 +1,106 @@
+diff -ruN a/lib/scan.js b/lib/scan.js
+--- a/lib/scan.js	2026-11-23 10:19:10
++++ b/lib/scan.js	2026-11-23 10:19:10
+@@ -53,7 +53,7 @@
+   const scanToEnd = opts.parts === true || opts.scanToEnd === true;
+   const slashes = [];
+   const tokens = [];
+-  const parts = [];
++  // `parts` will be generated at the end based on `slashes` and `state.start`
+ 
+   let str = input;
+   let index = -1;
+@@ -155,8 +155,8 @@
+ 
+     if (code === CHAR_FORWARD_SLASH) {
+       slashes.push(index);
+-      tokens.push(token);
+-      token = { value: '', depth: 0, isGlob: false };
++      tokens.push(token); // Push the token for the segment *before* this slash
++      token = { value: '', depth: 0, isGlob: false }; // Reset token for the segment *after* this slash
+ 
+       if (finished === true) continue;
+       if (prev === CHAR_DOT && index === (start + 1)) {
+@@ -340,49 +340,49 @@
+   };
+ 
+   if (opts.tokens === true) {
+-    state.maxDepth = 0;
+-    if (!isPathSeparator(code)) {
++    // Push the last accumulated token if it wasn't pushed by a trailing slash
++    // and represents a non-empty segment or an explicit empty segment at the end.
++    // If input is '/', `token` is empty after `tokens.push({value: '', ...})` for leading slash.
++    // `isPathSeparator(code)` will be true, so the `if` below won't run.
++    // The previous logic for `maxDepth` assumed the `tokens` array was adjusted later.
++    // For consistency with original logic, we ensure the last token is pushed.
++    if (!isPathSeparator(code) || token.value === '') { // `token.value === ''` handles trailing empty segment like 'foo/' or '/'
+       tokens.push(token);
+     }
+     state.tokens = tokens;
+   }
+ 
+-  if (opts.parts === true || opts.tokens === true) {
+-    let prevIndex;
++  // BEGIN FIX: Generate `parts` always covering the whole pattern
++  if (opts.parts === true) {
++    const parts = [];
++    let currentPartStart = state.start; // The effective start of the pattern after prefix processing
+ 
+-    for (let idx = 0; idx < slashes.length; idx++) {
+-      const n = prevIndex ? prevIndex + 1 : start;
+-      const i = slashes[idx];
+-      const value = input.slice(n, i);
+-      if (opts.tokens) {
+-        if (idx === 0 && start !== 0) {
+-          tokens[idx].isPrefix = true;
+-          tokens[idx].value = prefix;
+-        } else {
+-          tokens[idx].value = value;
+-        }
+-        depth(tokens[idx]);
+-        state.maxDepth += tokens[idx].depth;
+-      }
+-      if (idx !== 0 || value !== '') {
+-        parts.push(value);
+-      }
+-      prevIndex = i;
++    // Iterate through the indices of path separators found in the input (original string)
++    for (const slashIndex of slashes) {
++      // Extract the segment between the last part start and the current slash
++      const part = input.slice(currentPartStart, slashIndex);
++      parts.push(part);
++      // Move the start of the next part past the current slash
++      currentPartStart = slashIndex + 1;
+     }
+ 
+-    if (prevIndex && prevIndex + 1 < input.length) {
+-      const value = input.slice(prevIndex + 1);
+-      parts.push(value);
++    // After processing all slashes, the remaining part of the input (from currentPartStart to the end)
++    // constitutes the last segment. This also handles cases with no slashes (e.g., 'foo', '*', '').
++    const lastPart = input.slice(currentPartStart);
++    parts.push(lastPart);
++    
++    state.parts = parts;
++  }
++  // END FIX
+ 
+-      if (opts.tokens) {
+-        tokens[tokens.length - 1].value = value;
+-        depth(tokens[tokens.length - 1]);
+-        state.maxDepth += tokens[tokens.length - 1].depth;
+-      }
++  // Calculate maxDepth if tokens are requested.
++  // This recalculation correctly uses the glob properties stored in each token.
++  if (opts.tokens === true) {
++    state.maxDepth = 0;
++    for (const tkn of state.tokens) {
++      depth(tkn);
++      state.maxDepth += tkn.depth;
+     }
+-
+-    state.slashes = slashes;
+-    state.parts = parts;
+   }
+ 
+   return state;

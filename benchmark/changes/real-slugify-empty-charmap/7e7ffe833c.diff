@@ -1,0 +1,22 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:18:30
++++ b/slugify.js	2026-11-23 10:18:30
+@@ -33,7 +33,17 @@
+     var slug = string.normalize().split('')
+       // replace characters based on charMap
+       .reduce(function (result, ch) {
+-        var appendChar = locale[ch] || charMap[ch] || ch;
++        var appendChar;
++        // Check locale first, then charMap. If a mapping exists, use it even if it's an empty string.
++        // Otherwise, fall back to the original character.
++        if (locale.hasOwnProperty(ch)) {
++          appendChar = locale[ch];
++        } else if (charMap.hasOwnProperty(ch)) {
++          appendChar = charMap[ch];
++        } else {
++          appendChar = ch;
++        }
++
+         if (appendChar === replacement) {
+           appendChar = ' ';
+         }

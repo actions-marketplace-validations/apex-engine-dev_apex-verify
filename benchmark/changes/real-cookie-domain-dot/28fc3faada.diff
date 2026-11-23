@@ -1,0 +1,22 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:13:42
++++ b/index.js	2026-11-23 10:13:42
+@@ -206,7 +206,17 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!domainValueRegExp.test(opt.domain)) {
++    // RFC 6265 specifies that domain can start with a dot, e.g. ".example.com"
++    // It also specifies that the domain must not contain illegal characters.
++    // `domainValueRegExp` validates the basic structure but allows leading dots.
++    // We need to ensure it doesn't have illegal characters or multiple dots.
++    var domain = opt.domain;
++    if (domain.length > 255 || domain.split('..').length > 1) {
++      throw new TypeError('option domain is invalid');
++    }
++
++    // Allow 'localhost' as a valid domain
++    if (domain !== 'localhost' && !domainValueRegExp.test(domain) && domain[0] !== '.') {
+       throw new TypeError('option domain is invalid');
+     }
+ 

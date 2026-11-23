@@ -1,0 +1,41 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:26
++++ b/index.js	2026-11-23 10:17:26
+@@ -101,8 +101,11 @@
+ 
+ function status (code) {
+   if (typeof code === 'number') {
+-    if (!status.message[code]) throw new Error('invalid status code: ' + code)
+-    return status.message[code]
++    // Ensure the number is a valid status code and not an inherited property
++    if (Object.prototype.hasOwnProperty.call(status.message, code)) {
++      return status.message[code]
++    }
++    throw new Error('invalid status code: ' + code)
+   }
+ 
+   if (typeof code !== 'string') {
+@@ -112,11 +115,18 @@
+   // '403'
+   var n = parseInt(code, 10)
+   if (!isNaN(n)) {
+-    if (!status.message[n]) throw new Error('invalid status code: ' + n)
+-    return status.message[n]
++    // Ensure the parsed number is a valid status code and not an inherited property
++    if (Object.prototype.hasOwnProperty.call(status.message, n)) {
++      return status.message[n]
++    }
++    throw new Error('invalid status code: ' + n)
+   }
+ 
+-  n = status.code[code.toLowerCase()]
+-  if (!n) throw new Error('invalid status message: "' + code + '"')
+-  return n
++  // lookup message
++  var msg = code.toLowerCase()
++  // Ensure the lookup is for a valid status message and not an inherited property
++  if (Object.prototype.hasOwnProperty.call(status.code, msg)) {
++    return status.code[msg]
++  }
++  throw new Error('invalid status message: "' + code + '"')
+ }

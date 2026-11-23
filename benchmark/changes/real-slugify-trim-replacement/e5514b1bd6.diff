@@ -1,0 +1,16 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:13:43
++++ b/slugify.js	2026-11-23 10:13:43
+@@ -53,6 +53,12 @@
+         .replace(new RegExp('[\\s' + replacement + ']+', 'g'), replacement)
+     }
+ 
++    // NEW: Remove leading/trailing replacement characters
++    // Escape the replacement character to be used safely in a regex
++    var escapedReplacement = replacement.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++    var trimReplacementRegex = new RegExp('^' + escapedReplacement + '|' + escapedReplacement + '$', 'g');
++    slug = slug.replace(trimReplacementRegex, '');
++
+     return slug
+   }
+ 

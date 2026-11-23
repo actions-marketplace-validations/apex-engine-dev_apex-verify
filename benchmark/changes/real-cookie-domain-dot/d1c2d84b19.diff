@@ -1,0 +1,46 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:13:42
++++ b/index.js	2026-11-23 10:13:42
+@@ -206,11 +206,40 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!domainValueRegExp.test(opt.domain)) {
++    // domain must be a non-empty string
++    if (typeof opt.domain !== 'string' || opt.domain.length === 0) {
+       throw new TypeError('option domain is invalid');
+     }
+ 
+-    str += '; Domain=' + opt.domain;
++    // leading dot is valid
++    var domain = opt.domain.charAt(0) === '.'
++      ? '.' + opt.domain.slice(1).toLowerCase()
++      : opt.domain.toLowerCase();
++
++    if (domain === '.localhost') {
++      domain = 'localhost';
++    }
++
++    // domain-value      = <subdomain>
++    //                     ; defined in [RFC1034], Section 3.5, as
++    //                     ; enhanced by [RFC1123], Section 2.1
++    // <subdomain>       = <label> | <subdomain> "." <label>
++    // <label>           = <let-dig> [ [ <ldh-str> ] <let-dig> ]
++    //                     Labels must be 63 characters or less.
++    //                     'let-dig' not 'letter' in the first char, per RFC1123
++    // <ldh-str>         = <let-dig-hyp> | <let-dig-hyp> <ldh-str>
++    // <let-dig-hyp>     = <let-dig> | "-"
++    // <let-dig>         = <letter> | <digit>
++    // <letter>          = any one of the 52 alphabetic characters A through Z in
++    //                     upper case and a through z in lower case
++    // <digit>           = any one of the ten digits 0 through 9
++    var domainNameRegExp = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
++
++    if (!domainNameRegExp.test(domain)) {
++      throw new TypeError('option domain is invalid');
++    }
++
++    str += '; Domain=' + domain;
+   }
+ 
+   if (opt.path) {

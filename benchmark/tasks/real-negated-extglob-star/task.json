@@ -1,0 +1,11 @@
+{
+  "id": "real-negated-extglob-star",
+  "kind": "fix",
+  "title": "Negated extglob with a star followed by more pattern never matches",
+  "prompt": "Our picomatch can't match a path against a negated extglob that contains a star when something follows the closing parenthesis. For example '/!(*.d).ts' should match '/file.something.ts' but not '/file.d.ts', and '/!(*.d).{ts,tsx}' or '/!(*.d).@(ts)' behave the same way (they should match '/file.dhello.ts' and '/file.d.something.ts', but not '/file.d.ts'). Please fix it.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/api.picomatch.js test/api.scan.js test/bash.js test/bash.spec.js test/brackets.js test/dotfiles.js test/dots-invalid.js test/extglobs-bash.js test/extglobs-minimatch.js test/extglobs-temp.js test/extglobs.js test/globstars.js test/issue-related.js test/malicious.js test/minimatch.js test/negation.js test/non-globs.js test/options.format.js test/options.ignore.js test/options.js test/options.noextglob.js test/options.noglobstar.js test/options.onMatch.js test/parens.js test/posix-classes.js test/qmarks.js test/regex-features.js test/slashes-posix.js test/slashes-windows.js test/special-characters.js test/stars.js test/wildmat.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-extglobs.test.js"
+  }
+}

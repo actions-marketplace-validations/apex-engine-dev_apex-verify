@@ -1,0 +1,12 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:22:21
++++ b/humanize-duration.js	2026-11-23 10:22:21
+@@ -1387,6 +1387,8 @@
+           }
+         }
+       } else {
++        // Use `String.prototype.replace` to ensure that only the first decimal point is replaced.
++        // This is important when the decimal option contains multiple characters.
+         formattedCount = countStr.replace(".", decimal);
+       }
+ 

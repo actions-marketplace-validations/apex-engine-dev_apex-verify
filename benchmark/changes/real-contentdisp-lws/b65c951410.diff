@@ -1,0 +1,55 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:15:47
++++ b/index.js	2026-11-23 10:15:47
+@@ -77,7 +77,8 @@
+  * OCTET         = <any 8-bit sequence of data>
+  */
+ 
+-var PARAM_REGEXP = /; *([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *= *("(?:[ !\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+) */g
++// Use the tab character (\t) as well as space ( ) for LWS
++var PARAM_REGEXP = /;[ \t]*([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*=[ \t]*("(?:[^"\\]|\\.)*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*/g
+ var TEXT_REGEXP = /^[\x20-\x7e\x80-\xff]+$/
+ var TOKEN_REGEXP = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/
+ 
+@@ -117,7 +118,7 @@
+  * ext-token        = <the characters in token, followed by "*">
+  */
+ 
+-var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *(?:$|;)/
++var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*(?:$|;)/
+ 
+ /**
+  * Create an attachment Content-Disposition header.
+@@ -321,17 +322,16 @@
+   var value
+ 
+   // calculate index to start at
+-  index = PARAM_REGEXP.lastIndex = match[0].substr(-1) === ';'
+-    ? index - 1
+-    : index
++  index = match.index + match[0].length
++  var startIndex = index
+ 
+   // match parameters
+   while ((match = PARAM_REGEXP.exec(string))) {
+-    if (match.index !== index) {
+-      throw new TypeError('invalid parameter format')
++    // Ensure that the parameter is not part of the disposition type
++    if (match.index < startIndex) {
++      continue
+     }
+ 
+-    index += match[0].length
+     key = match[1].toLowerCase()
+     value = match[2]
+ 
+@@ -365,7 +365,8 @@
+     params[key] = value
+   }
+ 
+-  if (index !== -1 && index !== string.length) {
++  // check if the entire string was parsed
++  if (string.length > index && PARAM_REGEXP.lastIndex !== string.length) {
+     throw new TypeError('invalid parameter format')
+   }
+ 

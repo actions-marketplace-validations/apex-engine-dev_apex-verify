@@ -1,0 +1,21 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:09
++++ b/lib/parse.js	2026-11-23 10:19:09
+@@ -576,7 +576,7 @@
+       }
+ 
+       if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
+-        output = token.close = `)$))${extglobStar}`;
++        output = token.close = `)$))${extglobStar})`;
+       }
+ 
+       if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)) {
+@@ -603,7 +603,7 @@
+    * Fast paths
+    */
+ 
+-  if (opts.fastpaths !== false && !/(^[*!]|[/()[\]{}"])/.test(input)) {
++  if (opts.fastpaths !== false && !/(^[*!]|[/()[\]{}"`])/.test(input)) {
+     let backslashes = false;
+ 
+     let output = input.replace(REGEX_SPECIAL_CHARS_BACKREF, (m, esc, chars, first, rest, index) => {

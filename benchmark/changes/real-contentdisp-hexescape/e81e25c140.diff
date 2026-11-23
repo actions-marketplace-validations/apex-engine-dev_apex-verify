@@ -1,0 +1,83 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:16:30
++++ b/index.js	2026-11-23 10:16:30
+@@ -35,6 +35,12 @@
+ var nonAsciiRegExp = /[^\x00-\x7f]/g
+ 
+ /**
++ * RegExp to match percent character.
++ */
++
++var percentRegExp = /%/
++
++/**
+  * RegExp to match chars that must be quoted-pair in RFC 2616
+  */
+ 
+@@ -68,17 +74,38 @@
+   // restrict to file base name
+   var name = basename(filename)
+ 
+-  if (asciiStringRegExp.test(name)) {
++  var isAscii = asciiStringRegExp.test(name)
++  var hasPercent = percentRegExp.test(name)
++
++  // Use simple 'filename' parameter if it's purely US-ASCII and contains no percent signs.
++  // This avoids ambiguity for clients that might percent-decode the filename parameter.
++  if (isAscii && !hasPercent) {
+     // simple header
+     // file name is always quoted and not a token for RFC 2616 compatibility
+     return 'attachment; filename=' + qstring(name)
+   }
+ 
+-  // simple Unicode -> US-ASCII transliteration
+-  var asciiFilename = name.replace(nonAsciiRegExp, '?')
++  // Otherwise (non-ASCII or contains percent sign), use filename* and a fallback filename parameter.
++  // The fallback filename needs special handling based on its content.
++  var filenameParam;
++  if (isAscii && hasPercent) {
++    // Case: US-ASCII filename that contains percent signs (e.g., 'hello%41world.txt').
++    // The filename parameter SHOULD be percent-encoded itself to avoid ambiguity,
++    // as per RFC 6266, Section 4.3.
++    filenameParam = pqstring(name);
++  } else {
++    // Case: Filename contains non-US-ASCII characters (e.g., 'планы.pdf').
++    // The filename parameter provides a transliterated fallback (non-ASCII replaced by '?').
++    // This matches existing behavior for Unicode names, which is a robust fallback for older clients.
++    var asciiFilename = name.replace(nonAsciiRegExp, '?')
++    filenameParam = qstring(asciiFilename)
++  }
+ 
+-  return 'attachment; filename=' + qstring(asciiFilename)
+-    + '; filename*=' + ustring(name)
++  // The filename* parameter provides the unambiguous, UTF-8 encoded filename.
++  var unicodeFilenameParam = ustring(name)
++
++  return 'attachment; filename=' + filenameParam
++    + '; filename*=' + unicodeFilenameParam
+ }
+ 
+ /**
+@@ -133,4 +160,22 @@
+     .replace(encodeUriAttrCharRegExp, pencode)
+ 
+   return 'UTF-8\'\'' + encoded
++}
++
++/**
++ * Percent encode a string and then quote it for HTTP.
++ * This is used for the filename fallback when filename contains percent characters,
++ * to prevent misinterpretation by clients.
++ *
++ * @param {string} val
++ * @return {string}
++ * @api private
++ */
++
++function pqstring(val) {
++  var str = String(val)
++  // The filename parameter SHOULD be percent-encoded as per Section 2.1 of RFC 3986.
++  // encodeURIComponent produces only US-ASCII characters, which are suitable for qstring.
++  var encoded = encodeURIComponent(str)
++  return qstring(encoded)
+ }

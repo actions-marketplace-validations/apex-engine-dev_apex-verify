@@ -1,0 +1,104 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:34
++++ b/index.js	2026-11-23 10:14:34
+@@ -33,6 +33,34 @@
+ var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
+ 
+ /**
++ * RegExp to match the exact string of a domain.
++ */
++var domainRegExp = /^([a-zA-Z0-9\.\-\_]+)$/;
++
++/**
++ * RegExp to match the exact string of a path.
++ */
++var pathRegExp = /^([a-zA-Z0-9\.\-\_~/]+)$/;
++
++/**
++ * RegExp to match cookie-octets according to RFC 6265.
++ *
++ * cookie-octet = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++ *              / obs-text
++ * obs-text     = %x80-FF
++ */
++var cookieOctetRegExp = /^[a-zA-Z0-9\x21\x23-\x2B\x2D\x3A\x3C-\x5B\x5D-\x7E\x80-\xFF]+$/;
++
++/**
++ * RegExp to match a valid cookie name.
++ *
++ * cookie-name = token
++ * token = 1* tchar
++ * tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++ */
++var tokenRegExp = /^([a-zA-Z0-9!#$%&'*+\-.^_`|~]+)$/;
++
++/**
+  * Parse a cookie header.
+  *
+  * Parse the given cookie header string into an object
+@@ -116,14 +144,28 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
+-    throw new TypeError('argument name is invalid');
++  // validate name
++  if (opt.loose) {
++    if (!fieldContentRegExp.test(name)) {
++      throw new TypeError('argument name is invalid');
++    }
++  } else {
++    if (!tokenRegExp.test(name)) {
++      throw new TypeError('argument name is invalid');
++    }
+   }
+ 
+   var value = enc(val);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
+-    throw new TypeError('argument val is invalid');
++  // validate value
++  if (opt.loose) {
++    if (value && !fieldContentRegExp.test(value)) {
++      throw new TypeError('argument val is invalid');
++    }
++  } else {
++    if (!cookieOctetRegExp.test(value)) {
++      throw new TypeError('argument val is invalid');
++    }
+   }
+ 
+   var str = name + '=' + value;
+@@ -139,16 +181,28 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!fieldContentRegExp.test(opt.domain)) {
+-      throw new TypeError('option domain is invalid');
++    if (opt.loose) {
++      if (!fieldContentRegExp.test(opt.domain)) {
++        throw new TypeError('option domain is invalid');
++      }
++    } else {
++      if (!domainRegExp.test(opt.domain)) {
++        throw new TypeError('option domain is invalid');
++      }
+     }
+ 
+     str += '; Domain=' + opt.domain;
+   }
+ 
+   if (opt.path) {
+-    if (!fieldContentRegExp.test(opt.path)) {
+-      throw new TypeError('option path is invalid');
++    if (opt.loose) {
++      if (!fieldContentRegExp.test(opt.path)) {
++        throw new TypeError('option path is invalid');
++      }
++    } else {
++      if (!pathRegExp.test(opt.path)) {
++        throw new TypeError('option path is invalid');
++      }
+     }
+ 
+     str += '; Path=' + opt.path;

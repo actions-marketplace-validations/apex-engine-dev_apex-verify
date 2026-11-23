@@ -1,0 +1,33 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:18:30
++++ b/slugify.js	2026-11-23 10:18:30
+@@ -33,7 +33,28 @@
+     var slug = string.normalize().split('')
+       // replace characters based on charMap
+       .reduce(function (result, ch) {
+-        var appendChar = locale[ch] || charMap[ch] || ch;
++        var appendChar;
++
++        // Check locale map first
++        if (locale.hasOwnProperty(ch)) {
++          appendChar = locale[ch];
++        }
++        // Then global charMap
++        else if (charMap.hasOwnProperty(ch)) {
++          appendChar = charMap[ch];
++        }
++        // If no mapping, use the original character
++        else {
++          appendChar = ch;
++        }
++
++        // If a character maps to the replacement value, we temporarily
++        // convert it to a space. This allows the later .replace(/\s+/g, replacement)
++        // to correctly handle consecutive characters that map to the replacement,
++        // or characters mapping to replacement next to actual spaces,
++        // ensuring they collapse into a single replacement character.
++        // This check correctly ignores empty string (`'' === replacement` will be false if `replacement` is not `''`)
++        // so empty string mappings will result in removal.
+         if (appendChar === replacement) {
+           appendChar = ' ';
+         }

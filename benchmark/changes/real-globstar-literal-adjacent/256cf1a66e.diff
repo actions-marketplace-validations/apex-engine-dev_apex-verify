@@ -1,0 +1,245 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:30
++++ b/lib/parse.js	2026-11-23 10:22:30
+@@ -441,7 +441,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || '';
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+@@ -1129,133 +1129,141 @@
+      * Stars
+      */
+ 
+-    if (prev && (prev.type === 'globstar' || prev.star === true)) {
+-      prev.type = 'star';
+-      prev.star = true;
++    // If prev is already a globstar (e.g., parsing `***` after first `**`)
++    if (prev && prev.type === 'globstar') {
+       prev.value += value;
+-      prev.output = star;
+-      state.backtrack = true;
+-      state.globstar = true;
+       consume(value);
+       continue;
+     }
+ 
+-    let rest = remaining();
+-    if (opts.noextglob !== true && /^\([^?]/.test(rest)) {
+-      extglobOpen('star', value);
+-      continue;
+-    }
+-
+-    if (prev.type === 'star') {
++    // If prev is a single star, and current value is also a star, we have `**`
++    if (prev && prev.type === 'star') {
+       if (opts.noglobstar === true) {
++        prev.value += value; // Collapse `**` into a single `*` effect
+         consume(value);
+         continue;
+       }
+ 
+-      const prior = prev.prev;
+-      const before = prior.prev;
+-      const isStart = prior.type === 'slash' || prior.type === 'bos';
+-      const afterStar = before && (before.type === 'star' || before.type === 'globstar');
++      const prior = prev.prev; // Token before the first `*`
++      const isStartOfPattern = prior.type === 'bos' || prior.type === 'slash';
++      const isEndOfPattern = eos() || (
++        state.parens > 0
++        && remaining().startsWith(')'.repeat(state.parens)) // Checks for balanced closing parens at the end
++        && !extglobs.some(extglob => extglob.type === 'negate')
++      );
++      const isFollowedBySeparator = peek() === '/';
+ 
+-      if (opts.bash === true && (!isStart || (rest[0] && rest[0] !== '/'))) {
+-        push({ type: 'star', value, output: '' });
+-        continue;
+-      }
++      let shouldBeFullSegmentGlobstar = false;
+ 
+-      const isBrace = state.braces > 0 && (prior.type === 'comma' || prior.type === 'brace');
+-      const isExtglob = extglobs.length && (prior.type === 'pipe' || prior.type === 'paren');
+-      if (!isStart && prior.type !== 'paren' && !isBrace && !isExtglob) {
+-        push({ type: 'star', value, output: '' });
+-        continue;
++      // Rule: a double star acts as a globstar only when it is the whole path segment.
++      // This means it must be preceded by BOS/slash and followed by EOS/slash.
++      if (isStartOfPattern && isEndOfPattern) { // Pattern: `**`
++        shouldBeFullSegmentGlobstar = true;
++      } else if (isStartOfPattern && isFollowedBySeparator) { // Pattern: `**/...`
++        shouldBeFullSegmentGlobstar = true;
++      } else if (prior.type === 'slash' && isEndOfPattern) { // Pattern: `.../**`
++        shouldBeFullSegmentGlobstar = true;
++      } else if (prior.type === 'slash' && isFollowedBySeparator) { // Pattern: `.../**/...`
++        shouldBeFullSegmentGlobstar = true;
+       }
+ 
+-      // strip consecutive `/**/`
+-      while (rest.slice(0, 3) === '/**') {
+-        const after = input[state.index + 4];
+-        if (after && after !== '/') {
+-          break;
++      // Handle `/**/` collapsing: This implies globstar behavior, and could consume more input.
++      // The original implementation had a loop for this.
++      let consumedConsecutiveDoubleSlashes = false;
++      let tempIndex = state.index; // Current index is at the second `*`
++      let tempRemaining = input.slice(tempIndex + 1); // Remaining string after the second `*`
++
++      // Check for patterns like `**/...`
++      if (tempRemaining.startsWith('/**')) {
++        let currentScanIndex = tempIndex + 1; // Start scanning after the second `*`
++        let currentLookahead = input.slice(currentScanIndex);
++        
++        while (currentLookahead.startsWith('/**')) {
++          const charAfterGlobstar = input[currentScanIndex + 3];
++          if (charAfterGlobstar && charAfterGlobstar !== '/') {
++            break; 
++          }
++          currentScanIndex += 3;
++          consumedConsecutiveDoubleSlashes = true;
++          shouldBeFullSegmentGlobstar = true;
++          tempIndex = currentScanIndex - 1; // Adjust tempIndex to point to the last '*' of `**`
++          currentLookahead = input.slice(currentScanIndex);
+         }
+-        rest = rest.slice(3);
+-        consume('/**', 3);
+       }
+ 
+-      // A globstar followed only by balanced closing parens is at the logical end of patterns like
+-      // `test(/utils/**)` and `test?(/utils/**)`. Treat it as EOS so the trailing `/**` can match its
+-      // parent path, except in negated extglobs where that would change the exclusion semantics.
+-      const isEnd = eos() || (
+-        state.parens > 0
+-        && rest === ')'.repeat(state.parens)
+-        && !extglobs.some(extglob => extglob.type === 'negate')
+-      );
+-
+-      if (prior.type === 'bos' && eos()) {
+-        prev.type = 'globstar';
++      // Bash-specific check: `**` behaves like `*` if it's not a full segment globstar.
++      // This aligns with the primary goal of the fix.
++      if (opts.bash === true && (!isStartOfPattern || (peek() && peek() !== '/')) && !shouldBeFullSegmentGlobstar) {
+         prev.value += value;
+-        prev.output = globstar(opts);
+-        state.output = prev.output;
+-        state.globstar = true;
+         consume(value);
+         continue;
+       }
++      
++      if (shouldBeFullSegmentGlobstar) {
++        // If multiple `/**/` were collapsed, update state.index.
++        if (consumedConsecutiveDoubleSlashes) {
++          state.index = tempIndex;
++        }
+ 
+-      if (prior.type === 'slash' && prior.prev.type !== 'bos' && !afterStar && isEnd) {
+-        state.output = state.output.slice(0, -(prior.output + prev.output).length);
+-        prior.output = `(?:${prior.output}`;
+-
++        // Remove the output of the first `*` (which is `STAR`)
++        state.output = state.output.slice(0, -prev.output.length);
+         prev.type = 'globstar';
+-        prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
+-        prev.value += value;
++        prev.value += value; // `prev.value` becomes `**`
+         state.globstar = true;
+-        state.output += prior.output + prev.output;
+-        consume(value);
+-        continue;
+-      }
+ 
+-      if (prior.type === 'slash' && prior.prev.type !== 'bos' && rest[0] === '/') {
+-        const end = rest[1] !== void 0 ? '|$' : '';
++        // Apply specific globstar regex outputs based on the precise context
++        if (isStartOfPattern && isEndOfPattern) { // Pattern: `**`
++          prev.output = globstar(opts);
++          state.output += prev.output;
++          consume(value);
++          continue;
++        }
+ 
+-        state.output = state.output.slice(0, -(prior.output + prev.output).length);
+-        prior.output = `(?:${prior.output}`;
++        if (isStartOfPattern && isFollowedBySeparator) { // Pattern: `**/`
++          prev.output = `(?:^|${SLASH_LITERAL}|${globstar(opts)}${SLASH_LITERAL})`;
++          state.output += prev.output;
++          consume(value + advance()); // Consume `**` and `/`
++          push({ type: 'slash', value: '/', output: '' });
++          continue;
++        }
+ 
+-        prev.type = 'globstar';
+-        prev.output = `${globstar(opts)}${SLASH_LITERAL}|${SLASH_LITERAL}${end})`;
+-        prev.value += value;
++        if (prior.type === 'slash' && isEndOfPattern) { // Pattern: `/**`
++          prior.output = `(?:${prior.output}`;
++          prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
++          state.output += prior.output + prev.output;
++          consume(value);
++          continue;
++        }
+ 
+-        state.output += prior.output + prev.output;
+-        state.globstar = true;
++        if (prior.type === 'slash' && isFollowedBySeparator) { // Pattern: `/**/`
++          const end = peek(1) !== void 0 ? '|$' : '';
++          prior.output = `(?:${prior.output}`;
++          prev.output = `${globstar(opts)}${SLASH_LITERAL}|${SLASH_LITERAL}${end})`;
++          state.output += prior.output + prev.output;
++          consume(value + advance()); // Consume `**` and `/`
++          push({ type: 'slash', value: '/', output: '' });
++          continue;
++        }
+ 
+-        consume(value + advance());
+-
+-        push({ type: 'slash', value: '/', output: '' });
++        // Fallback for globstar if no specific case matched
++        prev.output = globstar(opts);
++        state.output += prev.output;
++        consume(value);
+         continue;
+-      }
+ 
+-      if (prior.type === 'bos' && rest[0] === '/') {
+-        prev.type = 'globstar';
++      } else {
++        // `**` is NOT a full segment globstar. Treat it like a single star (within segment).
++        // The `prev` token is already `star` with `output: STAR` (`[^/]*?`).
++        // Just consume the current `*` and extend `prev.value`, keeping `prev.output` as `STAR`.
++        // This ensures `**.js` results in `[^/]*?.js`.
+         prev.value += value;
+-        prev.output = `(?:^|${SLASH_LITERAL}|${globstar(opts)}${SLASH_LITERAL})`;
+-        state.output = prev.output;
+-        state.globstar = true;
+-        consume(value + advance());
+-        push({ type: 'slash', value: '/', output: '' });
++        consume(value);
+         continue;
+       }
+-
+-      // remove single star from output
+-      state.output = state.output.slice(0, -prev.output.length);
+-
+-      // reset previous token to globstar
+-      prev.type = 'globstar';
+-      prev.output = globstar(opts);
+-      prev.value += value;
+-
+-      // reset output with globstar
+-      state.output += prev.output;
+-      state.globstar = true;
+-      consume(value);
+-      continue;
+     }
+ 
++    // This block handles the first `*` encountered, or a standalone `*`.
++    // It's placed after the `prev.type === 'star'` block to ensure `**` is prioritized.
+     const token = { type: 'star', value, output: star };
+ 
+     if (opts.bash === true) {

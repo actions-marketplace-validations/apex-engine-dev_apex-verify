@@ -1,0 +1,8 @@
+{
+  "name": "real-slugify-empty-charmap",
+  "private": true,
+  "main": "slugify.js",
+  "scripts": {
+    "test": "node --require ./test/mocha-shim.cjs --test test/slugify.js"
+  }
+}

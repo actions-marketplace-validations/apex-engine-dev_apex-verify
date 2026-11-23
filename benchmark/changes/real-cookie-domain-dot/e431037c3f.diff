@@ -1,0 +1,28 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:13:42
++++ b/index.js	2026-11-23 10:13:42
+@@ -66,7 +66,10 @@
+  * <digit>           = any one of the ten digits 0 through 9
+  */
+ 
+-var domainValueRegExp = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
++// The domain value must be a valid domain name.
++// This regex is a slightly modified version of the one found in the RFC,
++// allowing for leading dots and localhost.
++var domainValueRegExp = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?|localhost)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
+ 
+ /**
+  * RegExp to match path-value in RFC 6265 sec 4.1.1
+@@ -206,7 +209,11 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!domainValueRegExp.test(opt.domain)) {
++    // The domain value must be a valid domain name.
++    // This regex is a slightly modified version of the one found in the RFC,
++    // allowing for leading dots and localhost.
++    var domainRegExp = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?|localhost)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
++    if (!domainRegExp.test(opt.domain)) {
+       throw new TypeError('option domain is invalid');
+     }
+ 

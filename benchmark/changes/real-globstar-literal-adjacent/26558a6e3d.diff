@@ -1,0 +1,56 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:29
++++ b/lib/parse.js	2026-11-23 10:22:29
+@@ -393,6 +393,14 @@
+   } = PLATFORM_CHARS;
+ 
+   const globstar = opts => {
++    // When globstar is used as a whole path segment like "**/*.js"
++    // it should match across path separators.
++    // When it's part of a segment like "**.js" or "**.thing.js",
++    // it should behave like a single star and not cross path separators.
++    if (opts.bash === true) {
++      return `(${capture}(?:(?!${START_ANCHOR}${opts.dot ? DOTS_SLASH : DOT_LITERAL})[\\s\\S])*?)`;
++    }
++
+     return `(${capture}(?:(?!${START_ANCHOR}${opts.dot ? DOTS_SLASH : DOT_LITERAL})[\\s\\S])*?)`;
+   };
+ 
+@@ -495,6 +503,8 @@
+       const isBrace = state.braces > 0 && (tok.type === 'comma' || tok.type === 'brace');
+       const isExtglob = tok.extglob === true || (extglobs.length && (tok.type === 'pipe' || tok.type === 'paren'));
+ 
++      // When a globstar is followed by a character that is not a path separator,
++      // it should behave like a single star.
+       if (tok.type !== 'slash' && tok.type !== 'paren' && !isBrace && !isExtglob) {
+         state.output = state.output.slice(0, -prev.output.length);
+         prev.type = 'star';
+@@ -509,7 +519,7 @@
+     }
+ 
+     if (tok.value || tok.output) append(tok);
+-    if (prev && prev.type === 'text' && tok.type === 'text') {
++    if (prev.type === 'text' && tok.type === 'text') {
+       prev.output = (prev.output || prev.value) + tok.value;
+       prev.value += tok.value;
+       return;
+@@ -543,7 +553,7 @@
+ 
+     if ((token.type === 'plus' || token.type === 'star') && analysis.risky) {
+       const safeOutput = analysis.safeOutput
+-        ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${analysis.safeOutput})` : analysis.safeOutput)
++        ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${safeOutput})` : safeOutput)
+         : undefined;
+       const open = tokens[token.tokensIndex];
+ 
+@@ -1375,6 +1385,10 @@
+ 
+   const globstar = opts => {
+     if (opts.noglobstar === true) return star;
++    // When globstar is used as a whole path segment like "**/*.js"
++    // it should match across path separators.
++    // When it's part of a segment like "**.js" or "**.thing.js",
++    // it should behave like a single star and not cross path separators.
+     return `(${capture}(?:(?!${START_ANCHOR}${opts.dot ? DOTS_SLASH : DOT_LITERAL})[\\s\\S])*?)`;
+   };
+ 

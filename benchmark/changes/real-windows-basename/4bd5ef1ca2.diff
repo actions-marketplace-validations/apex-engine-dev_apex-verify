@@ -1,0 +1,27 @@
+diff -ruN a/lib/picomatch.js b/lib/picomatch.js
+--- a/lib/picomatch.js	2026-11-23 10:21:32
++++ b/lib/picomatch.js	2026-11-23 10:21:32
+@@ -134,7 +134,9 @@
+ 
+   if (match === false || opts.capture === true) {
+     if (opts.matchBase === true || opts.basename === true) {
+-      match = picomatch.matchBase(input, regex, options, posix);
++      // Pass the `options` object directly to matchBase,
++      // which contains the `windows` property.
++      match = picomatch.matchBase(input, regex, options);
+     } else {
+       match = regex.exec(output);
+     }
+@@ -157,9 +159,10 @@
+  * @api public
+  */
+ 
+-picomatch.matchBase = (input, glob, options) => {
++picomatch.matchBase = (input, glob, options = {}) => {
+   const regex = glob instanceof RegExp ? glob : picomatch.makeRe(glob, options);
+-  return regex.test(utils.basename(input));
++  // Pass the `options` object to `utils.basename` so it can respect the `windows` option.
++  return regex.test(utils.basename(input, options));
+ };
+ 
+ /**

@@ -1,0 +1,55 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:10
++++ b/lib/parse.js	2026-11-23 10:19:10
+@@ -241,14 +241,47 @@
+     if (token.type === 'negate') {
+       let extglobStar = star;
+ 
++      // When negated extglob is followed by a star, it needs to be expanded.
++      // Example: /!(*.d).ts should match /file.dhello.ts, but not /file.d.ts
++      // The original regex: `(?:(?!(?:([^\/]*?)\.d))([^\/]*?))(?:\.ts|$)`
++      // This regex fails because the `([^\/]*?)` after `(?!(?:([^\/]*?)\.d))` is too greedy.
++      // We need to ensure that the star `*` in the negated extglob is not matched if it's immediately followed by a dot and the extension.
++      // The fix involves checking if the star is followed by a dot and an extension, and if so, making the star non-greedy.
++      // However, the current implementation of `STAR` (`[^/]*?`) is already non-greedy.
++      // The issue is more with how the regex is constructed for negated extglobs.
++      // When a negated extglob `!(*.d)` is followed by `.ts`, the regex becomes
++      // `(?:(?!(?:(?:[^\\/]*?)\\.d))([^\\/]*?))(?:\.ts|$)`.
++      // If the input is `/file.d.ts`, the `([^\\/]*?)` before `(?:\.ts|$)` can match `file.d`,
++      // then the `(?!(?:(?:[^\\/]*?)\\.d))` fails.
++      // The problem is that the `([^\\/]*?)` is too greedy.
++      //
++      // The fix: If the `inner` of the negated extglob contains a star and is followed by a dot and an extension,
++      // then we should make the star non-greedy by ensuring it doesn't match the dot and the extension.
++      //
++      // Example: `!(*.d).ts`
++      // Current regex: `(?:(?!(?:(?:[^\\/]*?)\\.d))([^\\/]*?))(?:\.ts|$)`
++      // Problematic input: `/file.d.ts`
++      // `([^\\/]*?)` matches `file.d`. Then `(?!(?:(?:[^\\/]*?)\\.d))` checks if `file.d` does not end with `.d`. It does. So it fails.
++      //
++      // The fix should ensure that if the inner pattern is `*.d` and the outer pattern is `.ts`,
++      // then the `*` should not match anything that would lead to a `.d.ts` match.
++      //
++      // The fix also needs to consider cases where there are multiple stars or complex patterns within the negated extglob.
++      // The logic `token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)` aims to address this.
++      // It checks if the inner pattern has a star and if the remaining input starts with a dot followed by characters that are not slashes or dots.
++      // If this condition is met, it means we are likely dealing with a file extension.
++      // In such cases, the negated extglob should be constructed to explicitly exclude matching the `.d.ts` pattern.
++      // `output = token.close = `)${rest})${extglobStar})`;
++
+       if (token.inner && token.inner.length > 1 && token.inner.includes('/')) {
+         extglobStar = globstar(opts);
+       }
+ 
+-      if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
+-        output = token.close = `)$))${extglobStar}`;
+-      }
+-
++      // This part is crucial for cases like `!(*.d).ts` where we need to ensure the star inside `!(*.d)` doesn't greedily match the dot that starts the following extension.
++      // If the remaining part of the input starts with a dot and is not just a dot, then we need to ensure the negated extglob's star is handled correctly.
++      // The original logic `if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest))` already attempts to handle this.
++      // The `extglobStar` variable ensures we use the correct star pattern.
++      // The modification `output = token.close = `)${rest})${extglobStar})`; ensures the negated extglob correctly closes and includes the subsequent star pattern.
+       if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)) {
+         output = token.close = `)${rest})${extglobStar})`;
+       }

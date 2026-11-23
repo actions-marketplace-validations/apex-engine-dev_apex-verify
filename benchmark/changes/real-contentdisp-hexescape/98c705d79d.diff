@@ -1,0 +1,34 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:16:30
++++ b/index.js	2026-11-23 10:16:30
+@@ -68,16 +68,25 @@
+   // restrict to file base name
+   var name = basename(filename)
+ 
+-  if (asciiStringRegExp.test(name)) {
+-    // simple header
++  var isSimpleAscii = asciiStringRegExp.test(name)
++  var hasPercentChar = name.indexOf('%') !== -1
++
++  if (isSimpleAscii && !hasPercentChar) {
++    // simple header: pure US-ASCII, no percent signs
+     // file name is always quoted and not a token for RFC 2616 compatibility
+     return 'attachment; filename=' + qstring(name)
+   }
+ 
+-  // simple Unicode -> US-ASCII transliteration
+-  var asciiFilename = name.replace(nonAsciiRegExp, '?')
++  // If we reach here, either:
++  // 1. name is not pure US-ASCII (e.g., Unicode characters)
++  // 2. name is pure US-ASCII, but contains a percent sign (e.g., 'hello%41world.txt')
++  // In both cases, we use filename* and provide a sanitized filename fallback.
+ 
+-  return 'attachment; filename=' + qstring(asciiFilename)
++  // For the filename fallback, replace non-ASCII characters and percent signs with '?'
++  // This ensures the fallback is simple ASCII and avoids ambiguous percent-decoding by clients.
++  var fallbackFilename = name.replace(nonAsciiRegExp, '?').replace(/%/g, '?')
++
++  return 'attachment; filename=' + qstring(fallbackFilename)
+     + '; filename*=' + ustring(name)
+ }
+ 

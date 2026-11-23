@@ -1,0 +1,24 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:48
++++ b/lib/parse.js	2026-11-23 10:22:48
+@@ -543,7 +543,7 @@
+ 
+     if ((token.type === 'plus' || token.type === 'star') && analysis.risky) {
+       const safeOutput = analysis.safeOutput
+-        ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${analysis.safeOutput})` : analysis.safeOutput)
++        ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${safeOutput})` : safeOutput)
+         : undefined;
+       const open = tokens[token.tokensIndex];
+ 
+@@ -750,7 +750,10 @@
+ 
+       if (value === '!' && prev.value === '[') {
+         // POSIX bracket negation: [!abc] is equivalent to [^abc]
+-        value = '^';
++        // If literalBrackets is true, this should not be a negation.
++        if (opts.literalBrackets !== true) {
++          value = '^';
++        }
+       }
+ 
+       prev.value += value;

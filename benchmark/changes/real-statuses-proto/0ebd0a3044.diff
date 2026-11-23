@@ -1,0 +1,56 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:26
++++ b/index.js	2026-11-23 10:17:26
+@@ -61,7 +61,9 @@
+  */
+ 
+ function createMessageToStatusCodeMap (codes) {
+-  var map = {}
++  // Use Object.create(null) to create a map without a prototype,
++  // preventing inherited properties like 'constructor' from ever existing.
++  var map = Object.create(null)
+ 
+   Object.keys(codes).forEach(function forEachCode (code) {
+     var message = codes[code]
+@@ -101,7 +103,10 @@
+ 
+ function status (code) {
+   if (typeof code === 'number') {
+-    if (!status.message[code]) throw new Error('invalid status code: ' + code)
++    // Ensure the code is a direct property of status.message, not inherited.
++    if (!Object.prototype.hasOwnProperty.call(status.message, code)) {
++      throw new Error('invalid status code: ' + code)
++    }
+     return status.message[code]
+   }
+ 
+@@ -112,11 +117,25 @@
+   // '403'
+   var n = parseInt(code, 10)
+   if (!isNaN(n)) {
+-    if (!status.message[n]) throw new Error('invalid status code: ' + n)
++    // Ensure the code is a direct property of status.message, not inherited.
++    if (!Object.prototype.hasOwnProperty.call(status.message, n)) {
++      throw new Error('invalid status code: ' + n)
++    }
+     return status.message[n]
+   }
+ 
+-  n = status.code[code.toLowerCase()]
+-  if (!n) throw new Error('invalid status message: "' + code + '"')
+-  return n
++  // Lookup by message string (case-insensitive)
++  var lowerCaseCode = code.toLowerCase()
++  var result // Using 'result' for clarity instead of re-using 'n'
++
++  // Ensure the message is a direct property of status.code, not inherited.
++  if (Object.prototype.hasOwnProperty.call(status.code, lowerCaseCode)) {
++    result = status.code[lowerCaseCode]
++  }
++
++  // If result is undefined (not found), throw error.
++  if (result === undefined) {
++    throw new Error('invalid status message: "' + code + '"')
++  }
++  return result
+ }

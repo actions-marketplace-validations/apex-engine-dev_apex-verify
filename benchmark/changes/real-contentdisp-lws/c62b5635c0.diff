@@ -1,0 +1,23 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:15:48
++++ b/index.js	2026-11-23 10:15:48
+@@ -77,7 +77,8 @@
+  * OCTET         = <any 8-bit sequence of data>
+  */
+ 
+-var PARAM_REGEXP = /; *([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *= *("(?:[ !\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+) */g
++// Use `[ \t]*` to match zero or more spaces or horizontal tabs for LWS
++var PARAM_REGEXP = /;[ \t]*([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*=[ \t]*("(?:[ !\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*/g
+ var TEXT_REGEXP = /^[\x20-\x7e\x80-\xff]+$/
+ var TOKEN_REGEXP = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/
+ 
+@@ -117,7 +118,8 @@
+  * ext-token        = <the characters in token, followed by "*">
+  */
+ 
+-var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *(?:$|;)/
++// Use `[ \t]*` to match zero or more spaces or horizontal tabs for LWS
++var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*(?:$|;)/
+ 
+ /**
+  * Create an attachment Content-Disposition header.

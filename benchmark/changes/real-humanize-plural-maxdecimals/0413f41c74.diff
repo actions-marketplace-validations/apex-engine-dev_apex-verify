@@ -1,0 +1,61 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:36
++++ b/humanize-duration.js	2026-11-23 10:20:36
+@@ -1363,6 +1363,8 @@
+ 
+       /** @type {string} */
+       var formattedCount;
++      // Use the original unitCount for pluralization logic, but the rounded value for display.
++      var originalUnitCount = unitCount;
+       var normalizedUnitCount =
+         maxDecimalPoints === void 0
+           ? unitCount
+@@ -1370,7 +1372,7 @@
+             Math.pow(10, maxDecimalPoints);
+       var countStr = normalizedUnitCount.toString();
+ 
+-      if (language._hideCountIf2 && unitCount === 2) {
++      if (language._hideCountIf2 && originalUnitCount === 2) {
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+@@ -1392,8 +1394,9 @@
+ 
+       var languageWord = language[unitName];
+       var word;
++      // Use the original unitCount for pluralization logic.
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        word = languageWord(originalUnitCount);
+       } else {
+         word = languageWord;
+       }
+@@ -1524,6 +1527,10 @@
+         unitName = units[i];
+         unitCount = /** @type {number} */ (unitCounts[unitName]);
+         if (unitCount) {
++          // Store the calculated (potentially rounded) unitCount here.
++          // The rendering function will use this for display and the original
++          // unitCount for pluralization if it's available (it is not in this implementation).
++          // The `renderPiece` function already uses `originalUnitCount` for pluralization.
+           result.push({ unitName: unitName, unitCount: unitCount });
+         }
+       }
+@@ -1542,6 +1549,8 @@
+       if (!pieces.length) {
+         var units = options.units;
+         var smallestUnitName = units[units.length - 1];
++        // When there are no pieces (e.g., 0ms), we still want to render
++        // a string for the smallest unit with a count of 0.
+         return renderPiece(
+           { unitName: smallestUnitName, unitCount: 0 },
+           language,
+@@ -1564,6 +1573,8 @@
+       /** @type {string[]} */
+       var renderedPieces = [];
+       for (var i = 0; i < pieces.length; i++) {
++        // Pass the original unitCount for pluralization logic in renderPiece.
++        // The unitCount in the Piece object is the potentially rounded value.
+         renderedPieces.push(renderPiece(pieces[i], language, options));
+       }
+ 

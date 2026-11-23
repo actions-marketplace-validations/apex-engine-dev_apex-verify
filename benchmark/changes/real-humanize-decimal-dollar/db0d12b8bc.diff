@@ -1,0 +1,49 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:22:20
++++ b/humanize-duration.js	2026-11-23 10:22:20
+@@ -649,7 +649,7 @@
+         "миллисекунд"
+       ),
+       mr: language(
+-        onesUnit(["वर्ष", "वर्षे"]),
++        onesUnit([" વર્ષ", "वर्षे"]),
+         onesUnit(["महिना", "महिने"]),
+         onesUnit(["आठवडा", "आठवडे"]),
+         "दिवस",
+@@ -1374,19 +1374,20 @@
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+-        formattedCount = "";
+-        for (var i = 0; i < countStr.length; i++) {
+-          var character = countStr[i];
++        // This part handles the custom digit replacements.
++        // The `replace` method with a regex and callback is generally more efficient
++        // than iterating character by character for string manipulation.
++        formattedCount = countStr.replace(/[\s\S]/g, function (character) {
+           if (character === ".") {
+-            formattedCount += decimal;
++            return decimal;
+           } else {
+             var asNumber = Number(character);
+             var digitReplacement = digitReplacements[asNumber];
+-            formattedCount +=
+-              digitReplacement === void 0 ? character : digitReplacement;
++            return digitReplacement === void 0 ? character : digitReplacement;
+           }
+-        }
++        });
+       } else {
++        // This part handles the default decimal separator.
+         formattedCount = countStr.replace(".", decimal);
+       }
+ 
+@@ -1663,7 +1664,7 @@
+ 
+     // @ts-expect-error
+     if (typeof define === "function" && define.amd) {
+-      // @ts-expect-error
++      // @ts-expect-effect
+       define(function () {
+         return humanizeDuration;
+       });

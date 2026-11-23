@@ -1,0 +1,15 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:18:30
++++ b/slugify.js	2026-11-23 10:18:30
+@@ -34,6 +34,11 @@
+       // replace characters based on charMap
+       .reduce(function (result, ch) {
+         var appendChar = locale[ch] || charMap[ch] || ch;
++        // Fix: Honour empty string mapping to delete the character.
++        // If appendChar is an empty string, we simply don't append anything.
++        if (appendChar === '') {
++          return result;
++        }
+         if (appendChar === replacement) {
+           appendChar = ' ';
+         }

@@ -1,0 +1,11 @@
+{
+  "id": "real-cookie-rfc6265",
+  "kind": "fix",
+  "title": "cookie.serialize accepts names and values with spaces",
+  "prompt": "cookie.serialize(name, val, options) in index.js only checks that the cookie name and value are printable header characters, so it happily produces cookies that are not valid under RFC 6265: a name such as 'foo bar' or an unencoded value such as 'foo bar' is accepted. Names should have to be valid tokens and values valid cookie-octets (optionally wrapped in double quotes); the same strictness is expected for the domain and path options without breaking ordinary values. Please make the validation follow the RFC.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/serialize.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-serialize.test.js"
+  }
+}

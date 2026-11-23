@@ -1,0 +1,26 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:15:55
++++ b/slugify.js	2026-11-23 10:15:55
+@@ -33,9 +33,19 @@
+     var slug = string.normalize().split('')
+       // replace characters based on charMap
+       .reduce(function (result, ch) {
+-        return result + (locale[ch] || charMap[ch] ||  (ch === replacement ? ' ' : ch))
+-          // remove not allowed characters
+-          .replace(options.remove || /[^\w\s$*_+~.()'"!\-:@]+/g, '')
++        var mappedChar = locale[ch] || charMap[ch] || ch;
++
++        // If the character, after potential mapping, is the same as the replacement,
++        // or if it was the replacement character itself, temporarily treat it as a space.
++        // This allows consecutive replacement-like characters (either original or mapped)
++        // to be collapsed by the subsequent /\s+/g replace.
++        if (mappedChar === replacement) {
++          mappedChar = ' ';
++        }
++        
++        // remove not allowed characters
++        var cleanedChar = mappedChar.replace(options.remove || /[^\w\s$*_+~.()'"!\-:@]+/g, '');
++        return result + cleanedChar;
+       }, '');
+ 
+     if (options.strict) {

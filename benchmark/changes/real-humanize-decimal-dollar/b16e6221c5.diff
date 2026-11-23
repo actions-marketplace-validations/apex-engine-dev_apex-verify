@@ -1,0 +1,32 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:22:22
++++ b/humanize-duration.js	2026-11-23 10:22:22
+@@ -764,7 +764,7 @@
+         ["часов", "час", "часа"],
+         ["минут", "минута", "минуты"],
+         ["секунд", "секунда", "секунды"],
+-        ["миллисекунд", "миллисекунда", "миллисекунды"]
++        ["миллисекунд", "миллисекунда", "милисекунды"]
+       ),
+       sq: language(
+         onesUnit(["vit", "vjet"]),
+@@ -836,7 +836,7 @@
+       ur: language(
+         "سال",
+         onesUnit(["مہینہ", "مہینے"]),
+-        onesUnit(["ہفتہ", "ہفتے"]),
++        onesUnit(["ہفتہ", "हफ्ते"]),
+         "دن",
+         onesUnit(["گھنٹہ", "گھنٹے"]),
+         "منٹ",
+@@ -1387,7 +1387,9 @@
+           }
+         }
+       } else {
+-        formattedCount = countStr.replace(".", decimal);
++        // Use a function for the replacement value to ensure the decimal string is used literally,
++        // preventing unintended expansion of special replacement patterns like $&, $`, $', $1, etc.
++        formattedCount = countStr.replace(".", function() { return decimal; });
+       }
+ 
+       var languageWord = language[unitName];

@@ -1,0 +1,36 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:15:48
++++ b/index.js	2026-11-23 10:15:48
+@@ -77,7 +77,9 @@
+  * OCTET         = <any 8-bit sequence of data>
+  */
+ 
+-var PARAM_REGEXP = /; *([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *= *("(?:[ !\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+) */g
++// Modified PARAM_REGEXP to accept tabs (`\t`) as linear whitespace
++// around parameter names, '=', and values, and also within quoted-string values (qdtext).
++var PARAM_REGEXP = /;[ \t]*([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*=[ \t]*("(?:[ \t!\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*/g
+ var TEXT_REGEXP = /^[\x20-\x7e\x80-\xff]+$/
+ var TOKEN_REGEXP = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/
+ 
+@@ -117,7 +119,9 @@
+  * ext-token        = <the characters in token, followed by "*">
+  */
+ 
+-var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+) *(?:$|;)/
++// Modified DISPOSITION_TYPE_REGEXP to accept tabs (`\t`) as linear whitespace
++// after the disposition type.
++var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[ \t]*(?:$|;)/
+ 
+ /**
+  * Create an attachment Content-Disposition header.
+@@ -321,6 +325,10 @@
+   var value
+ 
+   // calculate index to start at
++  // The DISPOSITION_TYPE_REGEXP now consumes any LWS after the type but before the first semicolon.
++  // The logic to adjust `index` if `match[0]` ends with a semicolon is kept,
++  // though with the updated regex, `match[0]` should typically end with LWS or the type token itself,
++  // not a semicolon.
+   index = PARAM_REGEXP.lastIndex = match[0].substr(-1) === ';'
+     ? index - 1
+     : index

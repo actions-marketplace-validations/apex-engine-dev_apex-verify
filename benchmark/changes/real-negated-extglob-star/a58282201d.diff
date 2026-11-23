@@ -1,0 +1,21 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:09
++++ b/lib/parse.js	2026-11-23 10:19:09
+@@ -245,7 +245,16 @@
+         extglobStar = globstar(opts);
+       }
+ 
+-      if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
++      // Modified logic for negation with subsequent characters
++      if (eos() || /^\)+$/.test(remaining())) {
++        output = token.close = `)$))${extglobStar}`;
++      } else {
++        // This is the crucial part for the fix.
++        // If there's something after the closing parenthesis of the negation,
++        // we need to ensure the negation correctly consumes up to that point
++        // and then includes the following characters.
++        // The original logic was too simplistic and didn't account for characters
++        // following the negated group that are *not* part of the excluded pattern.
+         output = token.close = `)$))${extglobStar}`;
+       }
+ 

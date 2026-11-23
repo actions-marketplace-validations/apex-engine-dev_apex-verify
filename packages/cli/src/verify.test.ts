@@ -268,3 +268,26 @@ test("--demo: no key, a pretend agent's wrong change is caught with expected and
   assert.match(text, /expected: hello-world/);
   assert.match(text, /actual:\s+hello-world!/);
 });
+
+test("dependencies are linked into the original code too, so the baseline test run can start", async () => {
+  const d = repo();
+  fs.mkdirSync(path.join(d, "node_modules/dep"), { recursive: true });
+  fs.writeFileSync(path.join(d, "node_modules/dep/index.js"), "module.exports = 1;\n");
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const { collectChange } = await import("./verify.js");
+  const c = await collectChange({ dir: d });
+  try {
+    assert.ok(fs.existsSync(path.join(c.orig, "node_modules/dep/index.js")), "the baseline sees the dependencies");
+    assert.ok(c.changes.every((x) => !x.path.startsWith("node_modules/")), "dependencies are not part of the change");
+  } finally { await c.cleanup(); }
+});
+
+test("a baseline whose tests could not run is not used to call a failure new", async () => {
+  const d = repo();
+  // Every test failed before the change too (a broken environment); the change does not fix or break anything.
+  fs.writeFileSync(path.join(d, "test/slug.test.js"), "import { test } from \"node:test\";\ntest(\"needs the network\", () => { throw new Error(\"ECONNREFUSED\"); });\n");
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "broken tests"]);
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  assert.ok(!r.reasons.some((x) => x.kind === "regression"), JSON.stringify(r.reasons));
+});

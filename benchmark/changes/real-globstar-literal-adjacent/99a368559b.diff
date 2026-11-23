@@ -1,0 +1,70 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:29
++++ b/lib/parse.js	2026-11-23 10:22:29
+@@ -441,7 +441,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || '';
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+@@ -1153,18 +1153,39 @@
+       }
+ 
+       const prior = prev.prev;
++      const isStartOfPathOrSegment = prior.type === 'slash' || prior.type === 'bos';
++      // `isEnd` is defined in the surrounding scope and correctly handles trailing parens for extglobs.
++      // E.g., `eos() || (state.parens > 0 && rest === ')'.repeat(state.parens) && !extglobs.some(extglob => extglob.type === 'negate'))`
++      const isEndOfPathOrSegment = eos() || (remaining()[0] === '/') || isEnd;
++
++      // Determine if `**` is an isolated path segment.
++      // It is NOT a whole segment if it's `**.js` or `foo/**.js`
++      const isWholeSegment = isStartOfPathOrSegment && isEndOfPathOrSegment;
++
++      if (!isWholeSegment) {
++        // If `**` is NOT a whole segment (e.g., `**.thing.js`, `a/**.js`)
++        // It should behave like a single star (`*`).
++        // `prev` already has `type: 'star'` and `output: STAR` from the first `*`.
++        // We just need to update its `value` from `*` to `**` and consume the current `*`.
++        prev.value += value; // Change `prev.value` from `*` to `**`
++        // `prev.output` remains `STAR` (e.g., `[^/]*?`)
++        // `prev.type` remains `star`
++        consume(value);
++        continue; // Skip all globstar conversion logic below
++      }
++
++      // If it IS a whole segment, proceed with globstar conversion logic below.
+       const before = prior.prev;
+-      const isStart = prior.type === 'slash' || prior.type === 'bos';
++      const isBrace = state.braces > 0 && (prior.type === 'comma' || prior.type === 'brace');
++      const isExtglob = extglobs.length && (prior.type === 'pipe' || prior.type === 'paren');
+       const afterStar = before && (before.type === 'star' || before.type === 'globstar');
+ 
+-      if (opts.bash === true && (!isStart || (rest[0] && rest[0] !== '/'))) {
++      if (opts.bash === true && (!isStartOfPathOrSegment || (rest[0] && rest[0] !== '/'))) {
+         push({ type: 'star', value, output: '' });
+         continue;
+       }
+ 
+-      const isBrace = state.braces > 0 && (prior.type === 'comma' || prior.type === 'brace');
+-      const isExtglob = extglobs.length && (prior.type === 'pipe' || prior.type === 'paren');
+-      if (!isStart && prior.type !== 'paren' && !isBrace && !isExtglob) {
++      if (!isStartOfPathOrSegment && prior.type !== 'paren' && !isBrace && !isExtglob) {
+         push({ type: 'star', value, output: '' });
+         continue;
+       }
+@@ -1182,11 +1203,7 @@
+       // A globstar followed only by balanced closing parens is at the logical end of patterns like
+       // `test(/utils/**)` and `test?(/utils/**)`. Treat it as EOS so the trailing `/**` can match its
+       // parent path, except in negated extglobs where that would change the exclusion semantics.
+-      const isEnd = eos() || (
+-        state.parens > 0
+-        && rest === ')'.repeat(state.parens)
+-        && !extglobs.some(extglob => extglob.type === 'negate')
+-      );
++      // This `isEnd` is reused from the outer scope and correctly determines if the remaining string signifies the end of a pattern.
+ 
+       if (prior.type === 'bos' && eos()) {
+         prev.type = 'globstar';

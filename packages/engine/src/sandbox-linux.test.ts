@@ -36,7 +36,7 @@ test("linux: tests can start and use a server on localhost inside the sandbox; n
   assert.match(out.stdout, /net:blocked/);
 });
 
-test("the profile is a bwrap spec on Linux and an sbpl profile elsewhere", () => {
+test("the profile is a bwrap spec on Linux, an appcontainer spec on Windows and an sbpl profile elsewhere", () => {
   const p = testSandboxProfile({ writable: [os.tmpdir()] });
-  if (linux) assert.ok(p.startsWith("bwrap:")); else assert.ok(p.includes("(version 1)"));
+  if (linux) assert.ok(p.startsWith("bwrap:")); else if (process.platform === "win32") assert.ok(p.startsWith("appcontainer:")); else assert.ok(p.includes("(version 1)"));
 });

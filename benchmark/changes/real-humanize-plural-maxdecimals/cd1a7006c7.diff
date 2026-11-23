@@ -1,0 +1,56 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:35
++++ b/humanize-duration.js	2026-11-23 10:20:35
+@@ -1289,17 +1289,6 @@
+ 
+     /**
+      * @internal
+-     * @template T
+-     * @param {T} obj
+-     * @param {keyof T} key
+-     * @returns {boolean}
+-     */
+-    function has(obj, key) {
+-      return Object.prototype.hasOwnProperty.call(obj, key);
+-    }
+-
+-    /**
+-     * @internal
+      * @param {Pick<NormalizedOptions, "language" | "fallbacks" | "languages">} options
+      * @throws {Error} Throws an error if language is not found.
+      * @returns {Language}
+@@ -1338,6 +1327,7 @@
+      */
+     function renderPiece(piece, language, options) {
+       var unitName = piece.unitName;
++      var originalUnitCount = piece.unitCount; // Keep the original count for pluralization
+       var unitCount = piece.unitCount;
+ 
+       var spacer = options.spacer;
+@@ -1363,6 +1353,7 @@
+ 
+       /** @type {string} */
+       var formattedCount;
++      // Use the potentially rounded unitCount for formatting, but originalUnitCount for pluralization.
+       var normalizedUnitCount =
+         maxDecimalPoints === void 0
+           ? unitCount
+@@ -1370,7 +1361,7 @@
+             Math.pow(10, maxDecimalPoints);
+       var countStr = normalizedUnitCount.toString();
+ 
+-      if (language._hideCountIf2 && unitCount === 2) {
++      if (language._hideCountIf2 && originalUnitCount === 2) {
+         formattedCount = "";
+         spacer = "";
+       } else if (digitReplacements) {
+@@ -1393,7 +1384,8 @@
+       var languageWord = language[unitName];
+       var word;
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        // Pass the *original* count to the language function for correct pluralization
++        word = languageWord(originalUnitCount);
+       } else {
+         word = languageWord;
+       }

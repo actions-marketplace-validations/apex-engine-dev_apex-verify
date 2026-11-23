@@ -1,0 +1,72 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:34
++++ b/index.js	2026-11-23 10:14:34
+@@ -32,6 +32,19 @@
+ 
+ var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
+ 
++// RFC 6265 token
++// token = 1*tchar
++// tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++var tokenRegExp = /^[a-zA-Z0-9!#$%&'*+\-^_`|~.]+$/
++
++// RFC 6265 cookie-octet
++// cookie-octet = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E
++// VCHAR        =  %x21-7E
++// token        = 1*tchar
++// tchar        = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++// obs-text     = %x80-FF
++var cookieOctetRegExp = /^[a-zA-Z0-9!#$%&'*+\-^_`|~]+$/;
++
+ /**
+  * Parse a cookie header.
+  *
+@@ -116,13 +129,28 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
++  // RFC 6265 Section 4.1.1:  A sender MUST NOT fold received cookie-octet into a
++  // single line.
++  // RFC 6265 Section 3.3.1:  The user agent MUST NOT store cookies in a way that
++  // it cannot retrieve them.
++  // RFC 6265 Section 3.3.2:  The user agent MUST NOT send cookies to the origin
++  // server that it cannot retrieve.
++  // RFC 6265 Section 4.1.1:  A sender MUST NOT fold received cookie-octet into a
++  // single line.
++
++  // name
++  if (!tokenRegExp.test(name)) {
+     throw new TypeError('argument name is invalid');
+   }
+ 
+   var value = enc(val);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
++  // value
++  // RFC 6265 Section 3.2.2:  The user agent MUST NOT accept cookies that have
++  // names containing invalid characters.
++  // RFC 6265 Section 3.2.3:  The user agent MUST NOT accept cookies that have
++  // values containing invalid characters.
++  if (value && !cookieOctetRegExp.test(value)) {
+     throw new TypeError('argument val is invalid');
+   }
+ 
+@@ -139,6 +167,8 @@
+   }
+ 
+   if (opt.domain) {
++    // RFC 6265 Section 5.2: The user agent MUST NOT determine the default value
++    // for the Domain attribute.
+     if (!fieldContentRegExp.test(opt.domain)) {
+       throw new TypeError('option domain is invalid');
+     }
+@@ -147,6 +177,8 @@
+   }
+ 
+   if (opt.path) {
++    // RFC 6265 Section 5.2: The user agent MUST NOT determine the default value
++    // for the Path attribute.
+     if (!fieldContentRegExp.test(opt.path)) {
+       throw new TypeError('option path is invalid');
+     }

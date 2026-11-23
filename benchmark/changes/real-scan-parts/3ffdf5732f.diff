@@ -1,0 +1,276 @@
+diff -ruN a/lib/scan.js b/lib/scan.js
+--- a/lib/scan.js	2026-11-23 10:19:09
++++ b/lib/scan.js	2026-11-23 10:19:09
+@@ -51,14 +51,22 @@
+ 
+   const length = input.length - 1;
+   const scanToEnd = opts.parts === true || opts.scanToEnd === true;
+-  const slashes = [];
++  
++  // `slashes` is used for `tokens` and `maxDepth` calculations.
++  // It respects `start` for prefix removal (e.g. `./`).
++  const slashes = []; 
++  
++  // `partSlashes` is used for the `parts` property,
++  // and includes all unescaped slashes from the original input.
++  const partSlashes = [];
++
+   const tokens = [];
+-  const parts = [];
++  const parts = []; // This will be the final parts list
+ 
+-  let str = input;
++  let str = input; // Original input string
+   let index = -1;
+-  let start = 0;
+-  let lastIndex = 0;
++  let start = 0; // Represents the effective start for base/glob (after prefix removal like '!' or './')
++  let lastIndex = 0; // The index in `input` for the end of the non-glob `base`
+   let isBrace = false;
+   let isBracket = false;
+   let isGlob = false;
+@@ -87,12 +95,13 @@
+ 
+     if (code === CHAR_BACKWARD_SLASH) {
+       backslashes = token.backslashes = true;
+-      code = advance();
++      code = advance(); // Skip the next character as it's escaped
+ 
++      // If the escaped char is a brace, mark it
+       if (code === CHAR_LEFT_CURLY_BRACE) {
+         braceEscaped = true;
+       }
+-      continue;
++      continue; // Continue to next char, after the escaped one
+     }
+ 
+     if (braceEscaped === true || code === CHAR_LEFT_CURLY_BRACE) {
+@@ -154,17 +163,22 @@
+     }
+ 
+     if (code === CHAR_FORWARD_SLASH) {
+-      slashes.push(index);
+-      tokens.push(token);
+-      token = { value: '', depth: 0, isGlob: false };
++      // Always add unescaped slashes to `partSlashes` for the `parts` property
++      partSlashes.push(index);
+ 
+-      if (finished === true) continue;
+-      if (prev === CHAR_DOT && index === (start + 1)) {
+-        start += 2;
+-        continue;
++      // This block handles the `start` and `lastIndex` for `base`/`glob` calculation.
++      // It may explicitly skip adding a slash to the `slashes` array (for `tokens`/`maxDepth`).
++      if (finished === false && prev === CHAR_DOT && index === (start + 1)) {
++        start += 2; // Adjust `start` to effectively remove "./" from consideration for `base`/`glob`
++        tokens.pop(); // Remove the '.' token since './' is skipped
++        lastIndex = index + 1; // Update lastIndex as if './' was not there
++        continue; // Do NOT add this '/' to `slashes` (for `tokens`/`maxDepth`)
+       }
+-
+-      lastIndex = index + 1;
++      
++      slashes.push(index); // Add to `slashes` (for `tokens`/`maxDepth`)
++      tokens.push(token);
++      token = { value: '', depth: 0, isGlob: false };
++      lastIndex = index + 1; // Update `lastIndex` for `base`/`glob`
+       continue;
+     }
+ 
+@@ -184,17 +198,24 @@
+         }
+ 
+         if (scanToEnd === true) {
++          let parenCount = 1;
+           while (eos() !== true && (code = advance())) {
+             if (code === CHAR_BACKWARD_SLASH) {
+               backslashes = token.backslashes = true;
+               code = advance();
+               continue;
+             }
+-
++            if (code === CHAR_LEFT_PARENTHESES) {
++              parenCount++;
++              continue;
++            }
+             if (code === CHAR_RIGHT_PARENTHESES) {
+-              isGlob = token.isGlob = true;
+-              finished = true;
+-              break;
++              parenCount--;
++              if (parenCount === 0) {
++                isGlob = token.isGlob = true;
++                finished = true;
++                break;
++              }
+             }
+           }
+           continue;
+@@ -249,7 +270,7 @@
+ 
+     if (opts.nonegate !== true && code === CHAR_EXCLAMATION_MARK && index === start) {
+       negated = token.negated = true;
+-      start++;
++      start++; // Adjust start for base/glob (skip '!')
+       continue;
+     }
+ 
+@@ -257,16 +278,23 @@
+       isGlob = token.isGlob = true;
+ 
+       if (scanToEnd === true) {
++        let parenCount = 1;
+         while (eos() !== true && (code = advance())) {
+-          if (code === CHAR_LEFT_PARENTHESES) {
++          if (code === CHAR_BACKWARD_SLASH) {
+             backslashes = token.backslashes = true;
+             code = advance();
+             continue;
+           }
+-
++          if (code === CHAR_LEFT_PARENTHESES) {
++            parenCount++;
++            continue;
++          }
+           if (code === CHAR_RIGHT_PARENTHESES) {
+-            finished = true;
+-            break;
++            parenCount--;
++            if (parenCount === 0) {
++              finished = true;
++              break;
++            }
+           }
+         }
+         continue;
+@@ -290,44 +318,43 @@
+     isGlob = false;
+   }
+ 
+-  let base = str;
+-  let prefix = '';
++  // --- Calculate base, glob, and prefix based on `start` and `lastIndex` ---
++  let prefix = input.slice(0, start); // The skipped prefix (e.g., '!', './', '!./')
++
++  // `str` is the original `input` string, but `lastIndex` and `start`
++  // are absolute indices into `input`.
++  let base = input.slice(start); 
+   let glob = '';
+ 
+-  if (start > 0) {
+-    prefix = str.slice(0, start);
+-    str = str.slice(start);
+-    lastIndex -= start;
+-  }
+-
+-  if (base && isGlob === true && lastIndex > 0) {
+-    base = str.slice(0, lastIndex);
+-    glob = str.slice(lastIndex);
+-  } else if (isGlob === true) {
++  if (isGlob === true && lastIndex > start) { // glob found, and there's a non-glob base part
++    base = input.slice(start, lastIndex);
++    glob = input.slice(lastIndex);
++  } else if (isGlob === true) { // glob found, but base is empty (e.g., '*')
+     base = '';
+-    glob = str;
+-  } else {
+-    base = str;
++    glob = input.slice(start);
++  } else { // No glob, entire remaining part is base
++    base = input.slice(start);
+   }
+-
+-  if (base && base !== '' && base !== '/' && base !== str) {
++  
++  // Clean up `base` ending slash if any
++  if (base && base !== '' && base !== '/' && base !== input.slice(start)) {
+     if (isPathSeparator(base.charCodeAt(base.length - 1))) {
+       base = base.slice(0, -1);
+     }
+   }
+-
++  
+   if (opts.unescape === true) {
+     if (glob) glob = utils.removeBackslashes(glob);
+-
+     if (base && backslashes === true) {
+       base = utils.removeBackslashes(base);
+     }
++    if (prefix) prefix = utils.removeBackslashes(prefix); // Unescape prefix too
+   }
+ 
+   const state = {
+     prefix,
+-    input,
+-    start,
++    input, // Original input
++    start, // Index after prefix
+     base,
+     glob,
+     isBrace,
+@@ -341,47 +368,33 @@
+ 
+   if (opts.tokens === true) {
+     state.maxDepth = 0;
+-    if (!isPathSeparator(code)) {
++    if (!isPathSeparator(code)) { // code at the point of loop termination
+       tokens.push(token);
+     }
+     state.tokens = tokens;
+   }
+ 
+-  if (opts.parts === true || opts.tokens === true) {
+-    let prevIndex;
+-
+-    for (let idx = 0; idx < slashes.length; idx++) {
+-      const n = prevIndex ? prevIndex + 1 : start;
+-      const i = slashes[idx];
+-      const value = input.slice(n, i);
+-      if (opts.tokens) {
+-        if (idx === 0 && start !== 0) {
+-          tokens[idx].isPrefix = true;
+-          tokens[idx].value = prefix;
+-        } else {
+-          tokens[idx].value = value;
+-        }
+-        depth(tokens[idx]);
+-        state.maxDepth += tokens[idx].depth;
+-      }
+-      if (idx !== 0 || value !== '') {
+-        parts.push(value);
+-      }
+-      prevIndex = i;
++  // --- Parts generation logic using `partSlashes` ---
++  if (opts.parts === true) {
++    let currentSliceStart = 0;
++    for (const slashIndex of partSlashes) {
++      // Add segment before this slash
++      const segment = input.slice(currentSliceStart, slashIndex);
++      parts.push(segment);
++      currentSliceStart = slashIndex + 1;
+     }
+ 
+-    if (prevIndex && prevIndex + 1 < input.length) {
+-      const value = input.slice(prevIndex + 1);
+-      parts.push(value);
+-
+-      if (opts.tokens) {
+-        tokens[tokens.length - 1].value = value;
+-        depth(tokens[tokens.length - 1]);
+-        state.maxDepth += tokens[tokens.length - 1].depth;
+-      }
++    // Add the remaining segment after the last slash (or the whole input if no slashes)
++    if (currentSliceStart <= input.length) {
++      const remainingSegment = input.slice(currentSliceStart);
++      parts.push(remainingSegment);
+     }
++    // Handle empty input explicitly for parts
++    if (input === '' && parts.length === 0) {
++      parts.push('');
++    }
+ 
+-    state.slashes = slashes;
++    state.slashes = partSlashes; // Use partSlashes for state.slashes
+     state.parts = parts;
+   }
+ 

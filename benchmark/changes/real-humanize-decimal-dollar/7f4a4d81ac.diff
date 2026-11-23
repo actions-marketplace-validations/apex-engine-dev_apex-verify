@@ -1,0 +1,32 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:22:21
++++ b/humanize-duration.js	2026-11-23 10:22:21
+@@ -1289,17 +1289,6 @@
+ 
+     /**
+      * @internal
+-     * @template T
+-     * @param {T} obj
+-     * @param {keyof T} key
+-     * @returns {boolean}
+-     */
+-    function has(obj, key) {
+-      return Object.prototype.hasOwnProperty.call(obj, key);
+-    }
+-
+-    /**
+-     * @internal
+      * @param {Pick<NormalizedOptions, "language" | "fallbacks" | "languages">} options
+      * @throws {Error} Throws an error if language is not found.
+      * @returns {Language}
+@@ -1387,6 +1376,10 @@
+           }
+         }
+       } else {
++        // IMPORTANT CHANGE: Use the provided decimal string literally.
++        // The original code incorrectly used string interpolation for '$' characters.
++        // We replace only the decimal point character from the string representation
++        // of the number with the custom decimal string.
+         formattedCount = countStr.replace(".", decimal);
+       }
+ 

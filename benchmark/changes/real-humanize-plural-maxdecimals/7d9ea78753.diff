@@ -1,0 +1,109 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:36
++++ b/humanize-duration.js	2026-11-23 10:20:36
+@@ -1339,6 +1339,7 @@
+     function renderPiece(piece, language, options) {
+       var unitName = piece.unitName;
+       var unitCount = piece.unitCount;
++      var roundedUnitCount = piece.roundedUnitCount; // Use the rounded count for display
+ 
+       var spacer = options.spacer;
+       var maxDecimalPoints = options.maxDecimalPoints;
+@@ -1363,12 +1364,12 @@
+ 
+       /** @type {string} */
+       var formattedCount;
+-      var normalizedUnitCount =
++      var normalizedRoundedUnitCount =
+         maxDecimalPoints === void 0
+-          ? unitCount
+-          : Math.floor(unitCount * Math.pow(10, maxDecimalPoints)) /
++          ? roundedUnitCount
++          : Math.floor(roundedUnitCount * Math.pow(10, maxDecimalPoints)) /
+             Math.pow(10, maxDecimalPoints);
+-      var countStr = normalizedUnitCount.toString();
++      var countStr = normalizedRoundedUnitCount.toString();
+ 
+       if (language._hideCountIf2 && unitCount === 2) {
+         formattedCount = "";
+@@ -1392,8 +1393,9 @@
+ 
+       var languageWord = language[unitName];
+       var word;
++      // Use the rounded unit count to determine the correct pluralization
+       if (typeof languageWord === "function") {
+-        word = languageWord(unitCount);
++        word = languageWord(roundedUnitCount);
+       } else {
+         word = languageWord;
+       }
+@@ -1408,7 +1410,8 @@
+      * @internal
+      * @typedef {Object} Piece
+      * @prop {UnitName} unitName
+-     * @prop {number} unitCount
++     * @prop {number} unitCount - The original, unrounded count.
++     * @prop {number} roundedUnitCount - The count after rounding (if applicable).
+      */
+ 
+     /**
+@@ -1524,9 +1527,47 @@
+         unitName = units[i];
+         unitCount = /** @type {number} */ (unitCounts[unitName]);
+         if (unitCount) {
+-          result.push({ unitName: unitName, unitCount: unitCount });
++          // Store both the original and rounded counts
++          result.push({
++            unitName: unitName,
++            unitCount: unitCount, // Original count
++            roundedUnitCount: unitCount // Initially same as original, will be updated if rounding occurs
++          });
+         }
+       }
++
++      // Apply rounding for maxDecimalPoints and update roundedUnitCount
++      if (options.maxDecimalPoints !== undefined) {
++        var processedMs = ms;
++        for (var k = 0; k < result.length; k++) {
++          var currentPiece = result[k];
++          var unitMs = unitMeasures[currentPiece.unitName];
++          var valueToRound = processedMs / unitMs;
++
++          var normalizedValue =
++            Math.floor(valueToRound * Math.pow(10, options.maxDecimalPoints)) /
++            Math.pow(10, options.maxDecimalPoints);
++
++          currentPiece.roundedUnitCount = normalizedValue;
++          processedMs -= normalizedValue * unitMs;
++        }
++      } else if (options.round) {
++        // If `round` is true, the `getPieces` logic already modifies `unitCounts`
++        // to reflect the rounded values. We need to map those rounded values back
++        // to the `roundedUnitCount` property.
++        for (i = 0; i < units.length; i++) {
++          unitName = units[i];
++          if (unitCounts[unitName] !== undefined) {
++            for (var l = 0; l < result.length; l++) {
++              if (result[l].unitName === unitName) {
++                result[l].roundedUnitCount = /** @type {number} */ (unitCounts[unitName]);
++                break;
++              }
++            }
++          }
++        }
++      }
++
+       return result;
+     }
+ 
+@@ -1542,8 +1583,9 @@
+       if (!pieces.length) {
+         var units = options.units;
+         var smallestUnitName = units[units.length - 1];
++        // For 0 duration, use 0 count for pluralization
+         return renderPiece(
+-          { unitName: smallestUnitName, unitCount: 0 },
++          { unitName: smallestUnitName, unitCount: 0, roundedUnitCount: 0 },
+           language,
+           options
+         );

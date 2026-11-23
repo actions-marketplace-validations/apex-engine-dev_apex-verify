@@ -1,0 +1,34 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:30
++++ b/lib/parse.js	2026-11-23 10:22:30
+@@ -398,7 +398,9 @@
+ 
+   const nodot = opts.dot ? '' : NO_DOT;
+   const qmarkNoDot = opts.dot ? QMARK : QMARK_NO_DOT;
+-  let star = opts.bash === true ? globstar(opts) : STAR;
++  // FIX: Ensure 'star' (for single '*') always matches within a segment,
++  // regardless of the 'bash' option. 'globstar' handles cross-segment matching.
++  let star = STAR; 
+ 
+   if (opts.capture) {
+     star = `(${star})`;
+@@ -441,7 +443,7 @@
+    */
+ 
+   const eos = () => state.index === len - 1;
+-  const peek = state.peek = (n = 1) => input[state.index + n];
++  const peek = state.peek = (n = 1) => input[state.index + n] || '';
+   const advance = state.advance = () => input[++state.index] || '';
+   const remaining = () => input.slice(state.index + 1);
+   const consume = (value = '', num = 0) => {
+@@ -1367,7 +1369,9 @@
+   const slashDot = opts.dot ? NO_DOTS_SLASH : NO_DOT;
+   const capture = opts.capture ? '' : '?:';
+   const state = { negated: false, prefix: '' };
+-  let star = opts.bash === true ? '.*?' : STAR;
++  // FIX: Ensure 'star' (for single '*') always matches within a segment,
++  // even in fastpaths, regardless of the 'bash' option.
++  let star = STAR;
+ 
+   if (opts.capture) {
+     star = `(${star})`;

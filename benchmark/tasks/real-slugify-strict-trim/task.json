@@ -1,0 +1,11 @@
+{
+  "id": "real-slugify-strict-trim",
+  "kind": "fix",
+  "title": "slugify strict mode leaves the replacement character at the ends",
+  "prompt": "In slugify.js, with the strict option, input that begins or ends with characters that strict mode strips still produces a slug with a leading or trailing replacement character. For example slugify('! Come on, fhqwhgads !', { strict: true }) returns '-Come-on-fhqwhgads-' but should return 'Come-on-fhqwhgads'. Please fix strict mode so the result has no leading or trailing replacement character and repeated ones are still collapsed, without changing non-strict output.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/slugify.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-slugify.test.js"
+  }
+}

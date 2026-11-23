@@ -1,0 +1,47 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:09
++++ b/lib/parse.js	2026-11-23 10:19:09
+@@ -241,17 +241,38 @@
+     if (token.type === 'negate') {
+       let extglobStar = star;
+ 
+-      if (token.inner && token.inner.length > 1 && token.inner.includes('/')) {
++      // Fix: The star for negated extglobs should also consider the possibility of matching further characters after the negated part.
++      // If the negated part contains a star and there's something after the closing parenthesis,
++      // we need to ensure that the star can match those characters.
++      const remainingPattern = remaining();
++      if (token.inner.includes('*') && remainingPattern && remainingPattern.length > 0) {
+         extglobStar = globstar(opts);
+       }
+ 
+-      if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
+-        output = token.close = `)$))${extglobStar}`;
++      // The original logic here was a bit complex and might have been too specific.
++      // Let's simplify the logic for the closing part of the negate extglob.
++      // The goal is to correctly match characters that follow the negated pattern.
++      // If the negated part was `!(*.d)` and the pattern is `!(*.d).ts`, the `.*` part of `!(*.d)`
++      // should not prevent the `.ts` part from matching.
++      // The `extglobStar` is intended to match characters *after* the negated group.
++      // If the negated group contains a star, we should use the globstar pattern.
++      if (token.inner.includes('*')) {
++        output = token.close = `)${extglobStar}`;
++      } else {
++        output = token.close = `)${extglobStar}`;
+       }
+ 
+-      if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)) {
+-        output = token.close = `)${rest})${extglobStar})`;
++      // This part seems to handle specific cases where the negated pattern is followed by a specific suffix like '.ts'.
++      // The original logic `if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest))`
++      // might be too specific. Let's reconsider.
++      // The core issue is that `!(*.d).ts` should match `/file.dhello.ts` but not `/file.d.ts`.
++      // This means the `.*` inside `!(*.d)` should consume `dhello` and the subsequent `.ts` should match.
++      // If the part after `)` can be matched by `star`, and the negated part contains `*`,
++      // then the `star` should be applied after the negated part.
++      if (token.inner.includes('*')) {
++        output = `)${extglobStar}`;
+       }
++
+ 
+       if (token.prev.type === 'bos') {
+         state.negatedExtglob = true;

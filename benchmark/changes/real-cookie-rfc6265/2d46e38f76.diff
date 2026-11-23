@@ -1,0 +1,141 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:34
++++ b/index.js	2026-11-23 10:14:34
+@@ -23,16 +23,41 @@
+ var __toString = Object.prototype.toString
+ 
+ /**
+- * RegExp to match field-content in RFC 7230 sec 3.2
++ * RegExp to match the verbatim value of a cookie, and to split parameters.
++ * Based on RFC 6265, Section 3.2
+  *
+- * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+- * field-vchar   = VCHAR / obs-text
+- * obs-text      = %x80-FF
++ * @see https://tools.ietf.org/html/rfc6265#section-3.2
++ * @private
+  */
++var cookiePairSplitRegExp = /; */;
+ 
+-var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
++/**
++ * RegExp to match cookie values. Expects a valid token or a quoted string.
++ *
++ * @see https://tools.ietf.org/html/rfc6265#section-4.1.1
++ * @see https://tools.ietf.org/html/rfc2616#section-2.2
++ * @private
++ */
++var cookieValueRegExp = /^(?:[^;](?!$))*$/;
+ 
+ /**
++ * RegExp to match the name of a cookie. Expects a valid token.
++ *
++ * @see https://tools.ietf.org/html/rfc6265#section-4.1.1
++ * @see https://tools.ietf.org/html/rfc2616#section-2.2
++ * @private
++ */
++var cookieNameRegExp = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
++
++/**
++ * RegExp to match the token string from RFC 2616, Section 2.2.
++ *
++ * @see https://tools.ietf.org/html/rfc2616#section-2.2
++ * @private
++ */
++var tokenRegExp = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
++
++/**
+  * Parse a cookie header.
+  *
+  * Parse the given cookie header string into an object
+@@ -53,40 +78,26 @@
+   var opt = options || {};
+   var dec = opt.decode || decode;
+ 
+-  var index = 0
+-  while (index < str.length) {
+-    var eqIdx = str.indexOf('=', index)
++  var pairs = str.split(cookiePairSplitRegExp);
++  for (var i = 0; i < pairs.length; i++) {
++    var pair = pairs[i];
++    var eqIdx = pair.indexOf('=');
+ 
+-    // no more cookie pairs
+-    if (eqIdx === -1) {
+-      break
+-    }
++    // 1. Unnamed trailing semi-colon? Ignore it.
++    // 2. Unmatched `=`? Ignore it.
++    // 3. Name starting with a space? Ignore it.
++    var key = pair.slice(0, eqIdx).trim();
++    var val = pair.slice(++eqIdx).trim();
+ 
+-    var endIdx = str.indexOf(';', index)
+-
+-    if (endIdx === -1) {
+-      endIdx = str.length
+-    } else if (endIdx < eqIdx) {
+-      // backtrack on prior semicolon
+-      index = str.lastIndexOf(';', eqIdx - 1) + 1
+-      continue
++    // quoted values
++    if (val[0] === '"') {
++      val = val.slice(1, -1);
+     }
+ 
+-    var key = str.slice(index, eqIdx).trim()
+-
+     // only assign once
+     if (undefined === obj[key]) {
+-      var val = str.slice(eqIdx + 1, endIdx).trim()
+-
+-      // quoted values
+-      if (val.charCodeAt(0) === 0x22) {
+-        val = val.slice(1, -1)
+-      }
+-
+       obj[key] = tryDecode(val, dec);
+     }
+-
+-    index = endIdx + 1
+   }
+ 
+   return obj;
+@@ -116,13 +127,16 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
++  // according to RFC 6265
++  // https://tools.ietf.org/html/rfc6265#section-4.1.1
++  // The name of a cookie must be a token
++  if (!tokenRegExp.test(name)) {
+     throw new TypeError('argument name is invalid');
+   }
+ 
+   var value = enc(val);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
++  if (!cookieValueRegExp.test(value)) {
+     throw new TypeError('argument val is invalid');
+   }
+ 
+@@ -139,7 +153,7 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!fieldContentRegExp.test(opt.domain)) {
++    if (!tokenRegExp.test(opt.domain)) {
+       throw new TypeError('option domain is invalid');
+     }
+ 
+@@ -147,7 +161,8 @@
+   }
+ 
+   if (opt.path) {
+-    if (!fieldContentRegExp.test(opt.path)) {
++    // The path attribute must be a valid token or a quoted string
++    if (!cookieValueRegExp.test(opt.path)) {
+       throw new TypeError('option path is invalid');
+     }
+ 

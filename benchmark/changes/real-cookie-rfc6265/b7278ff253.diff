@@ -1,0 +1,50 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:34
++++ b/index.js	2026-11-23 10:14:34
+@@ -33,6 +33,23 @@
+ var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
+ 
+ /**
++ * RegExp to match the token characters in RFC 6265 sec 4.2.1
++ *
++ * token = 1*tchar
++ * tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++ */
++var tokenRegExp = /^[\w!#$%&'*.^_`|~-]+$/;
++
++/**
++ * RegExp to match the quoted-string in RFC 6265 sec 4.2.1
++ *
++ * quoted-string = DQUOTE *qcontent DQUOTE
++ * qcontent = qdtext / obs-fold
++ * qdtext = HTAB / SP / %x21 / %x23-5B / %x5D-7E / obs-text
++ */
++var quotedRegExp = /^"((?:[^"\\]|\\.)*)"$/;
++
++/**
+  * Parse a cookie header.
+  *
+  * Parse the given cookie header string into an object
+@@ -116,13 +133,15 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
++  // Validate name
++  if (!tokenRegExp.test(name)) {
+     throw new TypeError('argument name is invalid');
+   }
+ 
+   var value = enc(val);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
++  // Validate value
++  if (value && !fieldContentRegExp.test(value) && !quotedRegExp.test(value)) {
+     throw new TypeError('argument val is invalid');
+   }
+ 
+@@ -272,3 +291,4 @@
+     return str;
+   }
+ }
++

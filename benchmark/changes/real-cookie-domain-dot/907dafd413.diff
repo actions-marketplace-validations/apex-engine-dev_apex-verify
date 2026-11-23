@@ -1,0 +1,21 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:13:42
++++ b/index.js	2026-11-23 10:13:42
+@@ -206,7 +206,11 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!domainValueRegExp.test(opt.domain)) {
++    // RFC 6265 Section 5.2 says that a domain attribute must match the
++    // current host. The original code was too strict in validating domains.
++    // We allow leading dots and localhost.
++    var domain = opt.domain.replace(/^\./, '');
++    if (!domainValueRegExp.test(domain) && domain !== 'localhost') {
+       throw new TypeError('option domain is invalid');
+     }
+ 
+@@ -326,3 +330,4 @@
+     return str;
+   }
+ }
++

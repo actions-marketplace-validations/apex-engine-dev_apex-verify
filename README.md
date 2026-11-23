@@ -56,7 +56,8 @@ We collected AI-written changes to small projects and knew for sure which ones w
 - **Your own tests (plus a scan for deleted or skipped tests) stop about 8 of every 100 wrong changes.**
 - **Apex verify stops about 65** across all 17 projects (28 of 43 wrong changes), and **52** on the 12 public projects that you can rerun yourself (16 of 31).
 - **It wrongly stops about 3 of every 100 good changes** (2 of 65; 1 of 48 on the public projects).
-- **It still misses about a third** of the wrong changes. It is not a proof of correctness.
+- **On real libraries it is rougher.** On 200 AI-written changes to 23 real open-source libraries (each task a real historical bug fix) it stopped 80 of every 100 wrong changes (tests plus the scan: none) but also wrongly stopped 11 of every 100 good ones, with the false alarms concentrated in a few tasks ([details and limits](benchmark/results/real-projects/README.md)). Fixing that is the next job.
+- **It still misses about a third** of the wrong changes on the small projects. It is not a proof of correctness.
 - **A checker from another company works about as well**: Claude as the checker stopped 55 of every 100 wrong changes (Gemini 63 on the same changes) with 2 or fewer in 100 false alarms ([details](benchmark/results/cross-vendor-full-set)).
 - **Two checkers that must both object did not help** (43%), and neither did two checkers from the same company or telling the checker to avoid the task's own examples ([docs/EXPERIMENTS.md](docs/EXPERIMENTS.md)). An earlier 60% figure for two checkers came from a smaller test and was wrong for the full pipeline. Blocking when *either* objects caught 75% at the same false-alarm rate in one test; that is not a mode yet.
 
@@ -100,7 +101,7 @@ Honest list of what is not done yet, each with an issue you can pick up:
 |---|---|
 | **File and network isolation on Windows** (it runs there; keys are scrubbed from the environment, files and network are not isolated) | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
 | Run the **Codex and Cursor** hooks inside the real apps (Gemini CLI and Claude Code are done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
-| Measure on **bigger, real projects** | [#13](https://github.com/apex-engine-dev/apex-verify/issues/13) |
+| Measure on **even more real projects**, and cut the false alarms seen there | [#13](https://github.com/apex-engine-dev/apex-verify/issues/13) |
 | Locked tests and **signed evidence** (so an agent cannot tamper with its own verdict) | [#7](https://github.com/apex-engine-dev/apex-verify/issues/7) |
 
 ## Questions you will have

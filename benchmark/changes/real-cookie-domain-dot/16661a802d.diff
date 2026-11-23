@@ -1,0 +1,19 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:13:43
++++ b/index.js	2026-11-23 10:13:43
+@@ -64,9 +64,14 @@
+  * <letter>          = any one of the 52 alphabetic characters A through Z in
+  *                     upper case and a through z in lower case
+  * <digit>           = any one of the ten digits 0 through 9
++ *
++ * The regex has been modified to allow an optional leading dot,
++ * which is a common practice for cookie domains, as well as accept 'localhost'.
++ * Malformed domains (e.g., double dots, trailing dots, spaces, injected attributes)
++ * are still rejected.
+  */
+ 
+-var domainValueRegExp = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
++var domainValueRegExp = /^(\.)?([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)([.][a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/i;
+ 
+ /**
+  * RegExp to match path-value in RFC 6265 sec 4.1.1

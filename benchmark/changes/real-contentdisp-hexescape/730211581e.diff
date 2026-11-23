@@ -1,0 +1,42 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:16:30
++++ b/index.js	2026-11-23 10:16:30
+@@ -35,6 +35,12 @@
+ var nonAsciiRegExp = /[^\x00-\x7f]/g
+ 
+ /**
++ * RegExp to match percent characters.
++ */
++
++var percentRegExp = /%/
++
++/**
+  * RegExp to match chars that must be quoted-pair in RFC 2616
+  */
+ 
+@@ -68,13 +74,18 @@
+   // restrict to file base name
+   var name = basename(filename)
+ 
+-  if (asciiStringRegExp.test(name)) {
++  // If filename is pure US-ASCII and does NOT contain a percent character,
++  // use the simple 'filename=' form to avoid client ambiguity with percent-decoding.
++  if (asciiStringRegExp.test(name) && !percentRegExp.test(name)) {
+     // simple header
+     // file name is always quoted and not a token for RFC 2616 compatibility
+     return 'attachment; filename=' + qstring(name)
+   }
+ 
+-  // simple Unicode -> US-ASCII transliteration
++  // Otherwise (if non-ASCII or contains a percent character),
++  // use both filename and filename* parameters.
++  // The filename* parameter provides the unambiguous, correctly encoded name.
++  // The filename parameter provides a fallback with transliterated ASCII.
+   var asciiFilename = name.replace(nonAsciiRegExp, '?')
+ 
+   return 'attachment; filename=' + qstring(asciiFilename)
+@@ -134,3 +145,4 @@
+ 
+   return 'UTF-8\'\'' + encoded
+ }
++

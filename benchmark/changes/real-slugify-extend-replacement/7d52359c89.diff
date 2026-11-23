@@ -1,0 +1,34 @@
+diff -ruN a/slugify.js b/slugify.js
+--- a/slugify.js	2026-11-23 10:15:55
++++ b/slugify.js	2026-11-23 10:15:55
+@@ -1,4 +1,4 @@
+-
++FILE: slugify.js
+ ;(function (name, root, factory) {
+   if (typeof exports === 'object') {
+     module.exports = factory()
+@@ -33,9 +33,21 @@
+     var slug = string.normalize().split('')
+       // replace characters based on charMap
+       .reduce(function (result, ch) {
+-        return result + (locale[ch] || charMap[ch] ||  (ch === replacement ? ' ' : ch))
+-          // remove not allowed characters
+-          .replace(options.remove || /[^\w\s$*_+~.()'"!\-:@]+/g, '')
++        var mapped = locale[ch] || charMap[ch];
++        var charToProcess;
++
++        if (mapped !== undefined) {
++          // If a character is mapped, use its mapped value.
++          // If the mapped value is the replacement character, treat it as a space for now.
++          charToProcess = (mapped === replacement) ? ' ' : mapped;
++        } else {
++          // If no mapping, and the character itself is the replacement char or whitespace, treat it as a space.
++          // This handles original spaces and hyphens (if replacement is hyphen)
++          charToProcess = (ch === replacement || /\s/.test(ch)) ? ' ' : ch;
++        }
++
++        // remove not allowed characters
++        return result + charToProcess.replace(options.remove || /[^\w\s$*_+~.()'"!\-:@]+/g, '');
+       }, '');
+ 
+     if (options.strict) {

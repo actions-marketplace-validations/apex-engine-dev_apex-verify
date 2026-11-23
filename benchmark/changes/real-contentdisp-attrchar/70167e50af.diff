@@ -1,0 +1,23 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:02
++++ b/index.js	2026-11-23 10:17:02
+@@ -18,9 +18,18 @@
+ 
+ /**
+  * RegExp to match non attr-char not handled by encodeURI.
++ *
++ * RFC 5987 (https://datatracker.ietf.org/doc/html/rfc5987#section-3.2.1)
++ * attr-char = ALPHA / DIGIT / "!" / "#" / "$" / "&" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++ *
++ * encodeURI does not encode the following characters:
++ * A-Z a-z 0-9 ; , / ? : @ & = + $ - _ . ! ~ * ' ( ) # space
++ *
++ * Comparing these, the characters that encodeURI does not encode AND are NOT attr-char are:
++ *   space ( ) , ; = @ ? / : * '
+  */
+ 
+-var encodeUriAttrCharRegExp = /[*']/g
++var encodeUriAttrCharRegExp = /[ *'(),;=@?\/:]/g
+ 
+ /**
+  * RegExp to match non-US-ASCII characters.

@@ -1,0 +1,27 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:20:35
++++ b/humanize-duration.js	2026-11-23 10:20:35
+@@ -1363,12 +1363,13 @@
+ 
+       /** @type {string} */
+       var formattedCount;
+-      var normalizedUnitCount =
++      // Use original unitCount for pluralization, but rounded for display
++      var displayCount =
+         maxDecimalPoints === void 0
+           ? unitCount
+           : Math.floor(unitCount * Math.pow(10, maxDecimalPoints)) /
+             Math.pow(10, maxDecimalPoints);
+-      var countStr = normalizedUnitCount.toString();
++      var countStr = displayCount.toString();
+ 
+       if (language._hideCountIf2 && unitCount === 2) {
+         formattedCount = "";
+@@ -1393,6 +1394,7 @@
+       var languageWord = language[unitName];
+       var word;
+       if (typeof languageWord === "function") {
++        // Pass the *original* unitCount to the language function for correct pluralization.
+         word = languageWord(unitCount);
+       } else {
+         word = languageWord;

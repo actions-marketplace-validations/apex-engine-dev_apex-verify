@@ -1,0 +1,11 @@
+{
+  "id": "real-contentdisp-attrchar",
+  "kind": "fix",
+  "title": "contentDisposition filename* contains characters that are not attr-char",
+  "prompt": "When contentDisposition(filename) has to use the extended filename*=UTF-8''... parameter (non-ASCII file names), the percent-encoded value can still contain characters that are not allowed in an RFC 5987 attr-char, for example '(' ')' ',' ';' '=' '@' or brackets, and so produces an invalid header. The value should be encoded so that only valid attr-chars remain unescaped. Please fix it.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/test.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-test.test.js"
+  }
+}

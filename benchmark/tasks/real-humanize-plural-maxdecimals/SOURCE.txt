@@ -1,0 +1,6 @@
+Upstream: https://github.com/EvanHahn/HumanizeDuration.js
+Fix commit: 924c2a183e3a2b7e08fe5fead6bf18bfab0568a6
+Parent (project/): ea005e75a316c94a4778631749c120e47e219688
+Hidden tests: test/humanizer.js from the fix commit, copied unchanged (renamed hidden-humanizer.test.js).
+Licence: see LICENSE.
+Only change to the test files: the dev-dependency `ms` was replaced by its literal values (ms("6h") -> 21600000, ms("7d") -> 604800000) so nothing needs installing.

@@ -1,0 +1,29 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:16:30
++++ b/index.js	2026-11-23 10:16:30
+@@ -68,9 +68,17 @@
+   // restrict to file base name
+   var name = basename(filename)
+ 
+-  if (asciiStringRegExp.test(name)) {
+-    // simple header
+-    // file name is always quoted and not a token for RFC 2616 compatibility
++  // RFC 2616 tokens are ~!#$%&'*+-.^_`|~, and the rest of ASCII
++  // RFC 2616 quoted-string is \anything or "anything"
++  // The problem is that a filename like "hello%41world.txt" is ambiguous.
++  // Clients that percent-decode the plain filename parameter will get "helloAworld.txt",
++  // which is not the original name.
++  // To avoid ambiguity, if a filename contains characters that could be percent-encoded,
++  // we should use the RFC 5987 encoding.
++  // Otherwise, we can use the simple form.
++
++  if (asciiStringRegExp.test(name) && !/[%#?]/.test(name)) {
++    // simple header, filename is a token or can be quoted
+     return 'attachment; filename=' + qstring(name)
+   }
+ 
+@@ -134,3 +142,4 @@
+ 
+   return 'UTF-8\'\'' + encoded
+ }
++

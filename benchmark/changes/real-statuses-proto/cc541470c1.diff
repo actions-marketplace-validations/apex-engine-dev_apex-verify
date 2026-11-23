@@ -1,0 +1,35 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:26
++++ b/index.js	2026-11-23 10:17:26
+@@ -100,9 +100,13 @@
+  */
+ 
+ function status (code) {
+-  if (typeof code === 'number') {
+-    if (!status.message[code]) throw new Error('invalid status code: ' + code)
+-    return status.message[code]
++  var msg
++  var num = parseInt(code, 10)
++
++  if (typeof code === 'number' || !isNaN(num)) {
++    msg = status.message[num]
++    if (!msg) throw new Error('invalid status code: ' + code)
++    return msg
+   }
+ 
+   if (typeof code !== 'string') {
+@@ -110,13 +114,7 @@
+   }
+ 
+   // '403'
+-  var n = parseInt(code, 10)
+-  if (!isNaN(n)) {
+-    if (!status.message[n]) throw new Error('invalid status code: ' + n)
+-    return status.message[n]
+-  }
+-
+-  n = status.code[code.toLowerCase()]
++  var n = status.code[code.toLowerCase()]
+   if (!n) throw new Error('invalid status message: "' + code + '"')
+   return n
+ }

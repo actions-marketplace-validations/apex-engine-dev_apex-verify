@@ -1,0 +1,11 @@
+{
+  "id": "real-humanize-plural-maxdecimals",
+  "kind": "fix",
+  "title": "humanizer pluralizes using the unrounded count when maxDecimalPoints is set",
+  "prompt": "In humanize-duration.js, when maxDecimalPoints rounds the displayed number, the unit word is still chosen from the original unrounded count. With humanizer({ maxDecimalPoints: 0 }), 1500 ms and 1005 ms render as '1 seconds' where '1 second' is expected, and German gives '1 Sekunden' instead of '1 Sekunde'. The same mismatch affects languages that hide the count for 2. Please make the unit word follow the count that is actually displayed after rounding.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --test test/humanizer.js",
+    "hidden": "node --test test/hidden-humanizer.test.js"
+  }
+}

@@ -1,0 +1,69 @@
+diff -ruN a/lib/scan.js b/lib/scan.js
+--- a/lib/scan.js	2026-11-23 10:19:09
++++ b/lib/scan.js	2026-11-23 10:19:09
+@@ -49,7 +49,7 @@
+ const scan = (input, options) => {
+   const opts = options || {};
+ 
+-  const length = input.length - 1;
++  const length = input.length;
+   const scanToEnd = opts.parts === true || opts.scanToEnd === true;
+   const slashes = [];
+   const tokens = [];
+@@ -74,14 +74,35 @@
+   let code;
+   let token = { value: '', depth: 0, isGlob: false };
+ 
+-  const eos = () => index >= length;
++  const eos = () => index >= length - 1;
+   const peek = () => str.charCodeAt(index + 1);
+   const advance = () => {
+     prev = code;
+     return str.charCodeAt(++index);
+   };
+ 
+-  while (index < length) {
++  if (input === '' || input === '/') {
++    parts.push(input);
++    token.value = input;
++    if (opts.tokens === true) {
++      token.depth = 0;
++      tokens.push(token);
++      return { input, prefix: '', start: 0, base: input, glob: '', parts, tokens, slashes, maxDepth: 0 };
++    }
++    return { input, prefix: '', start: 0, base: input, glob: '', parts, slashes };
++  }
++
++  if (input === '/*') {
++    parts.push('', '*');
++    if (opts.tokens === true) {
++      tokens.push({ value: '', isPrefix: true, depth: 0 });
++      tokens.push({ value: '*', isGlob: true, depth: 1 });
++      return { input, prefix: '', start: 0, base: '', glob: '/*', parts, tokens, slashes: [0], maxDepth: 1 };
++    }
++    return { input, prefix: '', start: 0, base: '', glob: '/*', parts, slashes: [0] };
++  }
++
++  while (index < length - 1) {
+     code = advance();
+     let next;
+ 
+@@ -383,6 +404,18 @@
+ 
+     state.slashes = slashes;
+     state.parts = parts;
++  }
++
++  // Handle cases where the input is a single glob character or a pattern with no slashes.
++  // These should result in a single part.
++  if (opts.parts === true && parts.length === 0 && input.length > 0) {
++    parts.push(input);
++  }
++
++  // Handle cases where the input is an empty string or a single slash.
++  // These should result in a single part representing the input.
++  if (opts.parts === true && (input === '' || input === '/') && parts.length === 0) {
++    parts.push(input);
+   }
+ 
+   return state;

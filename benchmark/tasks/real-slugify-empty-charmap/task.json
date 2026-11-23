@@ -1,0 +1,11 @@
+{
+  "id": "real-slugify-empty-charmap",
+  "kind": "fix",
+  "title": "slugify mishandles empty strings in custom charmaps",
+  "prompt": "slugify.extend() lets you map a character to an empty string to delete it, but in slugify.js such a mapping is ignored and the original character leaks through (the lookup treats the empty string as 'not found'). After slugify.extend({'ъ': ''}), slugify('ъяъ') should return 'ya', and slugify('ъяъ', { remove: /[]/g }) should also return 'ya'. Please fix the lookup so an empty mapping is honoured.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/slugify.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-slugify.test.js"
+  }
+}

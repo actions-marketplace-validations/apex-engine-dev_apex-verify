@@ -1,0 +1,19 @@
+diff -ruN a/humanize-duration.js b/humanize-duration.js
+--- a/humanize-duration.js	2026-11-23 10:22:20
++++ b/humanize-duration.js	2026-11-23 10:22:20
+@@ -1378,6 +1378,7 @@
+         for (var i = 0; i < countStr.length; i++) {
+           var character = countStr[i];
+           if (character === ".") {
++            // Use the provided decimal separator directly, no regex replacement needed.
+             formattedCount += decimal;
+           } else {
+             var asNumber = Number(character);
+@@ -1387,6 +1388,7 @@
+           }
+         }
+       } else {
++        // Replace only the literal dot with the decimal separator.
+         formattedCount = countStr.replace(".", decimal);
+       }
+ 

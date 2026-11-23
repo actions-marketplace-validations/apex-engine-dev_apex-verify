@@ -1,0 +1,11 @@
+{
+  "id": "real-contentdisp-hexescape",
+  "kind": "fix",
+  "title": "contentDisposition leaves a hex-escape-like file name ambiguous",
+  "prompt": "contentDisposition(filename) in index.js emits a simple 'attachment; filename=\"...\"' header for any pure US-ASCII file name. But a file name that itself contains something that looks like a percent escape (for example 'hello%41world.txt') is ambiguous for clients that percent-decode the plain filename parameter, so the original name is not preserved. Such names need to be sent in a form that is not ambiguous, while ordinary ASCII names keep the simple form. Please fix it.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/test.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-test.test.js"
+  }
+}

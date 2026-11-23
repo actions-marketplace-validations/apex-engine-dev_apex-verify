@@ -1,0 +1,11 @@
+{
+  "id": "real-slugify-trim-replacement",
+  "kind": "fix",
+  "title": "slugify keeps leading and trailing replacement characters",
+  "prompt": "slugify() in slugify.js leaves the replacement character at the start and end of the result when the input itself starts or ends with it. For example slugify('-Come on, fhqwhgads-') returns '-Come-on-fhqwhgads-', but the expected slug is 'Come-on-fhqwhgads' with no leading or trailing dash. Please fix it so the slug never starts or ends with the replacement character, while the rest of the behaviour (including repeated replacement characters being collapsed) stays the same.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/slugify.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-slugify.test.js"
+  }
+}

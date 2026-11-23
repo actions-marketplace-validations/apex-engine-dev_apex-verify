@@ -1,0 +1,7 @@
+Upstream: https://github.com/simov/slugify
+Fix commit: b216baebe0f90757af65b85983871d53ead9b726
+Parent (project/): d6fd1c054fdbf4939703e5cd137a2b2fe120a25d
+Hidden tests: test/slugify.js from the fix commit, copied unchanged (renamed hidden-slugify.test.js).
+Licence: see LICENSE.
+project/test/mocha-shim.cjs is ours: it runs the upstream mocha tests on node:test without installing mocha.
+Issue: https://github.com/simov/slugify/issues/112

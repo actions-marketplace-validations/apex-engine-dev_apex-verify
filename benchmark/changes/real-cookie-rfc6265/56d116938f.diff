@@ -1,0 +1,86 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:14:35
++++ b/index.js	2026-11-23 10:14:35
+@@ -23,16 +23,34 @@
+ var __toString = Object.prototype.toString
+ 
+ /**
+- * RegExp to match field-content in RFC 7230 sec 3.2
++ * RegExp to match `cookie-name` in RFC 6265, Section 4.1.1.
+  *
+- * field-content = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+- * field-vchar   = VCHAR / obs-text
+- * obs-text      = %x80-FF
++ * `cookie-name` is a `token` as defined in RFC 7230, Section 3.2.6.
++ * `token = 1*tchar`
++ * `tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~" / DIGIT / ALPHA`
+  */
++var cookieNameRegExp = /^[\u0021\u0023-\u0027\u002A\u002B\u002D\u002E\u0030-\u0039\u0041-\u005A\u005E-\u0060\u0061-\u007A\u007C\u007E]+$/;
+ 
+-var fieldContentRegExp = /^[\u0009\u0020-\u007e\u0080-\u00ff]+$/;
++/**
++ * RegExp to match `cookie-octet` in RFC 6265, Section 4.1.1.
++ *
++ * `cookie-value` is either a `cookie-octet` sequence or a `double-quoted-string`.
++ * For serialization, we assume unquoted values, which must conform to `*cookie-octet`.
++ * `cookie-octet = %x21 / %x23-2B / %x2D-3A / %x3C-5B / %x5D-7E`
++ */
++var cookieValueRegExp = /^[\u0021\u0023-\u002B\u002D-\u003A\u003C-\u005B\u005D-\u007E]*$/;
+ 
+ /**
++ * RegExp to match `field-vchar` in RFC 7230 sec 3.2.
++ * Used for domain and path options to disallow whitespace and control characters.
++ *
++ * `field-vchar = VCHAR / obs-text`
++ * `VCHAR = %x21-7E` (printable ASCII, excluding space)
++ * `obs-text = %x80-FF` (extended ASCII)
++ */
++var attributeValueRegExp = /^[\u0021-\u007E\u0080-\u00FF]+$/;
++
++/**
+  * Parse a cookie header.
+  *
+  * Parse the given cookie header string into an object
+@@ -116,13 +134,15 @@
+     throw new TypeError('option encode is invalid');
+   }
+ 
+-  if (!fieldContentRegExp.test(name)) {
++  // Validate name (must be a token)
++  if (!cookieNameRegExp.test(name)) {
+     throw new TypeError('argument name is invalid');
+   }
+ 
+   var value = enc(val);
+ 
+-  if (value && !fieldContentRegExp.test(value)) {
++  // Validate value (must be cookie-octets, after encoding)
++  if (value && !cookieValueRegExp.test(value)) {
+     throw new TypeError('argument val is invalid');
+   }
+ 
+@@ -139,7 +159,8 @@
+   }
+ 
+   if (opt.domain) {
+-    if (!fieldContentRegExp.test(opt.domain)) {
++    // Validate domain (must be field-vchar)
++    if (!attributeValueRegExp.test(opt.domain)) {
+       throw new TypeError('option domain is invalid');
+     }
+ 
+@@ -147,7 +168,8 @@
+   }
+ 
+   if (opt.path) {
+-    if (!fieldContentRegExp.test(opt.path)) {
++    // Validate path (must be field-vchar)
++    if (!attributeValueRegExp.test(opt.path)) {
+       throw new TypeError('option path is invalid');
+     }
+ 
+@@ -272,3 +294,4 @@
+     return str;
+   }
+ }
++

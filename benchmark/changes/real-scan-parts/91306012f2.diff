@@ -1,0 +1,93 @@
+diff -ruN a/lib/scan.js b/lib/scan.js
+--- a/lib/scan.js	2026-11-23 10:19:09
++++ b/lib/scan.js	2026-11-23 10:19:09
+@@ -64,6 +64,7 @@
+   let isGlob = false;
+   let isExtglob = false;
+   let isGlobstar = false;
++  let isLiteral = false;
+   let braceEscaped = false;
+   let backslashes = false;
+   let negated = false;
+@@ -153,6 +154,14 @@
+       break;
+     }
+ 
++    if (code === CHAR_FORWARD_SLASH && !isGlob && !isBracket && !isBrace) {
++      if (opts.parts === true) {
++        parts.push(''); // Add empty part for leading slash
++      }
++      start = index + 1;
++      continue;
++    }
++
+     if (code === CHAR_FORWARD_SLASH) {
+       slashes.push(index);
+       tokens.push(token);
+@@ -274,7 +283,7 @@
+       break;
+     }
+ 
+-    if (isGlob === true) {
++    if (isGlob === true || isLiteral === true) {
+       finished = true;
+ 
+       if (scanToEnd === true) {
+@@ -310,9 +319,19 @@
+     base = str;
+   }
+ 
+-  if (base && base !== '' && base !== '/' && base !== str) {
+-    if (isPathSeparator(base.charCodeAt(base.length - 1))) {
+-      base = base.slice(0, -1);
++  // Ensure that the parts array always covers the entire pattern
++  if (opts.parts === true) {
++    if (parts.length === 0 && input !== '') {
++      parts.push(input);
++    } else if (parts.length > 0 && input !== '' && !input.endsWith('/') && slashes.length > 0 && input.charCodeAt(input.length - 1) === input.charCodeAt(slashes[slashes.length - 1])) {
++      // trailing slash case
++    } else if (parts.length > 0 && input !== '' && parts[parts.length - 1] !== '' && slashes.length > 0 && input.charCodeAt(input.length - 1) !== input.charCodeAt(slashes[slashes.length - 1])) {
++      // If the last part is not empty and the input doesn't end with a slash, and there were slashes,
++      // it means the last segment of the input was not captured as a part.
++      const lastSlashIndex = slashes[slashes.length - 1];
++      if (lastSlashIndex < input.length - 1) {
++        parts.push(input.slice(lastSlashIndex + 1));
++      }
+     }
+   }
+ 
+@@ -343,7 +362,7 @@
+     state.maxDepth = 0;
+     if (!isPathSeparator(code)) {
+       tokens.push(token);
+-    }
++    } else if (opts.parts === true && !isGlob) { tokens.push(token) }
+     state.tokens = tokens;
+   }
+ 
+@@ -365,7 +384,7 @@
+         state.maxDepth += tokens[idx].depth;
+       }
+       if (idx !== 0 || value !== '') {
+-        parts.push(value);
++        if (value !== '') parts.push(value);
+       }
+       prevIndex = i;
+     }
+@@ -373,7 +392,7 @@
+     if (prevIndex && prevIndex + 1 < input.length) {
+       const value = input.slice(prevIndex + 1);
+       parts.push(value);
+-
++      if (value === '') parts.pop(); // Remove empty string if it's a trailing slash
+       if (opts.tokens) {
+         tokens[tokens.length - 1].value = value;
+         depth(tokens[tokens.length - 1]);
+@@ -381,6 +400,7 @@
+       }
+     }
+ 
++    if (input === '') parts.push('');
+     state.slashes = slashes;
+     state.parts = parts;
+   }

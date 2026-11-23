@@ -1,0 +1,35 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:19:09
++++ b/lib/parse.js	2026-11-23 10:19:09
+@@ -241,15 +241,24 @@
+     if (token.type === 'negate') {
+       let extglobStar = star;
+ 
+-      if (token.inner && token.inner.length > 1 && token.inner.includes('/')) {
++      // The fix: when the extglob is a negation and it's followed by something,
++      // we need to ensure that the star *after* the closing parenthesis
++      // doesn't accidentally consume the part that should have been matched by the extglob.
++      // Specifically, if there's a star after the closing parenthesis, and the content
++      // of the negation extglob contains a star, we need to ensure that the star after
++      // the negation doesn't prevent the inner content from being matched correctly.
++      // The original implementation incorrectly assumed that `star` would always be
++      // sufficient, but when there's content after the closing parenthesis, the regex
++      // needs to be more specific.
++      if (token.inner.includes('*') && (rest = remaining()) && rest.length > 0) {
++        extglobStar = globstar(opts); // Use globstar to handle potential slashes
++        output = token.close = `)${extglobStar}`; // Ensure the star after the extglob is captured.
++      } else if (token.inner && token.inner.length > 1 && token.inner.includes('/')) {
+         extglobStar = globstar(opts);
+-      }
+-
+-      if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
++        output = token.close = `)${extglobStar}`;
++      } else if (extglobStar !== star || eos() || /^\)+$/.test(remaining())) {
+         output = token.close = `)$))${extglobStar}`;
+-      }
+-
+-      if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)) {
++      } else if (token.inner.includes('*') && (rest = remaining()) && /^\.[^\\/.]+$/.test(rest)) {
+         output = token.close = `)${rest})${extglobStar})`;
+       }
+ 

@@ -1,0 +1,220 @@
+diff -ruN a/lib/parse.js b/lib/parse.js
+--- a/lib/parse.js	2026-11-23 10:22:29
++++ b/lib/parse.js	2026-11-23 10:22:29
+@@ -495,6 +495,11 @@
+       const isBrace = state.braces > 0 && (tok.type === 'comma' || tok.type === 'brace');
+       const isExtglob = tok.extglob === true || (extglobs.length && (tok.type === 'pipe' || tok.type === 'paren'));
+ 
++      // If the current token is not a slash, paren, brace, or extglob, and it's not the start of a new globstar sequence,
++      // then it's part of the previous globstar. We need to convert the globstar to a star.
++      // The condition `tok.type !== 'paren'` handles cases like `**(...)`.
++      // The condition `tok.type !== 'extglob'` is implicit from the `tok.extglob === true` check above.
++      // The condition `tok.type !== 'pipe'` is implicit from the `extglobs.length && (tok.type === 'pipe' || tok.type === 'paren')` check.
+       if (tok.type !== 'slash' && tok.type !== 'paren' && !isBrace && !isExtglob) {
+         state.output = state.output.slice(0, -prev.output.length);
+         prev.type = 'star';
+@@ -509,7 +514,7 @@
+     }
+ 
+     if (tok.value || tok.output) append(tok);
+-    if (prev && prev.type === 'text' && tok.type === 'text') {
++    if (prev.type === 'text' && tok.type === 'text') {
+       prev.output = (prev.output || prev.value) + tok.value;
+       prev.value += tok.value;
+       return;
+@@ -543,7 +548,7 @@
+ 
+     if ((token.type === 'plus' || token.type === 'star') && analysis.risky) {
+       const safeOutput = analysis.safeOutput
+-        ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${analysis.safeOutput})` : analysis.safeOutput)
++        ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${safeOutput})` : safeOutput)
+         : undefined;
+       const open = tokens[token.tokensIndex];
+ 
+@@ -1129,133 +1134,53 @@
+      * Stars
+      */
+ 
++    // Check if the previous token was a globstar or a star.
++    // If it was, this means we have consecutive stars.
++    // The `prev.star === true` check is for cases like `a*b*c`.
+     if (prev && (prev.type === 'globstar' || prev.star === true)) {
+-      prev.type = 'star';
+-      prev.star = true;
+-      prev.value += value;
+-      prev.output = star;
+-      state.backtrack = true;
+-      state.globstar = true;
+-      consume(value);
+-      continue;
+-    }
+-
+-    let rest = remaining();
+-    if (opts.noextglob !== true && /^\([^?]/.test(rest)) {
+-      extglobOpen('star', value);
+-      continue;
+-    }
+-
+-    if (prev.type === 'star') {
+-      if (opts.noglobstar === true) {
+-        consume(value);
+-        continue;
+-      }
+-
+-      const prior = prev.prev;
+-      const before = prior.prev;
+-      const isStart = prior.type === 'slash' || prior.type === 'bos';
+-      const afterStar = before && (before.type === 'star' || before.type === 'globstar');
+-
+-      if (opts.bash === true && (!isStart || (rest[0] && rest[0] !== '/'))) {
+-        push({ type: 'star', value, output: '' });
+-        continue;
+-      }
+-
+-      const isBrace = state.braces > 0 && (prior.type === 'comma' || prior.type === 'brace');
+-      const isExtglob = extglobs.length && (prior.type === 'pipe' || prior.type === 'paren');
+-      if (!isStart && prior.type !== 'paren' && !isBrace && !isExtglob) {
+-        push({ type: 'star', value, output: '' });
+-        continue;
+-      }
+-
+-      // strip consecutive `/**/`
+-      while (rest.slice(0, 3) === '/**') {
+-        const after = input[state.index + 4];
+-        if (after && after !== '/') {
+-          break;
+-        }
+-        rest = rest.slice(3);
+-        consume('/**', 3);
+-      }
+-
+-      // A globstar followed only by balanced closing parens is at the logical end of patterns like
+-      // `test(/utils/**)` and `test?(/utils/**)`. Treat it as EOS so the trailing `/**` can match its
+-      // parent path, except in negated extglobs where that would change the exclusion semantics.
+-      const isEnd = eos() || (
+-        state.parens > 0
+-        && rest === ')'.repeat(state.parens)
+-        && !extglobs.some(extglob => extglob.type === 'negate')
+-      );
+-
+-      if (prior.type === 'bos' && eos()) {
++      // If the current character is also a star, and it's not at the beginning of the string or after a slash,
++      // it indicates a sequence of stars. If the previous was already a globstar, we can extend it.
++      // Otherwise, we need to change the previous token to a globstar.
++      if (
++        (prev.type === 'globstar' && peek() === '*') || // `**` followed by `*`
++        (prev.type === 'star' && peek() === '*') // `*` followed by `*`
++      ) {
+         prev.type = 'globstar';
+         prev.value += value;
+         prev.output = globstar(opts);
+-        state.output = prev.output;
++        state.output = state.output.slice(0, -prev.output.length) + prev.output;
+         state.globstar = true;
++        state.backtrack = true;
+         consume(value);
+         continue;
+       }
++    }
+ 
+-      if (prior.type === 'slash' && prior.prev.type !== 'bos' && !afterStar && isEnd) {
+-        state.output = state.output.slice(0, -(prior.output + prev.output).length);
+-        prior.output = `(?:${prior.output}`;
+-
+-        prev.type = 'globstar';
+-        prev.output = globstar(opts) + (opts.strictSlashes ? ')' : '|$)');
+-        prev.value += value;
+-        state.globstar = true;
+-        state.output += prior.output + prev.output;
+-        consume(value);
++    // Check for `**` which is a globstar.
++    // This condition is specifically for the `**` pattern.
++    if (value === '*' && peek() === '*') {
++      // Ensure `**` is not part of an extglob like `*(**)`
++      if (opts.noextglob !== true && /^\([^?]/.test(remaining().slice(1))) {
++        extglobOpen('star', value);
+         continue;
+       }
+ 
+-      if (prior.type === 'slash' && prior.prev.type !== 'bos' && rest[0] === '/') {
+-        const end = rest[1] !== void 0 ? '|$' : '';
+-
+-        state.output = state.output.slice(0, -(prior.output + prev.output).length);
+-        prior.output = `(?:${prior.output}`;
+-
++      // If `**` is at the beginning of the pattern, or after a slash,
++      // it signifies a recursive globstar.
++      const isStart = prev.type === 'slash' || prev.type === 'bos';
++      if (isStart) {
+         prev.type = 'globstar';
+-        prev.output = `${globstar(opts)}${SLASH_LITERAL}|${SLASH_LITERAL}${end})`;
+-        prev.value += value;
+-
+-        state.output += prior.output + prev.output;
++        prev.value += value + '*'; // Include the second star
++        prev.output = globstar(opts);
++        state.output = state.output.slice(0, -prev.output.length) + prev.output;
+         state.globstar = true;
+-
+-        consume(value + advance());
+-
+-        push({ type: 'slash', value: '/', output: '' });
++        state.backtrack = true;
++        consume(value + advance()); // Consume both stars
+         continue;
+       }
+-
+-      if (prior.type === 'bos' && rest[0] === '/') {
+-        prev.type = 'globstar';
+-        prev.value += value;
+-        prev.output = `(?:^|${SLASH_LITERAL}|${globstar(opts)}${SLASH_LITERAL})`;
+-        state.output = prev.output;
+-        state.globstar = true;
+-        consume(value + advance());
+-        push({ type: 'slash', value: '/', output: '' });
+-        continue;
+-      }
+-
+-      // remove single star from output
+-      state.output = state.output.slice(0, -prev.output.length);
+-
+-      // reset previous token to globstar
+-      prev.type = 'globstar';
+-      prev.output = globstar(opts);
+-      prev.value += value;
+-
+-      // reset output with globstar
+-      state.output += prev.output;
+-      state.globstar = true;
+-      consume(value);
+-      continue;
+     }
+ 
++    // Handle the case of a single star `*`.
+     const token = { type: 'star', value, output: star };
+ 
+     if (opts.bash === true) {
+@@ -1273,20 +1198,21 @@
+       continue;
+     }
+ 
++    // If the star is at the beginning of the pattern, or after a slash or a dot,
++    // we need to ensure it doesn't match a leading dot by default (unless `dot` option is true).
+     if (state.index === state.start || prev.type === 'slash' || prev.type === 'dot') {
+       if (prev.type === 'dot') {
+         state.output += NO_DOT_SLASH;
+         prev.output += NO_DOT_SLASH;
+-
+       } else if (opts.dot === true) {
+         state.output += NO_DOTS_SLASH;
+         prev.output += NO_DOTS_SLASH;
+-
+       } else {
+         state.output += nodot;
+         prev.output += nodot;
+       }
+ 
++      // If the next character is not a star, ensure the star matches at least one character.
+       if (peek() !== '*') {
+         state.output += ONE_CHAR;
+         prev.output += ONE_CHAR;

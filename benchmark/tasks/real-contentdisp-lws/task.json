@@ -1,0 +1,11 @@
+{
+  "id": "real-contentdisp-lws",
+  "kind": "fix",
+  "title": "contentDisposition parse rejects tab whitespace",
+  "prompt": "contentDisposition.parse(string) in index.js only treats the space character as whitespace around the disposition type and around parameter names, '=' and values. Header values may use any linear whitespace, including a horizontal tab, e.g. 'attachment;\tfilename=\"x.txt\"' or 'attachment\t; filename\t=\t\"x.txt\"', and those are currently rejected or parsed wrongly. Please make parse accept tabs as well as spaces in those positions.",
+  "timeout": 420,
+  "meta": {
+    "visible": "node --require ./test/mocha-shim.cjs --test test/test.js",
+    "hidden": "node --require ./test/mocha-shim.cjs --test test/hidden-test.test.js"
+  }
+}

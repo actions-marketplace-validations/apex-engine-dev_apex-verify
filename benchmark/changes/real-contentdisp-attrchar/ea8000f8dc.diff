@@ -1,0 +1,25 @@
+diff -ruN a/index.js b/index.js
+--- a/index.js	2026-11-23 10:17:03
++++ b/index.js	2026-11-23 10:17:03
+@@ -18,9 +18,15 @@
+ 
+ /**
+  * RegExp to match non attr-char not handled by encodeURI.
++ *
++ * RFC 5987 defines attr-char as:
++ *   attr-char = ALPHA / DIGIT / "!" / "#" / "$" / "&" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
++ *
++ * encodeURI does not encode the following characters that are not attr-char:
++ *   ' * ( ) , ; = @ / ? : [ ]
+  */
+ 
+-var encodeUriAttrCharRegExp = /[*']/g
++var encodeUriAttrCharRegExp = /[*'();/?:=@,[\]]/g
+ 
+ /**
+  * RegExp to match non-US-ASCII characters.
+@@ -128,3 +134,4 @@
+ 
+   return 'UTF-8\'\'' + encoded
+ }
++

@@ -1,0 +1,8 @@
+{
+  "name": "real-humanize-plural-maxdecimals",
+  "private": true,
+  "main": "humanize-duration.js",
+  "scripts": {
+    "test": "node --test test/humanizer.js"
+  }
+}
