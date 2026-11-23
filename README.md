@@ -58,7 +58,7 @@ It downloads a about 60 KB file (about 2 seconds), changes nothing in your proje
 ```
 Run in a real Claude Code session: Claude said done on a wrong change, the Stop hook blocked it with the failing checks, and it kept being stopped (at most 3 times, so a wrong check can never trap it).
 
-**GitHub pull requests** (any agent, Copilot, Cursor cloud, or a person): a verdict comment and a required check.
+**GitHub pull requests** (any agent, Copilot, Cursor cloud, or a person): a verdict comment and a required check. Listed on the [GitHub Marketplace](https://github.com/marketplace/actions/apex-verify-ai-change-checker).
 ```yaml
 - uses: apex-engine-dev/apex-verify@v1
   with: { api-key: "${{ secrets.GEMINI_API_KEY }}" }
