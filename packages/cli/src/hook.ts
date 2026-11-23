@@ -19,7 +19,9 @@ import { renderText } from "./report.js";
  * trap an agent), APEX_MODE=warn never blocks, nothing runs when nothing changed, and an unchanged change is not
  * verified twice.
  */
-export interface HookInput { cwd?: string; transcript_path?: string; session_id?: string; stop_hook_active?: boolean; /** Gemini CLI's AfterAgent hook: the user's request (it sends no transcript). */ prompt?: string }
+export interface HookInput { cwd?: string; transcript_path?: string; session_id?: string; stop_hook_active?: boolean; /** Gemini CLI's AfterAgent hook: the user's request (it sends no transcript). */ prompt?: string;
+  /** Cursor's stop hook: the project folders, the run's end state, and the conversation id (it sends no cwd). */
+  workspace_roots?: string[]; status?: string; conversation_id?: string; hook_event_name?: string }
 
 /** The last thing the person asked for, from the agent's transcript (JSON lines). */
 export function lastUserPrompt(transcript: string): string {
@@ -28,9 +30,9 @@ export function lastUserPrompt(transcript: string): string {
     if (!line.trim()) continue;
     let j: any; try { j = JSON.parse(line); } catch { continue; }
     const m = j?.message ?? j;
-    if ((j?.type ?? m?.role) !== "user" && m?.role !== "user") continue;
+    if ((j?.type ?? m?.role) !== "user" && m?.role !== "user" && j?.role !== "user") continue;
     if (j?.isMeta || j?.isSidechain) continue;
-    const c = m?.content;
+    const c = m?.content ?? j?.content;
     let text = "";
     if (typeof c === "string") text = c;
     else if (Array.isArray(c)) text = c.filter((b: any) => b?.type === "text" && typeof b.text === "string").map((b: any) => b.text).join("\n");
@@ -54,7 +56,12 @@ function changeFingerprint(cwd: string): string | null {
 export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.env, out: (s: string) => void = console.log): Promise<number> {
   let input: HookInput = {};
   try { input = JSON.parse(stdin || "{}"); } catch { /* no input */ }
-  const cwd = input.cwd || process.cwd();
+  // Cursor sends workspace_roots instead of cwd, and wants {followup_message} to keep the agent going (decision/reason is also sent).
+  const cursor = Array.isArray(input.workspace_roots) || typeof input.conversation_id === "string";
+  if (cursor && input.status && input.status !== "completed") return 0; // aborted or errored: nothing to verify
+  input.session_id ||= input.conversation_id;
+  const cwd = input.cwd || input.workspace_roots?.[0] || process.cwd();
+  const block = (reason: string) => JSON.stringify(cursor ? { decision: "block", reason, followup_message: reason } : { decision: "block", reason });
   const fp = changeFingerprint(cwd);
   if (!fp) return 0; // nothing changed (or not a git repository): nothing to verify
   const state = path.join(os.tmpdir(), "apex-hook", (input.session_id || "session").replace(/[^\w.-]/g, "_") + ".json");
@@ -66,7 +73,7 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
 
   if (st.fp === fp && st.verdict) { // the same change was already judged
     if (st.verdict === "ready") return 0;
-    if (st.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks && st.message) { st.blocks = (st.blocks ?? 0) + 1; save(); out(JSON.stringify({ decision: "block", reason: st.message })); }
+    if (st.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks && st.message) { st.blocks = (st.blocks ?? 0) + 1; save(); out(block(st.message)); }
     return 0;
   }
   const task = (input.transcript_path && fs.existsSync(input.transcript_path) ? lastUserPrompt(fs.readFileSync(input.transcript_path, "utf8")) : "") || (typeof input.prompt === "string" ? input.prompt.trim() : "") || env.APEX_TASK || "";
@@ -78,7 +85,7 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
     const text = renderText(report);
     const message = `Apex verify says this change is ${report.verdict === "not_ready" ? "NOT READY" : report.verdict.toUpperCase()}. Do not stop yet.\n\n${text}`;
     st = { fp, verdict: report.verdict, message, blocks: st.fp === fp ? st.blocks ?? 0 : 0 };
-    if (report.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks) { st.blocks = (st.blocks ?? 0) + 1; save(); out(JSON.stringify({ decision: "block", reason: message })); return 0; }
+    if (report.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks) { st.blocks = (st.blocks ?? 0) + 1; save(); out(block(message)); return 0; }
     save();
     out(JSON.stringify({ systemMessage: report.verdict === "ready" ? `Apex verify: READY (${report.checks.passed} checks, ${report.tests.after?.passed ?? 0} tests pass)` : `Apex verify: ${report.verdict === "not_ready" ? "NOT READY (not blocking: " + (warnOnly ? "warn mode" : "block limit reached") + ")" : "UNKNOWN"}: ${report.reasons[0]?.summary ?? report.warnings[0] ?? ""}` }));
   } catch (e) {

@@ -8,7 +8,7 @@ Apex verify does not replace your agent. It checks what the agent changed. Pick 
 | **Claude Code** | the Apex verify plugin (below): a Stop hook, a skill and an MCP tool | **Yes.** The hook hands the reasons back and Claude keeps working. |
 | **Codex CLI** | a Stop hook and/or the MCP tool (below) | **Yes**, same mechanism. |
 | **Gemini CLI** | an `AfterAgent` hook and/or the MCP tool | **Yes**, tested in a real session (below). |
-| **Cursor** | the MCP tool, plus a `stop` hook in `.cursor/hooks.json` | Partly: the hook can send a follow-up message. |
+| **Cursor** | a `stop` hook in `.cursor/hooks.json` (below) and/or the MCP tool | Partly: the hook sends a follow-up message. Not yet run in the app. |
 | **Aider** | `test-cmd: apex verify "<task>" --no-model` in `.aider.conf.yml` | Informs only: Aider tries a fix when the command fails. |
 | **GitHub pull requests (any agent: Copilot, Cursor cloud, Codex cloud, a person)** | the Apex verify Action (below) | **Yes**, as a required check. |
 
@@ -45,7 +45,7 @@ Manual hook instead of the plugin (`.claude/settings.json`):
 
 ## Codex CLI
 
-Codex supports the same Stop hook contract. In `~/.codex/hooks.json` (or `.codex/hooks.json` in a trusted project):
+Codex documents the same Stop hook contract (`decision: block` plus `reason`; `stop_hook_active` is honoured). **Status: not yet run inside Codex** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)); hooks you add there must be trusted once with `/hooks`. In `~/.codex/hooks.json` (or `.codex/hooks.json` in a trusted project):
 
 ```json
 { "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
@@ -63,6 +63,16 @@ In `.gemini/settings.json` (project) or `~/.gemini/settings.json`:
 ```
 
 Gemini sends the request as `prompt` and treats `decision: "block"` as a retry, so it works like the Claude Code hook. Tested with Gemini CLI 0.32.1: a wrong `slugify` was blocked with the failing check, the agent fixed it and finished; a correct change got `READY`. (Gemini asks you to trust project-level hooks the first time.)
+
+## Cursor
+
+In `.cursor/hooks.json` (project) or `~/.cursor/hooks.json`:
+
+```json
+{ "version": 1, "hooks": { "stop": [ { "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --hook", "timeout": 300, "loop_limit": 3 } ] } }
+```
+
+Cursor sends `workspace_roots`, `conversation_id` and `status` (not `cwd`) and continues the agent when the hook prints `followup_message`; Apex verify detects that input and prints both `followup_message` and `decision: block`. An aborted or errored run is not verified. **Status: written to Cursor's documented hook format and tested with that input shape, but not yet run inside the Cursor app** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)); Cursor's own forum reports stop-hook follow-ups being unreliable in some versions, so please tell us what you see.
 
 ## Any MCP client (Cursor, Gemini CLI, Claude Desktop, ...)
 

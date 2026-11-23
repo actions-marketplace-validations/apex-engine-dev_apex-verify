@@ -113,3 +113,15 @@ test("go: the check file goes beside the code, in its package", async () => {
   assert.deepEqual(goPackageOf(["main.go", "util/a.go", "util/b.go", "go.mod"], () => "package main\n"), { dir: "", pkg: "main" });
   assert.deepEqual(goPackageOf(["util/a.go", "util/b.go", "util/b_test.go", "other/c.go"], () => "package util\n"), { dir: "util", pkg: "util" });
 });
+
+test("test runs never see API keys or tokens from the environment (every platform, Windows included)", async () => {
+  const { runTests } = await import("./surgical.js");
+  process.env.APEX_SECRET_PROBE_TOKEN = "s3cret"; process.env.APEX_SECRET_PROBE_KEY = "s3cret";
+  try {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "apex-env-"));
+    await fs.writeFile(path.join(dir, "probe.cjs"), 'const leaked = Object.keys(process.env).filter((k) => k.startsWith("APEX_SECRET_PROBE"));\nconsole.log(leaked.length ? "LEAKED " + leaked : "# pass 1\\n# fail 0");\nprocess.exit(leaked.length ? 1 : 0);\n');
+    const r = await runTests(dir, ["node", "probe.cjs"], undefined, 30, { sandbox: false });
+    assert.equal(r.exitCode, 0, r.output);
+    assert.doesNotMatch(r.output, /LEAKED/);
+  } finally { delete process.env.APEX_SECRET_PROBE_TOKEN; delete process.env.APEX_SECRET_PROBE_KEY; }
+});

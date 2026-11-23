@@ -7,7 +7,7 @@
 | macOS | Seatbelt: writes only inside the scratch copy, temp folders and package caches; no network except this machine; credential folders (`~/.ssh`, cloud logins, keychains) unreadable | CI (macOS job) |
 | Linux | bubblewrap (`bwrap`): read-only filesystem, writable only in the copy, temp folders and caches; no network except localhost (own network namespace); `~/.ssh`, `~/.aws` and similar hidden; own process tree, killed with the parent | CI (`linux-sandbox` job: write outside the copy denied, external network denied, localhost allowed) |
 | Container (any host with Docker) | the recipe below | CI (`container` job) |
-| Windows | **runs, with no sandbox**: the test suite and a verify run pass on Windows in CI, but checks run as you. For code you do not trust use WSL2 (the Linux sandbox) or the container | - |
+| Windows | **runs, with no file or network isolation**: the test suite and a verify run pass on Windows in CI. What does apply: API keys, tokens and passwords are removed from the environment of every test run (tested on all platforms), and checks run on a scratch copy, never in your project. Node cannot confine files or network on Windows, so for code you do not trust use WSL2 (the Linux sandbox) or the container | - |
 
 **Linux setup.** Install bubblewrap (`apt install bubblewrap`, `dnf install bubblewrap`). Unprivileged user namespaces must be allowed; on Ubuntu 24.04 they are restricted by default (`sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0`, or an AppArmor profile for `bwrap`). If bubblewrap is not usable, Apex verify says `sandbox: none` and still runs; `APEX_TEST_SANDBOX=0` turns the sandbox off.
 

@@ -16,6 +16,7 @@ async function main(argv: string[]): Promise<number> {
   const rest = argv[0] === "verify" ? argv.slice(1) : argv;
   if (!rest.length || rest.includes("--help") || rest.includes("-h") || rest[0] === "help") { console.log(USAGE); return 0; }
   if (rest.includes("--version") || rest.includes("-v")) { console.log(VERSION); return 0; }
+  if (rest.includes("--demo")) return (await import("./demo.js")).runDemo();
   if (rest.includes("--hook")) { const chunks: Buffer[] = []; for await (const c of process.stdin) chunks.push(c as Buffer); return runHook(Buffer.concat(chunks).toString("utf8")); }
   if (rest.includes("--mcp")) { await runMcp(); return 0; }
   const val = (k: string) => { const i = rest.indexOf(k); return i >= 0 ? rest[i + 1] : undefined; };

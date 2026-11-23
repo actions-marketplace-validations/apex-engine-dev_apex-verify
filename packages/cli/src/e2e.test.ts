@@ -146,6 +146,22 @@ test("the stop hook blocks 'done' for a wrong change (with the reason), at most 
   assert.ok(!warn.out.includes('"block"'), "warn mode never blocks");
 });
 
+test("the stop hook speaks Cursor (workspace_roots, followup_message) and Gemini CLI (prompt, no transcript)", async () => {
+  const run = (stdin: string) => new Promise<string>((resolve) => {
+    const p = spawn(process.execPath, [MAIN, "--hook"], { cwd: os.tmpdir(), env: { ...env(), APEX_CACHE_DIR: fs.mkdtempSync(path.join(os.tmpdir(), "apex-e2e-hx-")) } });
+    let out = ""; p.stdout.on("data", (x) => (out += x)); p.on("close", () => resolve(out.trim())); p.stdin.end(stdin);
+  });
+  const t = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "apex-e2e-cur-")), "tr.jsonl");
+  fs.writeFileSync(t, JSON.stringify({ role: "user", content: [{ type: "text", text: TASK }] }) + "\n");
+  const cursor = JSON.parse(await run(JSON.stringify({ hook_event_name: "stop", status: "completed", conversation_id: `cur-${process.pid}`, workspace_roots: [repo("wrong")], transcript_path: t, loop_count: 0 })));
+  assert.equal(cursor.decision, "block");
+  assert.match(cursor.followup_message, /NOT READY/);
+  assert.equal(await run(JSON.stringify({ hook_event_name: "stop", status: "aborted", conversation_id: "cur-ab", workspace_roots: [repo("wrong")], transcript_path: t })), "", "an aborted run is not verified");
+  const gemini = JSON.parse(await run(JSON.stringify({ cwd: repo("wrong"), session_id: `gem-${process.pid}`, prompt: TASK, prompt_response: "done", stop_hook_active: false })));
+  assert.equal(gemini.decision, "block");
+  assert.ok(!("followup_message" in gemini), "only Cursor gets followup_message");
+});
+
 test("the MCP server answers initialize, lists verify_change and verifies a change", async () => {
   const d = repo("good");
   const msgs = [

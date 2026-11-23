@@ -16,6 +16,14 @@ AI coding agents say "done" when the tests pass. But the tests only check what s
 
 ## Try it in 30 seconds
 
+**No key, no project, nothing to install first.** See it catch a wrong change in 5 seconds:
+
+```sh
+npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --demo
+```
+
+Then try it on your own project:
+
 You need Node 20+, git, and an API key for the model that writes the checks (use a different, ideally stronger model than your agent).
 
 ```sh
@@ -26,7 +34,7 @@ npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/downloa
 
 It downloads a 48 KB file (about 2 seconds), changes nothing in your project, and prints a verdict. No key? Add `--no-model` to run only your tests and the cheating scan (the verdict is then at most `unknown`).
 
-**Want to play first?** Run the built-in example, where an AI "fixed" a function and its own test passes:
+**More to play with:** the example in this repo, where an AI "fixed" a function and its own test passes:
 
 ```sh
 git clone https://github.com/apex-engine-dev/apex-verify && cd apex-verify/examples/said-done
@@ -63,7 +71,7 @@ Honest limits: these are small projects, the changes were written by Gemini mode
 | **Claude Code** | `/plugin marketplace add apex-engine-dev/apex-verify` then `/plugin install apex-verify@apex` | **Yes**: the Stop hook hands the failing check back and Claude keeps working | **Run in a real Claude Code session** (v2.1): Claude said done on a wrong change, the hook blocked it with the failing checks, and Claude kept being stopped; plugin validated |
 | **Any MCP client** | the `verify_change` tool | The agent asks | Protocol tested in CI; not with a real client |
 | **Gemini CLI** | an `AfterAgent` hook | **Yes**: it blocked a wrong change, the agent fixed it | **Run in a real Gemini CLI session** (v0.32) |
-| **Codex CLI, Cursor** | a Stop hook and/or the MCP tool | Yes / partly | **Documented, not tested** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)) |
+| **Codex CLI, Cursor** | a Stop hook and/or the MCP tool | Yes / partly | **Written to their documented hook formats; tested with their input shapes, not run inside the apps** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)) |
 
 Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what is and is not tested: [docs/USE-CASES.md](docs/USE-CASES.md).
 
@@ -90,8 +98,8 @@ Honest list of what is not done yet, each with an issue you can pick up:
 
 | Not done yet | Issue |
 |---|---|
-| A **sandbox on Windows** (it runs there, unsandboxed) | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
-| Test the **Codex and Cursor** hooks (Gemini CLI is done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
+| **File and network isolation on Windows** (it runs there; keys are scrubbed from the environment, files and network are not isolated) | [#9](https://github.com/apex-engine-dev/apex-verify/issues/9) |
+| Run the **Codex and Cursor** hooks inside the real apps (Gemini CLI and Claude Code are done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
 | Measure on **bigger, real projects** | [#13](https://github.com/apex-engine-dev/apex-verify/issues/13) |
 | Locked tests and **signed evidence** (so an agent cannot tamper with its own verdict) | [#7](https://github.com/apex-engine-dev/apex-verify/issues/7) |
 

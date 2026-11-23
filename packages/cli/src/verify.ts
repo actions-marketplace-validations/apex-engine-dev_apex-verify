@@ -177,7 +177,7 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       change: { mode: c.mode, base: c.base, files },
       tests: { command: null, before: null, after: null, newlyFailing: [] },
       checks: { writtenBy: o.checker?.model ?? null, written: false, passed: 0, failed: 0, failedOnOldCode: false, failures: "", failedChecks: [] },
-      cheats: [], sandbox: (await testSandboxAvailable().catch(() => false)) ? (process.platform === "darwin" ? "macOS Seatbelt (best effort)" : process.platform === "linux" ? "Linux bubblewrap" : "sandbox") : "none (run in CI or a container for code you do not trust)", usage: { modelCalls: 0, seconds: 0 }, proof: "",
+      cheats: [], sandbox: (await testSandboxAvailable().catch(() => false)) ? (process.platform === "darwin" ? "macOS Seatbelt (best effort)" : process.platform === "linux" ? "Linux bubblewrap" : "sandbox") : (process.platform === "win32" ? "none on Windows: API keys and tokens are removed from the environment, but files and network are not isolated (use WSL2 or a container for code you do not trust)" : "none (run in CI or a container for code you do not trust)"), usage: { modelCalls: 0, seconds: 0 }, proof: "",
     };
     const finish = (verdict: Verdict, checksCode = ""): VerifyReport => {
       report.verdict = verdict;

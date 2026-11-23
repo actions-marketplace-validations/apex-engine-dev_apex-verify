@@ -15,6 +15,7 @@ export const VERIFY_USAGE = `apex verify "<what the change should do>" [--dir <p
   --standard-cases   also ask for unstated standard-practice checks (CRLF, empty input); measured no gain, off by default
   --second-model <id> [--second-provider p]   a second, independent checker: NOT READY only when both object; one objection alone is UNKNOWN
   --fresh-inputs   ask the checker to use inputs other than the task's own examples (off by default; see benchmark/results)
+  --demo           a 30-second demonstration on a built-in project: no key, nothing sent anywhere
   --lock-tests     run your tests with the base versions of any test files the change edited or deleted (an agent cannot edit its way to green)
   --sign-key <file>   sign the report (Ed25519; make a key with --gen-key <file>); check one with --check-report <file> [--pub-key <base64>]
   --badge-out <file>   write a shields.io endpoint badge (JSON) with the verdict

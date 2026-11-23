@@ -256,3 +256,15 @@ test("signed reports: valid, changed after signing, and signed by another key", 
   assert.equal(checkReport(signed, generateKey(key + "2")).ok, false, "a different key than expected");
   assert.equal(checkReport(r).ok, false, "unsigned");
 });
+
+test("--demo: no key, a pretend agent's wrong change is caught with expected and actual, exit 0", async () => {
+  const { runDemo } = await import("./demo.js");
+  const lines: string[] = [];
+  const code = await runDemo((s) => lines.push(s));
+  const text = lines.join("\n");
+  assert.equal(code, 0);
+  assert.match(text, /Project tests: 2 passed/);
+  assert.match(text, /NOT READY/);
+  assert.match(text, /expected: hello-world/);
+  assert.match(text, /actual:\s+hello-world!/);
+});
