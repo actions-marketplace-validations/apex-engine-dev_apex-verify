@@ -108,6 +108,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # action.yml and the workflows must be valid YAML, and the Action's name and description must fit the Marketplace's rules (an unquoted colon in the name once broke the Action).
+      - name: action.yml and workflows parse; Marketplace limits hold
+        run: |
+          ruby -ryaml -e 'd = YAML.load_file("action.yml"); abort("description must be under 125 characters") unless d["description"].to_s.length < 125; abort("name is missing") if d["name"].to_s.empty?; Dir[".github/workflows/*.yml"].each { |f| YAML.load_file(f) }; puts "ok: #{d["name"]} (#{d["description"].length} chars)"'
       - uses: actions/setup-node@v4
         with:
           node-version: 22

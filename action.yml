@@ -1,4 +1,4 @@
-name: Apex verify: AI change checker
+name: "Apex verify: AI change checker"
 description: Catch AI code changes that pass your tests but are wrong. An independent model writes the missing checks.
 author: Apex verify
 branding:
