@@ -59,11 +59,29 @@ runs:
       with:
         node-version: "20"
     - name: Install Apex verify
+      id: install
       shell: bash
       run: |
+        set -uo pipefail
         cd "$GITHUB_ACTION_PATH"
-        npm install --no-audit --no-fund --loglevel=error   # the "prepare" script builds and bundles dist/apex.mjs
-        test -f dist/apex.mjs
+        # On a release tag (vX.Y.Z, or the moving v1) the bundle built for that release is downloaded: seconds, not a build.
+        # On any other ref, or when the download fails or is not the expected version, the bundle is built from this source.
+        REF="${GITHUB_ACTION_REF:-}"; VER=$(node -p 'require("./package.json").version')
+        BIN=""
+        if [ "$REF" = "v$VER" ] || [ "$REF" = "v1" ]; then
+          D="$RUNNER_TEMP/apex-bundle"; rm -rf "$D"; mkdir -p "$D"
+          URL="https://github.com/${GITHUB_ACTION_REPOSITORY:-apex-engine-dev/apex-verify}/releases/download/v$VER/apex-verify-$VER.tgz"
+          if curl -fsSL --retry 2 --max-time 60 -o "$D/a.tgz" "$URL" && tar -xzf "$D/a.tgz" -C "$D" \
+             && [ "$(node -p 'require(process.argv[1]).version' "$D/package/package.json" 2>/dev/null)" = "$VER" ] && [ -f "$D/package/dist/apex.mjs" ]; then
+            BIN="$D/package/dist/apex.mjs"; echo "Apex verify $VER: using the release bundle."
+          else echo "::notice title=Apex verify::The release bundle for v$VER could not be used; building from source."; fi
+        fi
+        if [ -z "$BIN" ]; then
+          npm install --no-audit --no-fund --loglevel=error   # the "prepare" script builds and bundles dist/apex.mjs
+          test -f dist/apex.mjs || exit 1
+          BIN="$GITHUB_ACTION_PATH/dist/apex.mjs"
+        fi
+        echo "bin=$BIN" >> "$GITHUB_OUTPUT"
     - name: Verify
       id: run
       shell: bash
@@ -78,6 +96,7 @@ runs:
         INPUT_FAIL_ON: ${{ inputs.fail-on }}
         INPUT_COMMENT: ${{ inputs.comment }}
         INPUT_BADGE: ${{ inputs.badge }}
+        APEX_BIN: ${{ steps.install.outputs.bin }}
         COMMIT_MSG: ${{ github.event.head_commit.message }}
         PR_TITLE: ${{ github.event.pull_request.title }}
         PR_BODY: ${{ github.event.pull_request.body }}
@@ -106,7 +125,7 @@ runs:
           ARGS+=(--no-model)
           echo "::notice title=Apex verify::No API key (or a fork pull request): running the tests and the cheating scan only, so the verdict is at most unknown."
         else export APEX_CHECKER_KEY="$INPUT_KEY"; fi
-        node "$GITHUB_ACTION_PATH/dist/apex.mjs" "${ARGS[@]}" | tee "$OUT/report.txt"
+        node "$APEX_BIN" "${ARGS[@]}" | tee "$OUT/report.txt"
         CODE=${PIPESTATUS[0]}
         VERDICT=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).verdict)}catch{console.log("error")}' "$OUT/report.json")
         # No report means no verification happened (a crash, or arguments that never reached verify): that is an error, whatever the exit code said.

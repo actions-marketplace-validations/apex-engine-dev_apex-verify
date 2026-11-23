@@ -53,7 +53,7 @@ export interface VerifyReport {
   cheats: Cheat[];
   /** What isolated the tests and generated checks on this machine. */
   sandbox: string;
-  usage: { modelCalls: number; seconds: number };
+  usage: { modelCalls: number; seconds: number; /** Tokens the checker calls used (as reported by the provider; 0 when it reports none). */ inputTokens: number; outputTokens: number };
   proof: string;
   /** With --lock-tests: the project's own test files that the change edited or deleted, restored from the base before the tests ran. */
   lockedTests?: string[];
@@ -258,7 +258,13 @@ const trim = (s: string, n: number) => (s.length > n ? s.slice(0, n) + "…" : s
 
 export async function verify(o: VerifyOptions): Promise<VerifyReport> {
   // Whatever leaves the machine for a model is redacted first (keys, tokens, private keys), and secret-looking files are never offered to it.
-  o = { ...o, ...(o.checker ? { checker: { ...o.checker, client: redactingClient(o.checker.client) } } : {}), ...(o.secondChecker ? { secondChecker: { ...o.secondChecker, client: redactingClient(o.secondChecker.client) } } : {}) };
+  const tokens = { input: 0, output: 0 };
+  const counting = (inner: ModelClient): ModelClient => ({ async *stream(req) {
+    let i = 0, out = 0; // providers report running totals for a call: the last event is the call's usage
+    try { for await (const e of inner.stream(req)) { if ((e as any).type === "usage") { i = Number((e as any).inputTokens) || i; out = Number((e as any).outputTokens) || out; } yield e; } }
+    finally { tokens.input += i; tokens.output += out; }
+  } });
+  o = { ...o, ...(o.checker ? { checker: { ...o.checker, client: counting(redactingClient(o.checker.client)) } } : {}), ...(o.secondChecker ? { secondChecker: { ...o.secondChecker, client: counting(redactingClient(o.secondChecker.client)) } } : {}) };
   const t0 = Date.now();
   const say = (l: string) => o.onProgress?.(l);
   const timeout = o.timeoutSec ?? 90;
@@ -271,11 +277,12 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       change: { mode: c.mode, base: c.base, files },
       tests: { command: null, before: null, after: null, newlyFailing: [] },
       checks: { writtenBy: o.checker?.model ?? null, written: false, passed: 0, failed: 0, failedOnOldCode: false, failures: "", failedChecks: [] },
-      cheats: [], sandbox: (await testSandboxAvailable().catch(() => false)) ? (process.platform === "darwin" ? "macOS Seatbelt (best effort)" : process.platform === "linux" ? "Linux bubblewrap" : process.platform === "win32" ? "Windows AppContainer (no network, writes only in the scratch copy)" : "sandbox") : (process.platform === "win32" ? "none on Windows: API keys and tokens are removed from the environment, but files and network are not isolated (use WSL2 or a container for code you do not trust)" : "none (run in CI or a container for code you do not trust)"), usage: { modelCalls: 0, seconds: 0 }, proof: "",
+      cheats: [], sandbox: (await testSandboxAvailable().catch(() => false)) ? (process.platform === "darwin" ? "macOS Seatbelt (best effort)" : process.platform === "linux" ? "Linux bubblewrap" : process.platform === "win32" ? "Windows AppContainer (no network, writes only in the scratch copy)" : "sandbox") : (process.platform === "win32" ? "none on Windows: API keys and tokens are removed from the environment, but files and network are not isolated (use WSL2 or a container for code you do not trust)" : "none (run in CI or a container for code you do not trust)"), usage: { modelCalls: 0, seconds: 0, inputTokens: 0, outputTokens: 0 }, proof: "",
     };
     const finish = (verdict: Verdict, checksCode = ""): VerifyReport => {
       report.verdict = verdict;
       report.usage.seconds = Math.round((Date.now() - t0) / 100) / 10;
+      report.usage.inputTokens = tokens.input; report.usage.outputTokens = tokens.output;
       report.proof = "sha256:" + sha(JSON.stringify({ task: o.task, files: c.changes.map((x) => [x.path, x.before && sha(x.before), x.after && sha(x.after)]), checksCode, tests: report.tests, checks: report.checks, verdict }));
       return report;
     };
@@ -359,7 +366,12 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
           });
         } else warnings.push(`${after.failed} test${after.failed === 1 ? "" : "s"} failed before the change too (not counted against it)`);
       }
-    } else warnings.push("no test runner found: only the checks written from the task can prove anything (pass --test \"<command>\" to use your own)");
+    } else {
+      // A test script that could not be used because the dependencies it needs are not installed: say so, it is the usual reason.
+      let missingDeps = false;
+      try { const pkg = JSON.parse(await fs.readFile(path.join(c.next, "package.json"), "utf8")); missingDeps = typeof pkg?.scripts?.test === "string" && Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).length > 0 && !existsSync(path.join(o.dir, "node_modules")); } catch { /* no package.json */ }
+      warnings.push(missingDeps ? "dependencies are not installed (run npm install or your package manager's install), so the project's tests could not run; only the checks written from the task can prove anything" : "no test runner found: only the checks written from the task can prove anything (pass --test \"<command>\" to use your own)");
+    }
 
     // 2b. the project's type check, if it has one: only errors the change introduced count
     const tc = await typecheckCommand(c.next);

@@ -86,3 +86,15 @@ test("round 2: Rust attributes survive comment stripping, and comment markers in
   const py = { path: "tests/test_a.py", before: "def test_a():\n    assert 1\ndef test_b():\n    assert 1\n", after: "def test_a():\n    assert 1\n# def test_b():\n#     assert 1\n" };
   assert.ok(detectCheats([py], "x").some((c) => c.kind === "tests_removed"));
 });
+
+test("starter issues: skip markers for JUnit, RSpec and xUnit; weakened assertions; ordinary code is left alone", () => {
+  const sk = (path: string, before: string, after: string) => detectCheats([{ path, before, after }], "x");
+  assert.ok(sk("src/test/java/FooTest.java", "@Test\nvoid a() {}\n", "@Test\n@Disabled\nvoid a() {}\n").some((c) => c.kind === "tests_skipped"));
+  assert.ok(sk("spec/a_spec.rb", "it 'works' do\n  expect(x).to eq(1)\nend\n", "it 'works' do\n  pending\n  expect(x).to eq(1)\nend\n").some((c) => c.kind === "tests_skipped"));
+  assert.ok(sk("Tests/FooTests.cs", "[Fact]\npublic void A() {}\n", "[Fact(Skip = \"later\")]\npublic void A() {}\n").some((c) => c.kind === "tests_skipped"));
+  const t = 'import { test, expect } from "vitest";\ntest("a", () => { expect(f()).toBe(2); });\n';
+  assert.ok(sk("test/a.test.js", t, t.replace("toBe(2)", "toBeDefined()")).some((c) => c.kind === "assertions_weakened"));
+  assert.ok(sk("test/a.test.js", t, t.replace("expect(f()).toBe(2);", "try { expect(f()).toBe(2); } catch {}")).some((c) => c.kind === "assertions_weakened"));
+  assert.deepEqual(sk("test/a.test.js", t, t + 'test("b", () => { expect(g()).toBeDefined(); });\n').filter((c) => c.kind === "assertions_weakened"), [], "a new test with a loose assertion is not a weakening");
+  assert.deepEqual(sk("src/queue.js", "const pendingJobs = [];\n", "const pendingJobs = [];\nconst skipList = [];\n"), []);
+});

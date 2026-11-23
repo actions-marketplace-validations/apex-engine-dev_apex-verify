@@ -506,3 +506,35 @@ test("without a sandbox, a test that modifies the real node_modules makes the ch
     assert.ok(r.reasons.some((x) => /node_modules/.test(x.summary)), JSON.stringify(r.reasons));
   } finally { delete process.env.APEX_TEST_SANDBOX; }
 });
+
+test("starter issues: token counts reach the report; a missing install is named; .apex-verify.json is read from the base commit and flags win", async () => {
+  const { renderText } = await import("./report.js");
+  const { parseVerifyArgs } = await import("./verify-cmd.js");
+  const d = repo();
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const client = { async *stream() { yield { type: "usage", inputTokens: 700, outputTokens: 10 }; yield { type: "usage", inputTokens: 700, outputTokens: 120 }; yield { type: "text-delta", text: "no tests here" }; yield { type: "done" }; } };
+  const r = await verify({ dir: d, task: TASK, checker: { client: client as any, model: "m" }, cache: false, attempts: 1 });
+  assert.ok(r.usage.inputTokens >= 700 && r.usage.outputTokens >= 120, JSON.stringify(r.usage));
+  assert.match(renderText(r), /tokens in/);
+  // dependencies declared, not installed
+  const e = repo();
+  fs.writeFileSync(path.join(e, "package.json"), JSON.stringify({ name: "p", type: "module", scripts: { test: "mocha" }, devDependencies: { mocha: "^10" } }));
+  fs.rmSync(path.join(e, "test"), { recursive: true });
+  execFileSync("git", ["-C", e, "add", "-A"]); execFileSync("git", ["-C", e, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "mocha"]);
+  write(e, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const r2 = await verify({ dir: e, task: TASK, checker: null });
+  assert.ok(r2.warnings.some((w) => /dependencies are not installed/.test(w)), JSON.stringify(r2.warnings));
+  // config file: committed version counts, flags win, the working copy cannot change it, unknown keys are an error
+  const f = repo();
+  fs.writeFileSync(path.join(f, ".apex-verify.json"), JSON.stringify({ timeout: 33, lockTests: true, testCommand: "node --test" }));
+  execFileSync("git", ["-C", f, "add", "-A"]); execFileSync("git", ["-C", f, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "cfg"]);
+  const a = parseVerifyArgs(["--task", "x", "--dir", f, "--no-model"], {});
+  assert.equal(a.timeoutSec, 33); assert.equal(a.lockTests, true);
+  assert.equal(parseVerifyArgs(["--task", "x", "--dir", f, "--no-model", "--timeout", "7"], {}).timeoutSec, 7);
+  fs.writeFileSync(path.join(f, ".apex-verify.json"), JSON.stringify({ timeout: 1, testCommand: "true" }));
+  assert.equal(parseVerifyArgs(["--task", "x", "--dir", f, "--no-model"], {}).timeoutSec, 33, "an uncommitted edit of the config is not used");
+  execFileSync("git", ["-C", f, "checkout", "-q", "--", "."]);
+  fs.writeFileSync(path.join(f, ".apex-verify.json"), JSON.stringify({ apiKey: "x" }));
+  execFileSync("git", ["-C", f, "add", "-A"]); execFileSync("git", ["-C", f, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "bad"]);
+  assert.throws(() => parseVerifyArgs(["--task", "x", "--dir", f, "--no-model"], {}), /unknown setting "apiKey"/);
+});

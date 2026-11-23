@@ -30,11 +30,13 @@ export function renderText(r: VerifyReport): string {
   out.push("", `  ${testsLine(r)}`, `  ${checksLine(r)}`, `  change: ${plural(r.change.files.length, "file")} ${r.change.mode === "patch" ? "in the diff" : `compared with ${r.change.base}`}`);
   out.push(`  sandbox: ${r.sandbox}`);
   for (const w of r.warnings) out.push(`  note: ${w}`);
-  out.push(`  ${r.usage.seconds}s, ${plural(r.usage.modelCalls, "model call")}; proof ${r.proof.slice(0, 19)}...  (--json for the full report)`);
+  out.push(`  ${r.usage.seconds}s, ${plural(r.usage.modelCalls, "model call")}${tokensText(r)}; proof ${r.proof.slice(0, 19)}...  (--json for the full report)`);
   return out.join("\n");
 }
 
 /** One comment for a pull request; the marker lets the Action update it in place. */
+const tokensText = (r: VerifyReport) => (r.usage.inputTokens || r.usage.outputTokens ? ` (${r.usage.inputTokens.toLocaleString("en-US")} tokens in, ${r.usage.outputTokens.toLocaleString("en-US")} out)` : "");
+
 /** What can honestly be said about the project's own tests next to a READY. */
 const testsOkText = (r: VerifyReport) => (r.tests.after && r.tests.after.failed > 0 ? `the change broke none of the tests (${r.tests.after.failed} already failed before it)` : r.tests.after && r.tests.after.passed + r.tests.after.failed === 0 ? "no project tests ran" : "the tests pass");
 
@@ -54,7 +56,7 @@ export function renderMarkdown(r: VerifyReport): string {
   if (r.verdict === "ready") out.push(`The checks written from the task pass, ${testsOkText(r)}, and nothing was weakened.`);
   out.push("", `| | |`, `|---|---|`, `| ${testsLine(r).split(": ")[0]} | ${mdInline(testsLine(r).split(": ").slice(1).join(": "))} |`, `| checks | ${mdInline(checksLine(r).replace(/^checks: /, ""))} |`, `| change | ${plural(r.change.files.length, "file")} vs \`${r.change.base.replace(/`/g, "")}\` |`);
   if (r.warnings.length) out.push("", ...r.warnings.map((w) => `> note: ${mdInline(w)}`));
-  out.push("", `<sub>${r.usage.seconds}s, ${plural(r.usage.modelCalls, "model call")} · proof \`${r.proof.slice(0, 19)}…\` · [Apex verify](https://github.com/apex-engine-dev/apex-verify)</sub>`);
+  out.push("", `<sub>${r.usage.seconds}s, ${plural(r.usage.modelCalls, "model call")}${tokensText(r)} · proof \`${r.proof.slice(0, 19)}…\` · [Apex verify](https://github.com/apex-engine-dev/apex-verify)</sub>`);
   return out.join("\n");
 }
 

@@ -175,6 +175,16 @@ export async function whichOnPath(name: string, envPath = process.env.PATH ?? ""
 }
 
 /** The command that runs this project's tests, or null when there are none Apex can run. */
+/** `npm test`, or the project's own package manager when its lockfile says so and the tool is installed. */
+async function packageManagerTest(root: string): Promise<string[]> {
+  const has = (f: string) => exists(path.join(root, f));
+  const onPath = async (bin: string) => (await runCommand(bin, ["--version"], { cwd: root, timeoutMs: 15_000 }).catch(() => null))?.exitCode === 0;
+  if ((await has("pnpm-lock.yaml")) && (await onPath("pnpm"))) return ["pnpm", "--silent", "test"];
+  if ((await has("yarn.lock")) && (await onPath("yarn"))) return ["yarn", "--silent", "test"];
+  if (((await has("bun.lockb")) || (await has("bun.lock"))) && (await onPath("bun"))) return ["bun", "run", "test"];
+  return ["npm", "test", "--silent"];
+}
+
 export async function detectTestRunner(root: string, override?: string): Promise<TestRunner | null> {
   // The project's own test command (passed in, for example `--test`) wins over detection.
   // An override that is just the project's usual test command (`npm test` on a node:test project, `go test ./...`…)
@@ -192,7 +202,7 @@ export async function detectTestRunner(root: string, override?: string): Promise
   const real = script && !/no test specified/i.test(script);
   const plainNode = /^[ \t]*node\s+--test\b/.test(script);
   // Dependencies must be installed for the script to mean anything; a script that runs node itself in a project that declares none (a zero-dependency library) needs no node_modules.
-  if (real && !plainNode && ((!declaresDeps && /^[ \t]*node\b/.test(script)) || (await exists(path.join(root, "node_modules"))))) return { kind: "npm", command: ["npm", "test", "--silent"], timeoutSec: 180 };
+  if (real && !plainNode && ((!declaresDeps && /^[ \t]*node\b/.test(script)) || (await exists(path.join(root, "node_modules"))))) return { kind: "npm", command: await packageManagerTest(root), timeoutSec: 180 };
   if (await findFile(root, async (name, full) => /\.test\.[mc]?js$/.test(name) && /node:test/.test(await fs.readFile(full, "utf8").catch(() => "")))) {
     return { kind: "node", command: ["node", "--test"], timeoutSec: 90 };
   }
@@ -301,7 +311,7 @@ export function runCommand(file: string, args: string[], o: { cwd: string; env?:
     const group = process.platform !== "win32";
     let child: import("node:child_process").ChildProcess;
     // On Windows npm, npx, yarn and pnpm are .cmd files, which spawn cannot start without a shell.
-    const cmdShim = process.platform === "win32" && /^(?:npm|npx|yarn|pnpm)$/i.test(file);
+    const cmdShim = process.platform === "win32" && /^(?:npm|npx|yarn|pnpm|bun)$/i.test(file);
     const q = (a: string) => (/[\s"&|<>^]/.test(a) ? `"${a.replace(/"/g, '\\"')}"` : a);
     try { child = cmdShim ? spawn(file, args.map(q), { cwd: o.cwd, env: o.env, shell: true, stdio: ["ignore", "pipe", "pipe"], windowsHide: true }) : spawn(file, args, { cwd: o.cwd, env: o.env, detached: group, stdio: ["ignore", "pipe", "pipe"], windowsHide: true }); }
     catch (err) { resolve({ stdout: "", stderr: `${file}: ${err instanceof Error ? err.message : String(err)}`, exitCode: null, failed: true, timedOut: false, aborted: false }); return; }

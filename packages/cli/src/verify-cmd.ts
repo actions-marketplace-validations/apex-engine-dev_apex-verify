@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { openAiClient } from "./openai-client.js";
 import { PRESETS } from "./providers.js";
@@ -35,6 +36,7 @@ Output
 
 Harder to fool
   --lock-tests         run your tests with the base versions of test files the change edited or deleted
+  (shared defaults: a committed .apex-verify.json with provider, model, testCommand, timeout, lockTests; flags win)
   --sign-key <file>    sign the report (Ed25519). Make a key: --gen-key <file>. Check one: --check-report <file> --pub-key <base64>
 
 Other ways to run it
@@ -75,6 +77,32 @@ export function normalizeArgv(argv: string[]): string[] {
   return out;
 }
 
+const CONFIG_KEYS: Record<string, "string" | "number" | "boolean"> = { provider: "string", model: "string", testCommand: "string", timeout: "number", lockTests: "boolean" };
+const CONFIG_FLAG: Record<string, string> = { provider: "provider", model: "model", testCommand: "test", timeout: "timeout", lockTests: "lock-tests" };
+/** The project's committed settings as flag values. In a git repository the file comes from the base commit; with --diff (or outside git) from the folder itself, which is the original project. */
+export function readProjectConfig(dir: string, base: string | undefined, diffMode: boolean): Record<string, string | true> {
+  let text: string | null = null;
+  const file = path.join(dir, ".apex-verify.json");
+  if (!diffMode) {
+    try {
+      const prefix = execFileSync("git", ["-C", dir, "rev-parse", "--show-prefix"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+      try { text = execFileSync("git", ["-C", dir, "show", `${base ?? "HEAD"}:${prefix}.apex-verify.json`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }); } catch { text = null; }
+    } catch { if (fs.existsSync(file)) text = fs.readFileSync(file, "utf8"); }
+  } else if (fs.existsSync(file)) text = fs.readFileSync(file, "utf8");
+  if (text === null) return {};
+  let cfg: unknown;
+  try { cfg = JSON.parse(text); } catch (e) { throw new Error(`.apex-verify.json is not valid JSON: ${e instanceof Error ? e.message : String(e)}`); }
+  if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) throw new Error(".apex-verify.json must be a JSON object");
+  const out: Record<string, string | true> = {};
+  for (const [k, v] of Object.entries(cfg as Record<string, unknown>)) {
+    const want = CONFIG_KEYS[k];
+    if (!want) throw new Error(`.apex-verify.json: unknown setting "${k}" (allowed: ${Object.keys(CONFIG_KEYS).join(", ")}; keys never go in this file)`);
+    if (typeof v !== want) throw new Error(`.apex-verify.json: "${k}" must be a ${want}`);
+    if (want === "boolean") { if (v) out[CONFIG_FLAG[k]!] = true; } else out[CONFIG_FLAG[k]!] = String(v);
+  }
+  return out;
+}
+
 /** Whether a flag is present as a flag, not as the value of another flag (a task text of "--version" is a task, not a request for the version). `argv` is normalized. */
 export function hasFlag(argv: string[], name: string): boolean {
   for (let i = 0; i < argv.length; i++) {
@@ -98,6 +126,9 @@ export function parseVerifyArgs(rawArgv: string[], env: NodeJS.ProcessEnv = proc
       else throw new Error(`unknown option --${k} (see apex --help). To start the task text with "--", put it after a bare "--".`);
     } else rest.push(a);
   }
+  // A committed .apex-verify.json sets a team's defaults. It is read from the base commit, not from the working copy, so a change cannot rewrite the rules it is judged by. Flags win over it; it never holds keys.
+  const cfgDir = path.resolve(String(flags.get("dir") || process.cwd()));
+  for (const [k, v] of Object.entries(readProjectConfig(cfgDir, typeof flags.get("base") === "string" ? String(flags.get("base")) : undefined, flags.has("diff")))) if (!flags.has(k)) flags.set(k, v);
   const task = (typeof flags.get("task") === "string" ? String(flags.get("task")) : rest.join(" ")).trim() || env.APEX_TASK?.trim() || "";
   if (!task) throw new Error('say what the change should do: apex verify "<task>"');
   const noModel = flags.get("no-model") === true;

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.6 (2026-11-23)
+The starter issues, each with a test.
+- **Package managers**: a project with a `pnpm-lock.yaml`, `yarn.lock` or `bun.lock` has its tests run by that tool when it is installed (npm otherwise).
+- **Missing install**: when a project declares dependencies and has no `node_modules`, the report says so, instead of only showing tests that fail to start.
+- **Cheating scan**: skip markers of JUnit (`@Disabled`, `@Ignore`), RSpec (`pending`, `skip`, `xit`) and xUnit/NUnit (`Skip = "..."`, `[Ignore]`); and a new finding, `assertions_weakened`, when an existing test keeps its name but a strict assertion becomes a loose one or is wrapped in an empty `try`.
+- **Token counts**: the report shows how many tokens the checker model used (`usage` in JSON).
+- **`.apex-verify.json`**: shared settings (`provider`, `model`, `testCommand`, `timeout`, `lockTests`), read from the base commit so a change cannot edit its own rules. Flags win; an unknown key is an error.
+- **GitHub Action**: on a release tag (`@v1`, `@vX.Y.Z`) the Action downloads that release's built bundle instead of building from source on every run; any other ref, or a failed download, still builds.
+
 ## 0.2.5 (2026-11-23)
 - Without a sandbox, a test that modifies the project's installed dependencies (`node_modules`, which is linked into the scratch copies) now makes the change `not ready`, with a note to reinstall. With a sandbox it was already read-only.
 - A generated Python check that holds a code fence inside a triple-quoted string is no longer cut short at that line.

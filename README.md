@@ -50,6 +50,8 @@ npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/downloa
 
 It downloads a about 60 KB file (about 2 seconds), changes nothing in your project, and prints a verdict. Exit code `0` is ready, `1` not ready, `3` unknown. Other providers: `--provider openai|anthropic|openrouter --model <id>`, or `--base-url` for any OpenAI-compatible endpoint. **Only Gemini has been run live by the maintainer**; if another works or fails for you, please say so in an issue. No key? Add `--no-model`: only your tests and the cheating scan run, and the verdict is at most `unknown`.
 
+Settings a team shares can live in a committed `.apex-verify.json` (`provider`, `model`, `testCommand`, `timeout`, `lockTests`). Flags win over the file, and the file is read from the commit being compared with, so the change under review cannot rewrite its own rules.
+
 ## Put it where the change happens
 
 **Claude Code**: block "done" until the change is ready.
@@ -112,7 +114,7 @@ This is what the comment looks like (real output of a run on the demo change abo
 ## How it decides
 
 1. **Builds the change on a copy** (your working tree, a branch, or a diff file).
-2. **Scans for cheating**: tests deleted, skipped, focused with `.only`, a test script that cannot fail, edits to the agent's own configuration. (`--lock-tests` restores the original tests before they run.)
+2. **Scans for cheating**: tests deleted, skipped, focused with `.only`, assertions weakened (`toBe(2)` turned into `toBeDefined()`, or wrapped in an empty `try`), a test script that cannot fail, edits to the agent's own configuration. (`--lock-tests` restores the original tests before they run.)
 3. **Runs your tests** before and after: a test that passed before and fails now is a regression. A type check counts too if you have one.
 4. **A different model writes checks from your task**, never from the agent's own tests. Checks are written for node:test, pytest, Jest, Vitest, Rust (`cargo test`) and Go (`go test`); other stacks still get your tests and the scan.
 5. **Proves each check can fail** by running it on the old code first. A check that passes there proves nothing and is thrown away.
