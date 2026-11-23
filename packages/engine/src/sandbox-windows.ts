@@ -91,7 +91,8 @@ $block = (($e.GetEnumerator() | ForEach-Object { $_.Key + '=' + $_.Value }) -joi
 exit ([ApexAC]::Run($o.name, $o.cmd, $o.cwd, $block))
 `;
 
-const quote = (a: string) => (a === "" || /[\s"]/.test(a) ? `"${a.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, "$1$1")}"` : a);
+// Quoted whenever cmd.exe could read a character as syntax (& | < > ^ % ( ) and spaces), not only for spaces.
+const quote = (a: string) => (a === "" || /[\s"&|<>^%()!,;=]/.test(a) ? `"${a.replace(/(\\*)"/g, '$1$1\\"').replace(/(\\+)$/, "$1$1")}"` : a);
 
 export function winSandboxSpec(o: { writable: string[] }): string {
   const writable = [...new Set(o.writable.map((p) => path.resolve(p)))];

@@ -1,45 +1,25 @@
 {
  "checker": "gemini-3.1-pro-preview",
  "runs": 1,
+ "version": "0.2.4 (project tests now run)",
  "rows": [
   {
    "task": "real-bytes-thousands",
    "change": "06e95bdb22",
    "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
-  },
-  {
-   "task": "real-bytes-thousands",
-   "change": "33ecd7d7fd",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-bytes-thousands",
    "change": "4aa8cb23d3",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-bytes-thousands",
-   "change": "ede1986e52",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
-  },
-  {
-   "task": "real-bytes-thousands",
-   "change": "ede517c7cb",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
-  },
-  {
-   "task": "real-bytes-thousands",
-   "change": "fd46cf78b1",
+   "change": "33ecd7d7fd",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "unknown"
@@ -59,11 +39,32 @@
    "gate_gemini_3_1_pro": "ready"
   },
   {
-   "task": "real-forwarded-ows",
-   "change": "6d6a2604b6",
-   "correct": false,
+   "task": "real-bytes-thousands",
+   "change": "ede517c7cb",
+   "correct": true,
    "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "ready"
+  },
+  {
+   "task": "real-bytes-thousands",
+   "change": "ede1986e52",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "unknown"
+  },
+  {
+   "task": "real-bytes-thousands",
+   "change": "fd46cf78b1",
+   "correct": true,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-forwarded-ows",
+   "change": "b301d9efba",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-forwarded-ows",
@@ -74,10 +75,10 @@
   },
   {
    "task": "real-forwarded-ows",
-   "change": "b301d9efba",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "change": "6d6a2604b6",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-forwarded-ows",
@@ -102,13 +103,6 @@
   },
   {
    "task": "real-fresh-modified",
-   "change": "917d2c9712",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-fresh-modified",
    "change": "97bee5a317",
    "correct": true,
    "tests_and_scan_alone": "unknown",
@@ -127,6 +121,13 @@
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
+  },
+  {
+   "task": "real-fresh-modified",
+   "change": "917d2c9712",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-negotiator-params",
@@ -161,13 +162,6 @@
    "change": "c5b9c53aa2",
    "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-negotiator-params",
-   "change": "ee92023a8b",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
   },
   {
@@ -200,21 +194,7 @@
   },
   {
    "task": "real-range-parser-partial",
-   "change": "b2418cca64",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-range-parser-partial",
    "change": "c2df326f8d",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-cookie-domain-dot",
-   "change": "7505d4d0e6",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
@@ -228,10 +208,45 @@
   },
   {
    "task": "real-cookie-domain-dot",
-   "change": "907dafd413",
+   "change": "28fc3faada",
+   "correct": true,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-range-parser-partial",
+   "change": "b2418cca64",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
+  },
+  {
+   "task": "real-negotiator-params",
+   "change": "ee92023a8b",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "ready"
+  },
+  {
+   "task": "real-cookie-domain-dot",
+   "change": "afe454f3e5",
+   "correct": true,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-cookie-domain-dot",
+   "change": "907dafd413",
+   "correct": true,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-cookie-domain-dot",
+   "change": "7505d4d0e6",
+   "correct": true,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-cookie-domain-dot",
@@ -242,51 +257,37 @@
   },
   {
    "task": "real-cookie-domain-dot",
-   "change": "28fc3faada",
+   "change": "603b750710",
    "correct": true,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-cookie-domain-dot",
-   "change": "afe454f3e5",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-cookie-domain-dot",
    "change": "16661a802d",
    "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-cookie-domain-dot",
-   "change": "603b750710",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-cookie-domain-dot",
    "change": "cbf6b35b61",
    "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-cookie-domain-dot",
    "change": "a63cfb26e3",
    "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-cookie-rfc6265",
    "change": "003755ca85",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
@@ -307,22 +308,15 @@
    "task": "real-cookie-rfc6265",
    "change": "a2283f567f",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-cookie-rfc6265",
    "change": "2d46e38f76",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-cookie-rfc6265",
-   "change": "3f36f37521",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
   },
   {
    "task": "real-cookie-rfc6265",
@@ -333,10 +327,24 @@
   },
   {
    "task": "real-cookie-rfc6265",
+   "change": "3f36f37521",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-contentdisp-lws",
+   "change": "cf79466be7",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-cookie-rfc6265",
    "change": "076f472ed6",
    "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-cookie-rfc6265",
@@ -347,9 +355,16 @@
   },
   {
    "task": "real-contentdisp-lws",
-   "change": "cf79466be7",
+   "change": "e84f022d5f",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-contentdisp-lws",
+   "change": "b65c951410",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
@@ -361,24 +376,17 @@
   },
   {
    "task": "real-contentdisp-lws",
-   "change": "b65c951410",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-contentdisp-lws",
-   "change": "e84f022d5f",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-contentdisp-lws",
    "change": "cbce746485",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-contentdisp-lws",
+   "change": "0ed96bffae",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-contentdisp-lws",
@@ -391,7 +399,14 @@
    "task": "real-contentdisp-lws",
    "change": "c91130d795",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-contentdisp-lws",
+   "change": "50011613cb",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
@@ -403,35 +418,7 @@
   },
   {
    "task": "real-contentdisp-lws",
-   "change": "0ed96bffae",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-contentdisp-lws",
-   "change": "50011613cb",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-contentdisp-lws",
    "change": "c62b5635c0",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-contentdisp-hexescape",
-   "change": "284db60313",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-contentdisp-hexescape",
-   "change": "5081c95e24",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
@@ -448,7 +435,28 @@
    "change": "efe8ac4eb2",
    "correct": false,
    "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "unknown"
+  },
+  {
+   "task": "real-contentdisp-hexescape",
+   "change": "5081c95e24",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-contentdisp-hexescape",
+   "change": "284db60313",
+   "correct": false,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-contentdisp-hexescape",
+   "change": "ee71faf788",
+   "correct": false,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "unknown"
   },
   {
    "task": "real-contentdisp-hexescape",
@@ -459,24 +467,17 @@
   },
   {
    "task": "real-contentdisp-hexescape",
-   "change": "e81e25c140",
+   "change": "ac50e0826e",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
-  },
-  {
-   "task": "real-contentdisp-hexescape",
-   "change": "ee71faf788",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-contentdisp-hexescape",
-   "change": "ac50e0826e",
+   "change": "e81e25c140",
    "correct": false,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "gate_gemini_3_1_pro": "unknown"
   },
   {
    "task": "real-contentdisp-hexescape",
@@ -489,8 +490,15 @@
    "task": "real-contentdisp-hexescape",
    "change": "98c705d79d",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-contentdisp-attrchar",
+   "change": "0777caf66c",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-contentdisp-attrchar",
@@ -501,31 +509,24 @@
   },
   {
    "task": "real-contentdisp-attrchar",
-   "change": "0777caf66c",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-contentdisp-attrchar",
    "change": "c16b285eb4",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-contentdisp-attrchar",
    "change": "65169aa31b",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-contentdisp-attrchar",
-   "change": "240031c7ce",
-   "correct": false,
+   "change": "70167e50af",
+   "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-contentdisp-attrchar",
@@ -536,7 +537,7 @@
   },
   {
    "task": "real-contentdisp-attrchar",
-   "change": "70167e50af",
+   "change": "ea8000f8dc",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
@@ -550,17 +551,17 @@
   },
   {
    "task": "real-contentdisp-attrchar",
-   "change": "eace99eaaf",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
+   "change": "240031c7ce",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-contentdisp-attrchar",
-   "change": "ea8000f8dc",
+   "change": "eace99eaaf",
    "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-statuses-proto",
@@ -599,6 +600,13 @@
   },
   {
    "task": "real-statuses-proto",
+   "change": "288f39ca9f",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "unknown"
+  },
+  {
+   "task": "real-statuses-proto",
    "change": "7dd735c852",
    "correct": true,
    "tests_and_scan_alone": "unknown",
@@ -608,22 +616,8 @@
    "task": "real-statuses-proto",
    "change": "c73ca27349",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-statuses-proto",
-   "change": "0ebd0a3044",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-statuses-proto",
-   "change": "288f39ca9f",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-statuses-proto",
@@ -636,140 +630,140 @@
    "task": "real-scan-parts",
    "change": "91306012f2",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-statuses-proto",
+   "change": "0ebd0a3044",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-scan-parts",
    "change": "5857fbc373",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-scan-parts",
-   "change": "2e9edcb595",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-scan-parts",
    "change": "3ffdf5732f",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-scan-parts",
-   "change": "539fa5a431",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-scan-parts",
    "change": "0d2edbc55e",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-scan-parts",
+   "change": "f959d6e90a",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-scan-parts",
+   "change": "539fa5a431",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-scan-parts",
    "change": "d54063434b",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-scan-parts",
-   "change": "f959d6e90a",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
-   "task": "real-negated-extglob-star",
-   "change": "f0cc388ba8",
+   "task": "real-scan-parts",
+   "change": "2e9edcb595",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
-  },
-  {
-   "task": "real-negated-extglob-star",
-   "change": "4ddf0798fb",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-negated-extglob-star",
    "change": "bc02a15fa1",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-negated-extglob-star",
    "change": "a58282201d",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-negated-extglob-star",
-   "change": "89c41974aa",
+   "change": "4ddf0798fb",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-negated-extglob-star",
-   "change": "974ca4cf29",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-negated-extglob-star",
    "change": "2b5ad77a22",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-negated-extglob-star",
    "change": "078e64efc3",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-negated-extglob-star",
+   "change": "89c41974aa",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-negated-extglob-star",
+   "change": "f0cc388ba8",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-negated-extglob-star",
    "change": "a9c12e8ac8",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-negated-extglob-star",
-   "change": "ada8232251",
+   "change": "974ca4cf29",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-globstar-in-parens",
    "change": "f3250bd61e",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-globstar-in-parens",
-   "change": "b347e658b4",
+   "change": "57316daf4a",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
@@ -781,58 +775,86 @@
   },
   {
    "task": "real-globstar-in-parens",
-   "change": "57316daf4a",
+   "change": "b347e658b4",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-globstar-in-parens",
    "change": "3954384a3f",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
-   "task": "real-globstar-in-parens",
-   "change": "3f680d7dfa",
+   "task": "real-negated-extglob-star",
+   "change": "ada8232251",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-bracket-negation",
    "change": "140b653ebf",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-bracket-negation",
    "change": "bdcfe1a337",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-bracket-negation",
    "change": "8633097c74",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-globstar-in-parens",
+   "change": "3f680d7dfa",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-bracket-negation",
    "change": "8030dae7ff",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-bracket-negation",
    "change": "e48b27d5f3",
    "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-bracket-negation",
+   "change": "3ef7ff6a06",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-bracket-negation",
+   "change": "307998d1fd",
+   "correct": false,
    "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "unknown"
+  },
+  {
+   "task": "real-bracket-negation",
+   "change": "e61f894eff",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
@@ -843,25 +865,11 @@
    "gate_gemini_3_1_pro": "unknown"
   },
   {
-   "task": "real-bracket-negation",
-   "change": "3ef7ff6a06",
-   "correct": false,
+   "task": "real-windows-basename",
+   "change": "ecbe5bb373",
+   "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-bracket-negation",
-   "change": "307998d1fd",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-bracket-negation",
-   "change": "e61f894eff",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-windows-basename",
@@ -874,33 +882,26 @@
    "task": "real-windows-basename",
    "change": "738c7e7c5f",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-windows-basename",
-   "change": "ecbe5bb373",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-windows-basename",
    "change": "e827cf02c5",
    "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-windows-basename",
-   "change": "aa7b8986a2",
-   "correct": false,
+   "change": "726652c9d9",
+   "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-windows-basename",
-   "change": "726652c9d9",
+   "change": "8f20ec4347",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
@@ -914,30 +915,30 @@
   },
   {
    "task": "real-windows-basename",
-   "change": "8f20ec4347",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "change": "aa7b8986a2",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-windows-basename",
    "change": "e4ece52129",
    "correct": true,
    "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "unknown"
+  },
+  {
+   "task": "real-globstar-literal-adjacent",
+   "change": "26558a6e3d",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-globstar-literal-adjacent",
    "change": "2f6772bae5",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-globstar-literal-adjacent",
-   "change": "26558a6e3d",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
@@ -949,87 +950,73 @@
   },
   {
    "task": "real-globstar-literal-adjacent",
-   "change": "99a368559b",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-globstar-literal-adjacent",
    "change": "874aabd04b",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-globstar-literal-adjacent",
-   "change": "b3dd209b80",
+   "change": "99a368559b",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-globstar-literal-adjacent",
-   "change": "256cf1a66e",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-globstar-literal-adjacent",
    "change": "727e57fefe",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-slugify-trim-replacement",
-   "change": "f5f0029fc6",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-slugify-trim-replacement",
    "change": "a8feeb0a32",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-globstar-literal-adjacent",
+   "change": "b3dd209b80",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-trim-replacement",
    "change": "7127196d69",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-trim-replacement",
    "change": "327efd13cd",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-trim-replacement",
    "change": "d6743252d6",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-slugify-trim-replacement",
+   "change": "f5f0029fc6",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-trim-replacement",
    "change": "8d720297d9",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-slugify-trim-replacement",
-   "change": "e5514b1bd6",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-slugify-trim-replacement",
@@ -1042,6 +1029,13 @@
    "task": "real-slugify-trim-replacement",
    "change": "5a57dda986",
    "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-slugify-trim-replacement",
+   "change": "e5514b1bd6",
+   "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
   },
@@ -1049,35 +1043,42 @@
    "task": "real-slugify-trim-replacement",
    "change": "7653548ef1",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-strict-trim",
    "change": "c4483c1c8b",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-strict-trim",
    "change": "cf1aac7edc",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-slugify-strict-trim",
-   "change": "94cdd96a22",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-strict-trim",
    "change": "c3b95c9486",
    "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-slugify-strict-trim",
+   "change": "fba1614002",
+   "correct": true,
    "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "ready"
+  },
+  {
+   "task": "real-slugify-strict-trim",
+   "change": "94cdd96a22",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
@@ -1088,15 +1089,29 @@
    "gate_gemini_3_1_pro": "ready"
   },
   {
+   "task": "real-globstar-literal-adjacent",
+   "change": "256cf1a66e",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-slugify-strict-trim",
+   "change": "ac64952b61",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
    "task": "real-slugify-strict-trim",
    "change": "b75c23295b",
    "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-strict-trim",
-   "change": "fba1614002",
+   "change": "b92e2bf1ae",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
@@ -1109,53 +1124,32 @@
    "gate_gemini_3_1_pro": "ready"
   },
   {
-   "task": "real-slugify-strict-trim",
-   "change": "ac64952b61",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-slugify-extend-replacement",
-   "change": "6a4aa27b02",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
    "task": "real-slugify-extend-replacement",
    "change": "9fab299ad0",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
-   "task": "real-slugify-strict-trim",
-   "change": "b92e2bf1ae",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "task": "real-slugify-extend-replacement",
+   "change": "c8c1cc3302",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-extend-replacement",
    "change": "a3bd7ff518",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-extend-replacement",
    "change": "6bba8cc467",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-slugify-extend-replacement",
-   "change": "c8c1cc3302",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-extend-replacement",
@@ -1166,15 +1160,22 @@
   },
   {
    "task": "real-slugify-extend-replacement",
-   "change": "7d52359c89",
+   "change": "6a4aa27b02",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-slugify-extend-replacement",
    "change": "8e8b428dc8",
    "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-slugify-extend-replacement",
+   "change": "11c4d8d424",
+   "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
   },
@@ -1186,11 +1187,18 @@
    "gate_gemini_3_1_pro": "ready"
   },
   {
+   "task": "real-slugify-extend-replacement",
+   "change": "7d52359c89",
+   "correct": false,
+   "tests_and_scan_alone": "not_ready",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
    "task": "real-slugify-empty-charmap",
    "change": "f5aa9ca2af",
    "correct": false,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
+   "gate_gemini_3_1_pro": "unknown"
   },
   {
    "task": "real-slugify-empty-charmap",
@@ -1200,24 +1208,17 @@
    "gate_gemini_3_1_pro": "ready"
   },
   {
-   "task": "real-slugify-extend-replacement",
-   "change": "11c4d8d424",
-   "correct": true,
+   "task": "real-slugify-empty-charmap",
+   "change": "46a2493968",
+   "correct": false,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "gate_gemini_3_1_pro": "unknown"
   },
   {
    "task": "real-slugify-empty-charmap",
    "change": "b17fbd6ba2",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-slugify-empty-charmap",
-   "change": "46a2493968",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
@@ -1229,7 +1230,7 @@
   },
   {
    "task": "real-slugify-empty-charmap",
-   "change": "7e7ffe833c",
+   "change": "ff1a70feb5",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
@@ -1243,42 +1244,28 @@
   },
   {
    "task": "real-slugify-empty-charmap",
-   "change": "ff1a70feb5",
+   "change": "7e7ffe833c",
    "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
-  },
-  {
-   "task": "real-slugify-empty-charmap",
-   "change": "d40ba8f884",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-humanize-plural-maxdecimals",
-   "change": "cd1a7006c7",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-slugify-empty-charmap",
    "change": "0fd9757354",
    "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
-   "task": "real-humanize-plural-maxdecimals",
-   "change": "7d9ea78753",
+   "task": "real-slugify-empty-charmap",
+   "change": "d40ba8f884",
    "correct": false,
-   "tests_and_scan_alone": "unknown",
+   "tests_and_scan_alone": "not_ready",
    "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-humanize-plural-maxdecimals",
-   "change": "efaea2c820",
+   "change": "cd1a7006c7",
    "correct": false,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "not_ready"
@@ -1292,10 +1279,17 @@
   },
   {
    "task": "real-humanize-plural-maxdecimals",
-   "change": "afc9cb97d7",
-   "correct": true,
+   "change": "efaea2c820",
+   "correct": false,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-humanize-plural-maxdecimals",
+   "change": "0413f41c74",
+   "correct": false,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "not_ready"
   },
   {
    "task": "real-humanize-plural-maxdecimals",
@@ -1306,7 +1300,14 @@
   },
   {
    "task": "real-humanize-plural-maxdecimals",
-   "change": "0413f41c74",
+   "change": "afc9cb97d7",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "ready"
+  },
+  {
+   "task": "real-humanize-plural-maxdecimals",
+   "change": "7d9ea78753",
    "correct": false,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "not_ready"
@@ -1320,24 +1321,17 @@
   },
   {
    "task": "real-humanize-plural-maxdecimals",
-   "change": "e52243cd99",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "ready"
-  },
-  {
-   "task": "real-humanize-plural-maxdecimals",
    "change": "00c7040103",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
   },
   {
-   "task": "real-humanize-decimal-dollar",
-   "change": "db0d12b8bc",
-   "correct": false,
+   "task": "real-humanize-plural-maxdecimals",
+   "change": "e52243cd99",
+   "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-humanize-decimal-dollar",
@@ -1348,21 +1342,21 @@
   },
   {
    "task": "real-humanize-decimal-dollar",
-   "change": "7e2cf35dfd",
-   "correct": false,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "not_ready"
-  },
-  {
-   "task": "real-humanize-decimal-dollar",
-   "change": "329a74e7ee",
+   "change": "db0d12b8bc",
    "correct": false,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "unknown"
   },
   {
    "task": "real-humanize-decimal-dollar",
-   "change": "8c5179ad54",
+   "change": "329a74e7ee",
+   "correct": false,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-humanize-decimal-dollar",
+   "change": "b9bcb0047d",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
@@ -1372,14 +1366,21 @@
    "change": "7f4a4d81ac",
    "correct": false,
    "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "not_ready"
+  },
+  {
+   "task": "real-humanize-decimal-dollar",
+   "change": "7e2cf35dfd",
+   "correct": false,
+   "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "unknown"
   },
   {
    "task": "real-humanize-decimal-dollar",
-   "change": "b9bcb0047d",
+   "change": "545f9f6179",
    "correct": true,
    "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
+   "gate_gemini_3_1_pro": "ready"
   },
   {
    "task": "real-humanize-decimal-dollar",
@@ -1390,17 +1391,17 @@
   },
   {
    "task": "real-humanize-decimal-dollar",
-   "change": "545f9f6179",
-   "correct": true,
-   "tests_and_scan_alone": "unknown",
-   "gate_gemini_3_1_pro": "unknown"
-  },
-  {
-   "task": "real-humanize-decimal-dollar",
    "change": "b16e6221c5",
    "correct": true,
    "tests_and_scan_alone": "unknown",
    "gate_gemini_3_1_pro": "ready"
+  },
+  {
+   "task": "real-humanize-decimal-dollar",
+   "change": "8c5179ad54",
+   "correct": true,
+   "tests_and_scan_alone": "unknown",
+   "gate_gemini_3_1_pro": "unknown"
   }
  ]
 }

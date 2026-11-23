@@ -8,65 +8,27 @@ Two passes: the first five tasks (30 changes) and eighteen more (170 changes), c
 
 Per task, 6 to 10 samples from Gemini through the OpenAI-compatible endpoint: `gemini-2.5-flash` and `gemini-2.5-flash-lite`, temperature 0.8 to 0.9. The prompt was the task text plus the project's source and test files; the model returned edited files, turned into unified diffs. Empty and duplicate diffs were dropped; nothing was selected on how it looked. Each change was labelled **right or wrong by the hidden tests**. Upstream tests written for mocha run on `node --test` through a small shim (`project/test/mocha-shim.cjs`).
 
-## Results (one run, checker `gemini-3.1-pro-preview`)
+## Correction (2026-11-23): the first numbers published here were wrong
 
-| | Tests + cheating scan alone | Gate with the checker |
+The first version of this page said the projects' own tests stopped **none** of the wrong changes and that "the visible tests passed for every change". That was false. Apex verify had a bug: it did not find the test command of a project with no installed dependencies, so on all 23 libraries it never ran the project's tests, and the "tests only" column was `unknown` everywhere. Nobody checked the visible tests directly. When we did, they failed on 85 of the 107 wrong changes. The bug is fixed in 0.2.4 and everything below is a fresh run with it. The withdrawn rows are kept in `results-first-run-withdrawn.json`.
+
+## Results (one run, Apex verify 0.2.4, checker `gemini-3.1-pro-preview`)
+
+| | The project's tests + cheating scan | Apex verify (tests + scan + checks) |
 |---|---|---|
-| Wrong changes blocked | **0 of 107** | **86 of 107 (80%)** |
-| Wrong changes marked READY (missed) | 0 | 14 of 107 |
-| Right changes wrongly blocked | 0 of 93 | **10 of 93 (11%)** |
-| Right changes marked READY | 0 | 70 of 93 |
-| Left `unknown` | everything | 7 wrong, 13 right |
+| Wrong changes blocked (107) | **80 (75%)** | **97 (91%)** |
+| Wrong changes called READY | 0 | 1 |
+| Wrong changes left `unknown` | 27 | 9 |
+| Right changes wrongly blocked (93) | **10 (11%)** | **21 (23%)** |
+| Right changes called READY | 0 (no checker: at most `unknown`) | 64 |
 
-Without a checker the gate cannot say `ready` on these projects (the visible tests passed for every change), so everything is `unknown` and nothing is blocked: **the project's tests plus the cheating scan caught none of the wrong changes here.**
+**What the checker adds.** Of the 27 wrong changes that the project's own tests did not catch, the generated checks caught **17**, called 1 `ready` and left 9 `unknown`. That is the real question this tool exists for, and 27 changes is a small sample.
 
-**Per task** (wrong / right changes, then what the gate did):
+**What it costs.** Of the 83 right changes that pass the project's tests, the generated checks wrongly blocked **11 (13%)**: `cookie-rfc6265` 5, `contentdisp-attrchar` 2, and one each in four other tasks. The other 10 wrong blocks come from the project's tests themselves: 8 in `real-cookie-domain-dot`, where the upstream fix also changed a visible test, so every correct fix fails the old one, and 2 in `bytes-thousands`.
 
-| Task | Changes | Wrong blocked | Right wrongly blocked |
-|---|---|---|---|
-| `real-bracket-negation` | 9 / 0 | 8 of 9 | 0 of 0 |
-| `real-bytes-thousands` | 1 / 5 | 1 of 1 | 0 of 5 |
-| `real-contentdisp-attrchar` | 4 / 6 | 3 of 4 | 2 of 6 |
-| `real-contentdisp-hexescape` | 6 / 4 | 3 of 6 | 0 of 4 |
-| `real-contentdisp-lws` | 6 / 4 | 6 of 6 | 0 of 4 |
-| `real-cookie-domain-dot` | 2 / 8 | 2 of 2 | 1 of 8 |
-| `real-cookie-rfc6265` | 4 / 6 | 4 of 4 | 3 of 6 |
-| `real-forwarded-ows` | 1 / 5 | 1 of 1 | 0 of 5 |
-| `real-fresh-modified` | 1 / 5 | 1 of 1 | 0 of 5 |
-| `real-globstar-in-parens` | 6 / 0 | 6 of 6 | 0 of 0 |
-| `real-globstar-literal-adjacent` | 7 / 0 | 7 of 7 | 0 of 0 |
-| `real-humanize-decimal-dollar` | 5 / 5 | 3 of 5 | 0 of 5 |
-| `real-humanize-plural-maxdecimals` | 6 / 4 | 5 of 6 | 0 of 4 |
-| `real-negated-extglob-star` | 10 / 0 | 9 of 10 | 0 of 0 |
-| `real-negotiator-params` | 0 / 6 | 0 of 0 | 1 of 6 |
-| `real-range-parser-partial` | 0 / 6 | 0 of 0 | 0 of 6 |
-| `real-scan-parts` | 8 / 0 | 6 of 8 | 0 of 0 |
-| `real-slugify-empty-charmap` | 5 / 5 | 5 of 5 | 0 of 5 |
-| `real-slugify-extend-replacement` | 7 / 3 | 2 of 7 | 0 of 3 |
-| `real-slugify-strict-trim` | 5 / 5 | 5 of 5 | 0 of 5 |
-| `real-slugify-trim-replacement` | 8 / 2 | 3 of 8 | 0 of 2 |
-| `real-statuses-proto` | 4 / 6 | 4 of 4 | 1 of 6 |
-| `real-windows-basename` | 2 / 8 | 2 of 2 | 2 of 8 |
+## An earlier audit (of the withdrawn run)
 
-## What to read from this
-
-- The checker catches most wrong changes on real libraries (80%), against none for tests alone.
-- By the hidden-test label it wrongly blocks 11 in 100 right changes, more than on the small projects; **after the audit above, about 4 in 100 are checker mistakes** (the rest are changes that really miss something the task text says).
-- It missed 14 wrong changes (called them READY).
-
-## Audit of the 10 wrongly blocked right changes (done after seeing the results)
-
-We looked at each one by hand and, where the task text makes a claim, ran that claim against the change (`audit.json` has the evidence per change). Result:
-
-| What it was | Count |
-|---|---|
-| **The change passes the upstream hidden test but does not do what the task text says**: the gate was right, the label (the hidden test) was too narrow | 6 |
-| **A real checker error**: a generated check contradicted the task, or had a harness mistake | 2 |
-| **Checker noise**: READY on a rerun of the same change | 2 |
-
-So by the benchmark's own label (hidden tests) the gate wrongly blocks **10 of 93 (11%)**, but **only 4 of 93 (4%) are mistakes of the checker**; the other 6 are changes that really do not satisfy the stated task. Read the 4% with care: one reviewer (the maintainers' tooling, not an independent person) did the audit after the numbers were known, and the checks are rewritten on every run, so three of the ten flipped on a rerun. We keep the original labels in `results.json` and report both numbers.
-
-A second check on the same question: the gate was run on each task's own **upstream reference fix** (the real maintainers' fix). It said READY for 18 of 23, `unknown` for 4, and NOT READY for 1 (`real-negotiator-params`), so a correct fix usually passes.
+In the withdrawn run we looked by hand at the 10 right-by-label changes the checks blocked and found that 6 really did not do what the task text says (the upstream hidden test was narrower than the task), 2 were checker errors and 2 were noise (`audit.json`). **That audit has not been repeated for the run above**, so it does not turn the 13% into a smaller number; it only says some of those blocks are probably deserved.
 
 ## Limits, plainly
 

@@ -153,3 +153,20 @@ test("a Python check file with a docstring before `from __future__` keeps the fu
   const futureAt = out.indexOf("from __future__"), preludeAt = out.indexOf("__apex_os");
   assert.ok(futureAt >= 0 && preludeAt > futureAt, "the prelude comes after the future import");
 });
+
+test("macOS sandbox: shell profiles in the home folder are unreadable, the real node_modules is read-only, and node still runs", { skip: process.platform !== "darwin" }, async () => {
+  const { testSandboxProfile, inTestSandbox, runCommand, testSandboxAvailable } = await import("./test-runner.js");
+  if (!(await testSandboxAvailable())) return;
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), "apex-home-"));
+  await fs.writeFile(path.join(home, ".zshrc"), "export SECRET_TOKEN=abc\n");
+  await fs.writeFile(path.join(home, ".gitconfig"), "[user]\n\tname = t\n");
+  const proj = await fs.mkdtemp(path.join(os.tmpdir(), "apex-proj-"));
+  await fs.mkdir(path.join(proj, "node_modules/dep"), { recursive: true });
+  await fs.writeFile(path.join(proj, "node_modules/dep/index.js"), "module.exports = 1;\n");
+  const copy = await fs.mkdtemp(path.join(os.tmpdir(), "apex-copy-"));
+  const js = `const fs=require("fs");const r=(f)=>{try{fs.readFileSync(f);return "read"}catch(e){return "denied"}};const w=(f)=>{try{fs.writeFileSync(f,"x");return "wrote"}catch(e){return "denied"}};console.log(JSON.stringify({zshrc:r(${JSON.stringify(path.join(home, ".zshrc"))}),gitconfig:r(${JSON.stringify(path.join(home, ".gitconfig"))}),nm:w(${JSON.stringify(path.join(proj, "node_modules/dep/index.js"))}),own:w("ok.txt")}))`;
+  const profile = testSandboxProfile({ writable: [copy], readable: [proj], readOnly: [path.join(proj, "node_modules")], home });
+  const { file, args } = inTestSandbox(profile, process.execPath, ["-e", js]);
+  const r = await runCommand(file, args, { cwd: copy, timeoutMs: 30_000 });
+  assert.deepEqual(JSON.parse(r.stdout.trim()), { zshrc: "denied", gitconfig: "read", nm: "denied", own: "wrote" }, r.stdout + r.stderr);
+});

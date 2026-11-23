@@ -24,3 +24,13 @@ test("a mocha project with its dependencies installed runs through npm test", as
   const r = await detectTestRunner(dir);
   assert.deepEqual(r?.command, ["npm", "test", "--silent"]);
 });
+
+test("a package.json test script on a project with no dependencies is used even without node_modules", async () => {
+  const { detectTestRunner } = await import("./test-runner.js");
+  const fsp = await import("node:fs/promises"); const os = await import("node:os"); const p = await import("node:path");
+  const d = await fsp.mkdtemp(p.join(os.tmpdir(), "apex-nodeps-"));
+  await fsp.writeFile(p.join(d, "package.json"), JSON.stringify({ name: "x", scripts: { test: "node --require ./shim.cjs --test test/a.js" } }));
+  assert.equal((await detectTestRunner(d))?.kind, "npm");
+  await fsp.writeFile(p.join(d, "package.json"), JSON.stringify({ name: "x", scripts: { test: "mocha" }, devDependencies: { mocha: "^10" } }));
+  assert.notEqual((await detectTestRunner(d))?.kind, "npm", "declared dependencies that are not installed: the script cannot run");
+});

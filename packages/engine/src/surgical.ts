@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import { checkCommand, inTestSandbox, readTestOutput, runCommand, testSandboxAvailable, testSandboxProfile } from "./test-runner.js";
 import { bugEdgeChecks, coverageGate, exportParams, implicitCheckTap, missingExports, namedExports, outOfScope, requestOnly, requestRules, requestScope, resolveImports, securityFlags } from "./mechanical.js";
 import { execFile } from "node:child_process";
@@ -903,8 +903,11 @@ export async function runTests(cwd: string, cmd: string[], signal?: AbortSignal,
   let args = cmd.slice(1);
   if (sandboxed) {
     // The project's own cache folders under node_modules (linked into the copy) stay writable: vitest and babel write there.
-    const caches = [".cache", ".vite", ".vitest"].map((d) => path.join(project, "node_modules", d)).filter((d) => existsSync(d));
-    ({ file, args } = inTestSandbox(testSandboxProfile({ writable: [cwd, ...caches], readable: [project] }), file, args));
+    // Vite and Vitest keep their caches inside node_modules; the folders they would create are made first, so they can be writable while the rest stays read-only.
+    const nmDir = path.join(project, "node_modules");
+    if (existsSync(path.join(nmDir, "vite")) || existsSync(path.join(nmDir, "vitest"))) for (const d of [".vite", ".vitest", ".vite-temp"]) { try { mkdirSync(path.join(nmDir, d), { recursive: true }); } catch { /* read-only install */ } }
+    const caches = [".cache", ".vite", ".vitest", ".vite-temp"].map((d) => path.join(project, "node_modules", d)).filter((d) => existsSync(d));
+    ({ file, args } = inTestSandbox(testSandboxProfile({ writable: [cwd, ...caches], readable: [project], readOnly: [path.join(project, "node_modules")] }), file, args));
   }
   const r = await runCommand(file, args, { cwd, timeoutMs: timeoutSec * 1000, maxBuffer: 8 << 20, signal, env: { ...runEnv(), CI: "1", FORCE_COLOR: "0", ...pythonPathFor(cwd) } });
   const output = r.stdout + r.stderr;

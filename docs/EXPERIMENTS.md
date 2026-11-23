@@ -21,3 +21,7 @@ Telling the checker to avoid the task's own example values caught 27 of 43 wrong
 
 ## Claude as the checker, full pipeline (2026-11-22)
 Claude-written checks through the whole pipeline on 101 changes: 22 of 40 wrong changes blocked (Gemini 25 of 40), 1 of 61 false alarms. Both must object: 17 of 40. Either objects: 30 of 40 at 2 of 61 false alarms. The earlier "60% / 2% when both object" result did not survive the full pipeline and is withdrawn. Data: [`benchmark/results/cross-vendor-full-set`](../benchmark/results/cross-vendor-full-set).
+
+
+## A wrong headline, and how it happened (2026-11-23)
+We published that on 23 real libraries the projects' own tests stopped none of 107 wrong AI changes while Apex verify stopped 80%. The tests-only arm was `unknown` for every change, and we read that as "the tests passed". In fact the tool had not found those projects' test command (a detection bug for zero-dependency projects), so no test ever ran. Running the tests directly showed they fail on 85 of the 107. Lesson kept: an arm that returns `unknown` everywhere is a broken measurement, not a result; check the baseline by hand before quoting it. Corrected numbers: `benchmark/results/real-projects`.

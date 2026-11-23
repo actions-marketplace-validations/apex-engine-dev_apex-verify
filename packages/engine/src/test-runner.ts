@@ -187,11 +187,12 @@ export async function detectTestRunner(root: string, override?: string): Promise
     return { kind: "custom", command: ["bash", "-c", override.trim()], timeoutSec: 180 };
   }
   // A package.json test script that is a real one, with its dependencies installed.
-  let script = "";
-  try { script = String(JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8")).scripts?.test ?? ""); } catch { /* none */ }
+  let script = "", declaresDeps = true;
+  try { const pkg = JSON.parse(await fs.readFile(path.join(root, "package.json"), "utf8")); script = String(pkg.scripts?.test ?? ""); declaresDeps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies }).length > 0; } catch { /* none */ }
   const real = script && !/no test specified/i.test(script);
   const plainNode = /^[ \t]*node\s+--test\b/.test(script);
-  if (real && !plainNode && (await exists(path.join(root, "node_modules")))) return { kind: "npm", command: ["npm", "test", "--silent"], timeoutSec: 180 };
+  // Dependencies must be installed for the script to mean anything; a script that runs node itself in a project that declares none (a zero-dependency library) needs no node_modules.
+  if (real && !plainNode && ((!declaresDeps && /^[ \t]*node\b/.test(script)) || (await exists(path.join(root, "node_modules"))))) return { kind: "npm", command: ["npm", "test", "--silent"], timeoutSec: 180 };
   if (await findFile(root, async (name, full) => /\.test\.[mc]?js$/.test(name) && /node:test/.test(await fs.readFile(full, "utf8").catch(() => "")))) {
     return { kind: "node", command: ["node", "--test"], timeoutSec: 90 };
   }
@@ -378,7 +379,7 @@ export function runCommand(file: string, args: string[], o: { cwd: string; env?:
  * narrower rule stopped test runners from starting (the reason run_tests has an outside-the-sandbox fallback).
  * `readable`: folders that stay readable even under a denied place (the project itself, when it is kept there).
  */
-export function testSandboxProfile(o: { writable: string[]; readable?: string[]; home?: string; env?: NodeJS.ProcessEnv }): string {
+export function testSandboxProfile(o: { writable: string[]; readable?: string[]; /** Folders that stay read-only even inside a writable place (the real project's node_modules, linked into the copy). */ readOnly?: string[]; home?: string; env?: NodeJS.ProcessEnv }): string {
   if (process.platform === "linux") return linuxSandboxSpec(o);
   if (process.platform === "win32") return winSandboxSpec(o);
   const env = o.env ?? process.env;
@@ -407,10 +408,20 @@ export function testSandboxProfile(o: { writable: string[]; readable?: string[];
   ].filter((p) => existsSync(p)).map(real);
   for (const dir of inHome(".ssh", ".aws", ".gnupg", ".azure", ".kube", ".docker", ".config/gcloud", ".config/gh", ".config/op", ".claude", ".codex", ".gemini", ".cursor", ".config/github-copilot", ".config/anthropic", ".openai", "Library/Keychains", "Library/Cookies", "Library/Application Support", "Library/Mail", "Library/Messages", "Library/Safari")) lines.push(`(deny file-read* (subpath ${q(dir)}))`);
   for (const file of inHome(".netrc", ".npmrc", ".pypirc", ".git-credentials", ".yarnrc.yml", ".cargo/credentials", ".cargo/credentials.toml", ".pgpass", ".vault-token", ".zsh_history", ".bash_history", ".python_history", ".node_repl_history")) lines.push(`(deny file-read* (literal ${q(file)}))`);
+  // Dotfiles directly in the home folder (shell profiles with exported tokens, tool configs, histories) are not readable,
+  // except the few that test tools need. Folders such as ~/.nvm or ~/.cargo keep working: only the entries at the top are covered.
+  if (h) {
+    const rx = h.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    lines.push(`(deny file-read-data (regex #"^${rx}/\\.[^/]+$"))`);
+    for (const f of inHome(".gitconfig", ".gitignore_global", ".gitignore", ".nvmrc", ".node-version", ".tool-versions", ".python-version", ".ruby-version", ".editorconfig")) lines.push(`(allow file-read-data (literal ${q(f)}))`);
+    for (const d of inHome(".nvm", ".volta", ".fnm", ".asdf", ".pyenv", ".rbenv", ".rustup", ".cargo", ".bun", ".deno", ".local", ".config", ".cache", ".npm", ".yarn", ".pnpm-store", ".gradle", ".m2", ".sdkman")) lines.push(`(allow file-read-data (literal ${q(d)}))`);
+  }
   // After the denials (the last matching rule wins): the copy, the temporary folders and the caches.
   for (const dir of [...temp, ...caches]) lines.push(`(allow file-write* (subpath ${q(dir)}))`);
   // Local sockets a test opens for itself; not the ones elsewhere (an ssh agent, Docker).
   for (const dir of temp) lines.push(`(allow network-outbound (subpath ${q(dir)}))`);
+  // Read-only places come before the writable ones, so a cache folder inside one can still be opened for writing below.
+  for (const dir of (o.readOnly ?? []).filter((p) => existsSync(p)).map(real)) lines.push(`(deny file-write* (subpath ${q(dir)}))`);
   for (const dir of (o.readable ?? []).map(real)) if (dir !== "/" && !(h && (dir === h || h.startsWith(dir + path.sep)))) lines.push(`(allow file-read* (subpath ${q(dir)}))`);
   for (const dir of o.writable.map(real)) if (dir !== "/" && !(h && (dir === h || h.startsWith(dir + path.sep)))) lines.push(`(allow file-read* (subpath ${q(dir)}))`, `(allow file-write* (subpath ${q(dir)}))`, `(allow network-outbound (subpath ${q(dir)}))`);
   return lines.join("\n") + "\n";
@@ -423,7 +434,7 @@ export function testSandboxProfile(o: { writable: string[]; readable?: string[];
  * its own process tree, killed with the parent. The "profile" is a JSON spec that inTestSandbox turns into bwrap arguments.
  */
 const BWRAP_PREFIX = "bwrap:";
-function linuxSandboxSpec(o: { writable: string[]; readable?: string[]; home?: string; env?: NodeJS.ProcessEnv }): string {
+function linuxSandboxSpec(o: { writable: string[]; readable?: string[]; readOnly?: string[]; home?: string; env?: NodeJS.ProcessEnv }): string {
   const env = o.env ?? process.env;
   const real = (p: string) => { try { return realpathSync(p); } catch { return path.resolve(p); } };
   const home = real(o.home ?? env.HOME ?? os.homedir());
@@ -435,7 +446,9 @@ function linuxSandboxSpec(o: { writable: string[]; readable?: string[]; home?: s
   const hideDirs = inHome(".ssh", ".aws", ".gnupg", ".azure", ".kube", ".docker", ".config/gcloud", ".config/gh", ".config/op", ".claude", ".codex", ".gemini", ".cursor", ".config/github-copilot", ".config/anthropic", ".openai").filter((p) => existsSync(p));
   const hideFiles = inHome(".netrc", ".npmrc", ".pypirc", ".git-credentials", ".yarnrc.yml", ".cargo/credentials", ".cargo/credentials.toml", ".pgpass", ".vault-token", ".zsh_history", ".bash_history", ".python_history", ".node_repl_history").filter((p) => existsSync(p));
   const writable = [...new Set([...temp, ...caches, ...o.writable.map(real)])].filter((p) => p !== "/" && p !== home);
-  return BWRAP_PREFIX + JSON.stringify({ writable, hideDirs, hideFiles });
+  const readOnly = (o.readOnly ?? []).filter((p) => existsSync(p)).map(real);
+  const own = o.writable.map(real);
+  return BWRAP_PREFIX + JSON.stringify({ writable, hideDirs, hideFiles, readOnly, own });
 }
 
 let bwrapProbe: Promise<boolean> | null = null;
@@ -443,11 +456,13 @@ function linuxSandboxAvailable(): Promise<boolean> {
   return (bwrapProbe ??= runCommand("bwrap", ["--ro-bind", "/", "/", "--dev", "/dev", "--unshare-net", "--unshare-pid", process.execPath, "-e", "process.exit(0)"], { cwd: os.tmpdir(), timeoutMs: 15_000 }).then((r) => !r.failed, () => false));
 }
 function inLinuxSandbox(spec: string, file: string, args: string[]): { file: string; args: string[] } {
-  const { writable, hideDirs, hideFiles } = JSON.parse(spec.slice(BWRAP_PREFIX.length)) as { writable: string[]; hideDirs: string[]; hideFiles: string[] };
+  const { writable, hideDirs, hideFiles, readOnly = [], own = [] } = JSON.parse(spec.slice(BWRAP_PREFIX.length)) as { writable: string[]; hideDirs: string[]; hideFiles: string[]; readOnly?: string[]; own?: string[] };
   const a = ["--ro-bind", "/", "/", "--dev", "/dev", "--proc", "/proc", "--unshare-net", "--unshare-pid", "--die-with-parent", "--new-session"];
   for (const d of hideDirs) a.push("--tmpfs", d);
   for (const f of hideFiles) a.push("--ro-bind", "/dev/null", f);
   for (const w of writable) a.push("--bind", w, w);
+  // The real project's node_modules stays read-only even when the project sits in a writable place; cache folders inside it are bound writable again.
+  for (const r of readOnly) { a.push("--ro-bind", r, r); for (const w of own) if (w.startsWith(r + path.sep)) a.push("--bind", w, w); }
   return { file: "bwrap", args: [...a, file, ...args] };
 }
 

@@ -92,20 +92,24 @@ Generated checks and your tests run in a sandbox where the platform allows: macO
 
 ## Does it work? The honest numbers
 
-**The short version: on 200 AI-written changes to real open-source libraries, your tests plus a cheating scan stopped none of the wrong ones; Apex verify stopped about 80 in 100, and it wrongly stopped about 4 in 100 good changes (11 by the strictest count).** It still misses some, so treat `ready` as strong evidence, not a proof.
+**The short version, on 200 AI-written changes to 23 real open-source libraries:** the projects' own tests already stopped 75 in 100 of the wrong changes. Adding Apex verify's checks raised that to 91 in 100, and of the 27 wrong changes that slipped past the tests it caught 17. The price: it wrongly stopped 23 in 100 good changes (the projects' own tests account for 11 of those, the generated checks for the rest). So it catches more, and it costs you false alarms; `ready` is strong evidence, not a proof.
+
+> **Correction, 2026-11-23:** earlier versions of this page said the projects' tests stopped *none* of the wrong changes on the real libraries. That was wrong: a bug kept Apex verify from running those projects' tests at all, and we had not checked them directly. [What happened and the withdrawn numbers](benchmark/results/real-projects/README.md).
 
 How we know: we collected AI-written changes and knew which were wrong, using hidden tests Apex verify never saw. A "wrong" change looks fine and may pass the visible tests but does not do what the task asked.
 
-<p align="center"><img src="docs/assets/results.svg" alt="Out of 100 wrong AI changes: tests plus a cheating scan stop 8 on small projects and none on real libraries; Apex verify stops 52 to 80" width="760"></p>
+<p align="center"><img src="docs/assets/results.svg" alt="Out of 100 wrong AI changes: on small projects tests stop 8 and Apex verify 65; on real libraries tests stop 75 and Apex verify 91" width="760"></p>
 
 | | Wrong changes stopped | Good changes wrongly stopped |
 |---|---|---|
-| Your tests + the cheating scan | about **8 in 100** (none on the real libraries below) | not separately measured |
-| **Apex verify**, 17 small projects (108 changes) | about **65 in 100** (52 on the 12 public projects you can rerun) | about **3 in 100** |
-| **Apex verify**, 23 real open-source libraries (200 changes, each task a real historical bug fix) | about **80 in 100** | **11 in 100** by the hidden-test label; **about 4 in 100 after a hand audit** ([why](benchmark/results/real-projects/README.md)) |
+| **17 small projects** (108 changes): tests + cheating scan | about 8 in 100 | not measured separately |
+| 17 small projects: **Apex verify** | about 65 in 100 (52 on the 12 public projects you can rerun) | about 3 in 100 |
+| **23 real libraries** (200 changes, each task a real historical bug fix): tests + cheating scan | **75 in 100** | 11 in 100 |
+| 23 real libraries: **Apex verify** | **91 in 100** | **23 in 100** |
 
-- **It still misses a lot**: about a third of wrong changes on the small projects, and 14 of 107 wrong changes on the real libraries were called `ready`. It is not a proof of correctness.
-- **The "11 vs 4" is the honest part.** We checked the 10 good-by-label changes it stopped: for 6, the change really did not do what the task text said (the upstream test was narrower than the task). Four were checker mistakes. One reviewer did that audit after seeing the numbers, so treat 4 as an estimate.
+- **Where it helps most is where tests are thin.** On the small projects the visible tests caught almost nothing and the checks did the work. On the real libraries the tests are good, and the checks add a smaller step (75 to 91) at a real cost in false alarms.
+- **It still misses things**: about a third of wrong changes on the small projects; on the real libraries 1 wrong change was called `ready` and 9 were left `unknown`.
+- **The false alarms are the open problem.** 13 in 100 good changes that pass a real library's tests were stopped by a generated check ([issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20)). Use `APEX_MODE=warn` or `fail-on: never` if that is too many for you.
 - **A checker from another company works about as well** (Claude 55 in 100 vs Gemini 63 on the same changes), and **two checkers that must agree did not help** ([experiments, including what failed](docs/EXPERIMENTS.md)).
 - Limits: Gemini models wrote every change, one run each, the real-library set is lopsided. Everything is rerunnable: `node benchmark/run-gate.mjs`. **Please try to break it**: a wrong `ready`, or a `not ready` on a good change, is the most useful bug report we can get.
 
@@ -131,7 +135,7 @@ If it catches something for you, a ⭐ helps others find it. If it gets somethin
 
 | You can | Where |
 |---|---|
-| **Cut the remaining checker false alarms on real libraries** (about 4 in 100) | [issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20) |
+| **Cut the checker's false alarms on real libraries** (13 in 100 good changes) | [issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20) |
 | **Run the Codex or Cursor hook** inside the real app and tell us what you saw | a pull request or issue |
 | **Add a language or test runner** | issues labelled `good first issue` |
 | **Be a second maintainer** | [GOVERNANCE.md](GOVERNANCE.md) |

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4 (2026-11-23)
+- **Correction to published results.** A bug kept Apex verify from running the tests of a project that has a `package.json` test script, no declared dependencies and no `node_modules` (all 23 real-library benchmark tasks). Its "tests alone stopped none of the wrong changes" result on real libraries was therefore wrong. Fixed, and re-measured: the projects' own tests block 80 of 107 wrong changes (75%); the full gate 97 (91%), with 21 of 93 right changes wrongly blocked (23%). README, chart and `benchmark/results/real-projects` are corrected; the withdrawn rows are kept.
+- Sandbox: the real project's `node_modules` (linked into the scratch copies) is read-only for tests, and on macOS dotfiles in the home folder (shell profiles, tool configs) are no longer readable. Windows: arguments with `&`, `^`, `%` and similar are quoted.
+
 ## 0.2.3 (2026-11-23)
 A second review round, on the fixes of 0.2.1 themselves, plus a first-run polish. Every finding was reproduced first; each fix has a test.
 - **`--diff` could still write outside the scratch copy** through formats the first fix did not read (`Index:` lines and context diffs, which the system `patch` follows) and into the real `node_modules` through the copy's link. Diffs are now applied with `git apply` only, non-unified formats and `node_modules`/`.git` paths are refused, and the link is taken away while a diff is applied.

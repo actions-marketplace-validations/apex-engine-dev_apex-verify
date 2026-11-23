@@ -19,6 +19,6 @@ It prints: wrong changes blocked, right changes wrongly blocked (each with a 95%
 | `results/second-vendor/` | checks written by Claude (Anthropic) vs Gemini, one set per task, no repair or second look | Claude 69% blocked / 12% false alarms; Gemini 61% / 19%; (its "both must object" row was withdrawn: it did not hold on the full pipeline, see `results/cross-vendor-full-set/`) |
 | `results/cross-vendor-full-set/` | Claude-written checks through the full pipeline on 101 changes | Claude 22 of 40 wrong blocked, 1 of 61 false alarms; Gemini 25 of 40 and 2 of 61; both must object 17 of 40 |
 | `results/fresh-inputs/`, `results/two-checkers-same-vendor/` | two options measured on the 108 changes | neither beat the default; both off by default |
-| `results/real-projects/` | 200 changes to 23 real libraries, each a real historical bug fix | gate blocked **86 of 107** wrong changes (80%) and wrongly blocked **10 of 93** right ones (11%); tests + scan alone caught none |
+| `results/real-projects/` | 200 changes to 23 real libraries, each a real historical bug fix (re-run with 0.2.4; the first numbers were wrong and are withdrawn there) | the projects' tests alone block **80 of 107** wrong changes (75%); the full gate **97 of 107** (91%) and wrongly blocks **21 of 93** right ones (23%; 10 from the projects' own tests) |
 
 Read `results/*/README.md` for the method and limits. In short: small projects, Gemini-written changes, one run per change, and the intervals understate the real uncertainty because changes cluster by task. Please try to break it.
