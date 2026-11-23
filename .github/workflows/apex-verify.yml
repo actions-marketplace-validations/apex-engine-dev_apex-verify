@@ -19,3 +19,15 @@ jobs:
           api-key: ${{ secrets.GEMINI_API_KEY }}
           fail-on: never
           badge: true
+  # The same check through the released Action (@v1), which downloads the release bundle instead of building: this keeps that path tested.
+  released:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: apex-engine-dev/apex-verify@v1
+        with:
+          fail-on: never
+          comment: false
