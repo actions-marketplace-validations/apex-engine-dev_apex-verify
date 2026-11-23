@@ -7,27 +7,49 @@ import { signReport } from "./sign.js";
 import { verify, type VerifyReport } from "./verify.js";
 import type { ModelClient } from "apex-verify-engine";
 
-export const VERIFY_USAGE = `apex verify "<what the change should do>" [--dir <project>] [--base <git ref> | --diff <file>] [--model <checker model>] [--provider gemini|openai|anthropic|openrouter | --base-url <url>] [--no-model] [--format text|json|markdown|sarif] [--out <file>] [--test "<command>"]
-  Checks whether a change an AI agent (or a person) already made is really done. Nothing in your project is changed.
-  --base       compare your working copy with this git ref (default HEAD; in a pull request: the base commit)
-  --diff       or judge a unified diff instead of a git change
-  --model      the model that writes the checks from your task: use a different, ideally stronger one than the agent that made the change
-  --standard-cases   also ask for unstated standard-practice checks (CRLF, empty input); measured no gain, off by default
-  --second-model <id> [--second-provider p]   a second, independent checker: NOT READY only when both object; one objection alone is UNKNOWN
-  --fresh-inputs   ask the checker to use inputs other than the task's own examples (off by default; see benchmark/results)
-  --quiet          no progress lines, just the report
-  --version        print the version
-  --demo           a 30-second demonstration on a built-in project: no key, nothing sent anywhere
-  --lock-tests     run your tests with the base versions of any test files the change edited or deleted (an agent cannot edit its way to green)
-  --sign-key <file>   sign the report (Ed25519; make a key with --gen-key <file>); check one with --check-report <file> --pub-key <base64> (the key you trust; --any-key skips that check)
+export const VERIFY_USAGE = `apex verify "<what the change should do>" [options]
+
+  Checks whether a change an AI agent (or a person) already made is really done.
+  Works on a copy: nothing in your project is changed.
+
+  Try it first:   apex verify --demo        (5 seconds, no key, nothing sent anywhere)
+
+What to check
+  --dir <project>      the project folder (default: the current folder)
+  --base <git ref>     compare your working copy with this ref (default HEAD; in a pull request: the base commit)
+  --diff <file>        or judge a unified diff instead of a git change
+  --test "<command>"   your test command, when it is not detected
+  --timeout <seconds>  time limit for each test run (default 90)
+
+The checker (the model that writes checks from your task; use a different one than your agent's)
+  --provider <name>    gemini (default), openai, anthropic, openrouter; or --base-url <url> for any OpenAI-compatible endpoint
+  --model <id>         the checker model
+  --no-model           no model: only your tests and the cheating scan (needs no key; the verdict is at most unknown)
+
+Output
+  --format <f>         text (default), json (full report), markdown (for a pull request comment), sarif (code scanning)
+  --out <file>         write the chosen format to a file
+  --markdown-out / --sarif-out / --json-out <file>   also write those formats (one run)
   --badge-out <file>   write a badge with the verdict: shields.io endpoint JSON, or a static SVG when the file ends in .svg
-  --no-model   only the deterministic parts: the project's tests and the cheating scan (needs no key)
-  --markdown-out / --sarif-out / --json-out <file>   also write those formats to a file (one run)
-  --format     text (default), json (full report), markdown (for a pull request comment), sarif (code scanning)
-  --hook       run as an agent's stop hook (Claude Code, Codex): reads the hook JSON on stdin, blocks "done" while the change is not ready
-  --mcp        run as an MCP server exposing the verify_change tool
+  --quiet              no progress lines, just the report
+
+Harder to fool
+  --lock-tests         run your tests with the base versions of test files the change edited or deleted
+  --sign-key <file>    sign the report (Ed25519). Make a key: --gen-key <file>. Check one: --check-report <file> --pub-key <base64>
+
+Other ways to run it
+  --hook               as an agent's stop hook (Claude Code, Gemini CLI, Codex): hook JSON on stdin, blocks "done" while not ready
+  --mcp                as an MCP server exposing the verify_change tool
+  --version            print the version
+
+Experimental (measured, no gain so far; see docs/EXPERIMENTS.md)
+  --second-model <id> [--second-provider <name>]   a second checker: NOT READY only when both object
+  --standard-cases     also ask for unstated standard-practice checks
+  --fresh-inputs       ask the checker to avoid the task's own example values
+
 Exit codes: 0 ready, 1 not ready, 3 unknown (not enough to say), 2 usage or setup error.
-Keys: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY (or --api-key-env NAME). Environment equivalents of the flags, for hooks and CI: APEX_CHECKER_MODEL, APEX_PROVIDER, APEX_BASE_URL, APEX_API_KEY_ENV.`;
+Keys: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY (or --api-key-env NAME). Environment equivalents of the flags, for hooks and CI: APEX_CHECKER_MODEL, APEX_PROVIDER, APEX_BASE_URL, APEX_API_KEY_ENV.
+Docs: https://github.com/apex-engine-dev/apex-verify`;
 
 export interface VerifyCliArgs {
   task: string; dir: string; base?: string; diffFile?: string; model?: string; baseUrl: string; apiKey?: string; noModel: boolean;
@@ -51,6 +73,16 @@ export function normalizeArgv(argv: string[]): string[] {
     else out.push("--" + k, v!);
   }
   return out;
+}
+
+/** Whether a flag is present as a flag, not as the value of another flag (a task text of "--version" is a task, not a request for the version). `argv` is normalized. */
+export function hasFlag(argv: string[], name: string): boolean {
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i]!;
+    if (a === name) return true;
+    if (a.startsWith("--") && VALUE_FLAGS.has(a.slice(2))) i++;
+  }
+  return false;
 }
 
 export function parseVerifyArgs(rawArgv: string[], env: NodeJS.ProcessEnv = process.env): VerifyCliArgs {
@@ -110,6 +142,22 @@ export function parseVerifyArgs(rawArgv: string[], env: NodeJS.ProcessEnv = proc
   };
 }
 
+/** Colour only for a person at a terminal: never when piped, never with NO_COLOR, and only on the default output. */
+export const useColor = (): boolean => Boolean(process.stdout.isTTY) && !process.env.NO_COLOR && process.env.TERM !== "dumb";
+export function colorize(text: string): string {
+  const c = (code: number, s: string) => `\x1b[${code}m${s}\x1b[0m`;
+  return text.split("\n").map((l) => {
+    if (/^apex verify: READY/.test(l)) return c(1, c(32, l));
+    if (/^apex verify: NOT READY/.test(l)) return c(1, c(31, l));
+    if (/^apex verify: UNKNOWN/.test(l)) return c(1, c(33, l));
+    if (/^\s+expected:/.test(l)) return c(32, l);
+    if (/^\s+actual:/.test(l)) return c(31, l);
+    if (/^\s+fix:/.test(l)) return c(33, l);
+    if (/^\s+(tests|checks|change|sandbox|note):/.test(l) || /proof sha256:/.test(l)) return c(2, l);
+    return l;
+  }).join("\n");
+}
+
 export const renderFormat = (r: VerifyReport, f: VerifyCliArgs["format"]) => (f === "json" ? JSON.stringify(r, null, 2) : f === "markdown" ? renderMarkdown(r) : f === "sarif" ? renderSarif(r) : renderText(r));
 
 /** The checker(s) the arguments describe. */
@@ -139,6 +187,6 @@ export async function runVerify(a: VerifyCliArgs, out: (s: string) => void = con
   if (a.jsonOut) fs.writeFileSync(a.jsonOut, JSON.stringify(report, null, 2) + "\n");
   const text = renderFormat(report, a.format);
   if (a.out) fs.writeFileSync(a.out, text + "\n");
-  if (!a.out || a.format === "text") out(text);
+  if (!a.out || a.format === "text") out(a.format === "text" && !a.out && useColor() ? colorize(text) : text);
   return exitCode(report.verdict);
 }

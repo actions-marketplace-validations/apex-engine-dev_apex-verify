@@ -415,3 +415,79 @@ test(".gitattributes export-ignore cannot hide tests from the comparison (the ba
   assert.ok(r.cheats.some((x) => /deleted|removed/i.test(x.detail) || x.kind === "test_deleted"), JSON.stringify(r.cheats));
   assert.equal(r.verdict, "not_ready");
 });
+
+test("round 2: Index:/context diffs and node_modules paths are refused; a removed '-- /path' line inside a hunk is not a file header", async () => {
+  const d = repo();
+  const victim = path.join(os.tmpdir(), `apex-r2-victim-${process.pid}.txt`); fs.writeFileSync(victim, "ORIGINAL\n");
+  const tryDiff = async (text: string) => { const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "apex-d2-")), "x.diff"); fs.writeFileSync(f, text); return verify({ dir: d, task: TASK, checker: null, diffFile: f }).then(() => "applied", (e: Error) => e.message); };
+  assert.match(await tryDiff(`Index: ${path.relative(d, victim)}\n1c1\n< ORIGINAL\n---\n> PWNED\n`), /only unified diffs/);
+  assert.match(await tryDiff(`*** ${path.relative(d, victim)}\n--- nonexist\n***************\n*** 1 ****\n! ORIGINAL\n--- 1 ----\n! PWNED\n`), /only unified diffs/);
+  assert.equal(fs.readFileSync(victim, "utf8"), "ORIGINAL\n");
+  assert.match(await tryDiff("--- a/node_modules/dep/index.js\n+++ b/node_modules/dep/index.js\n@@ -1 +1 @@\n-x\n+y\n"), /node_modules/);
+  fs.writeFileSync(path.join(d, "q.sql"), "-- /usr/local/bin note\nselect 1;\n");
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "sql"]);
+  assert.equal(await tryDiff("--- a/q.sql\n+++ b/q.sql\n@@ -1,2 +1 @@\n--- /usr/local/bin note\n select 1;\n"), "applied");
+  fs.rmSync(victim, { force: true });
+});
+
+test("round 2: a change whose code rewrites the baseline copy is NOT READY, not 'already failed before'", async () => {
+  const d = repo();
+  write(d, "test/slug.test.js", "import { test } from \"node:test\";\nimport assert from \"node:assert/strict\";\nimport fs from \"node:fs\";\nimport { slugify } from \"../src/slug.js\";\ntry { fs.writeFileSync(new URL(\"../../before/src/slug.js\", import.meta.url), \"export function slugify(s) { return 42; }\\n\"); } catch {}\ntest(\"lower\", () => { assert.equal(slugify(\"A\"), \"a\"); });\n");
+  write(d, "src/slug.js", "export function slugify(s) { return 42; }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  assert.equal(r.verdict, "not_ready", JSON.stringify(r.reasons));
+});
+
+test("round 2: a test that newly breaks inside a suite that already failed is a regression", async () => {
+  const d = repo();
+  const suite = (digits: string, under: string) => `import { test, describe } from "node:test";\nimport assert from "node:assert/strict";\nimport { slugify } from "../src/slug.js";\ndescribe("suite", () => {\n  test("keeps digits", () => { assert.equal(slugify("A1"), "${digits}"); });\n  test("keeps underscores", () => { assert.equal(slugify("A_B"), "${under}"); });\n});\n`;
+  write(d, "test/slug.test.js", suite("WRONG", "a_b"));
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "suite"]);
+  write(d, "test/slug.test.js", suite("a1", "a_b"));
+  write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().replace(/_/g, \"-\"); }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  assert.ok(r.reasons.some((x) => x.kind === "regression"), JSON.stringify(r.reasons) + JSON.stringify(r.tests));
+  assert.ok(r.tests.newlyFailing.includes("keeps underscores"), JSON.stringify(r.tests.newlyFailing));
+});
+
+test("round 2: a test command that now runs no tests is a regression when the original ran some", async () => {
+  const d = repo();
+  const pkg = JSON.parse(fs.readFileSync(path.join(d, "package.json"), "utf8")); pkg.scripts.test = "node --test >/dev/null 2>&1; echo all good"; fs.writeFileSync(path.join(d, "package.json"), JSON.stringify(pkg));
+  write(d, "src/slug.js", "export function slugify(s) { return 42; }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  assert.equal(r.verdict, "not_ready", JSON.stringify(r.reasons));
+});
+
+test("round 2: a task text that looks like a mode flag is a task", async () => {
+  const { hasFlag, normalizeArgv } = await import("./verify-cmd.js");
+  const argv = normalizeArgv(["--task", "--version", "--dir", ".", "--no-model"]);
+  assert.equal(hasFlag(argv, "--version"), false);
+  assert.equal(hasFlag(normalizeArgv(["--version"]), "--version"), true);
+});
+
+test("round 2: redaction leaves code alone and catches common secret shapes", async () => {
+  const { redactSecrets } = await import("./redact.js");
+  for (const code of ["token = parseTokenFromHeader(req)", "secret: config.auth.jwtSecret,", "nextPageToken: response.nextPageToken", "model = 'sk-learn-pipeline-for-models-v2'"]) assert.equal(redactSecrets(code), code);
+  const hit = (t: string, secret: string) => assert.ok(!redactSecrets(t).includes(secret), t);
+  hit("aws_secret_access_key = wJalrXUtnFEMIK7MDENGbPxRfiCY", "wJalrXUtnFEMIK7MDENGbPxRfiCY");
+  hit("DATABASE_URL=postgres://admin:hunter2pw@db.internal:5432/app", "hunter2pw");
+  hit("Authorization: Bearer abcdefghijklmnopqrstuvwxyz012345", "abcdefghijklmnopqrstuvwxyz012345");
+  hit('password = "short1"', "short1");
+  hit("glpat-AbCdEfGhIjKlMnOpQrSt", "glpat-AbCdEfGhIjKlMnOpQrSt");
+  hit("key sk-proj-A1b2C3d4E5f6G7h8I9j0K1l2M3n4", "sk-proj-A1b2C3d4E5f6G7h8I9j0K1l2M3n4");
+});
+
+test("round 2: a typecheck that passed before and fails now is a regression whatever it prints; a sparse checkout's missing files are not deletions", async () => {
+  const d = repo();
+  const pkg = JSON.parse(fs.readFileSync(path.join(d, "package.json"), "utf8")); pkg.scripts.typecheck = "node tc.mjs"; fs.writeFileSync(path.join(d, "package.json"), JSON.stringify(pkg));
+  fs.writeFileSync(path.join(d, "tc.mjs"), 'import fs from "node:fs"; if (fs.readFileSync("src/slug.js", "utf8").includes("BROKEN")) { console.log("TS2304: Cannot find name x"); process.exit(2); }\n');
+  fs.mkdirSync(path.join(d, "docs/tests"), { recursive: true }); fs.writeFileSync(path.join(d, "docs/tests/test_doc.py"), "def test_a():\n    assert True\n");
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "tc"]);
+  execFileSync("git", ["-C", d, "sparse-checkout", "set", "--no-cone", "/*", "!/docs/"], { stdio: "pipe" });
+  assert.equal(fs.existsSync(path.join(d, "docs/tests/test_doc.py")), false);
+  write(d, "src/slug.js", "// BROKEN\nexport function slugify(s) { return String(s).toLowerCase().trim(); }\n");
+  const r = await verify({ dir: d, task: TASK, checker: null });
+  assert.ok(r.reasons.some((x) => x.kind === "regression" && /typecheck/.test(x.summary)), JSON.stringify(r.reasons));
+  assert.ok(!r.cheats.some((x) => x.kind === "test_deleted"), JSON.stringify(r.cheats));
+  assert.ok(!r.change.files.some((f) => f.path.startsWith("docs/")));
+});

@@ -834,7 +834,7 @@ export function isJunkPath(parts: string[], diffOnly = false): boolean {
 export async function copyProject(src: string, dest: string): Promise<void> {
   // Cloned on APFS, so nearly free. Symlinks that lead out of the project are not copied: a test could write through one into the real tree.
   const realSrc = await fs.realpath(src);
-  await fs.cp(src, dest, { recursive: true, mode: fsConstants.COPYFILE_FICLONE, filter: async (p) => {
+  await fs.cp(src, dest, { recursive: true, verbatimSymlinks: true, mode: fsConstants.COPYFILE_FICLONE, filter: async (p) => {
     const rel = path.relative(src, p);
     if (isJunkPath(rel.split(path.sep).filter(Boolean))) return false;
     try {

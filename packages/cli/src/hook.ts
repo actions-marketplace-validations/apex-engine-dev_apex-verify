@@ -43,14 +43,21 @@ export function lastUserPrompt(transcript: string): string {
   return last;
 }
 
-/** A fingerprint of everything that differs from HEAD, or null when nothing does. NUL-separated git output, so file names with spaces or non-ASCII characters are read as they are, and untracked files are hashed by their bytes. */
-export function changeFingerprint(cwd: string): string | null {
+const gitOut = (cwd: string, args: string[]) => execFileSync("git", ["-C", cwd, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], maxBuffer: 256 * 1024 * 1024 });
+export const headOf = (cwd: string): string | null => { try { return gitOut(cwd, ["rev-parse", "HEAD"]).trim(); } catch { return null; } };
+
+/**
+ * A fingerprint of everything that differs from `base` (default HEAD), or null when nothing does. With a base other than
+ * HEAD, work the agent already committed counts too. NUL-separated git output, so file names with spaces or non-ASCII
+ * characters are read as they are, and untracked files are hashed by their bytes.
+ */
+export function changeFingerprint(cwd: string, base = "HEAD"): string | null {
   try {
     execFileSync("git", ["-C", cwd, "rev-parse", "--is-inside-work-tree"], { stdio: "pipe" });
     const raw = execFileSync("git", ["-C", cwd, "status", "--porcelain=v1", "-z", "-uall"], { encoding: "buffer", maxBuffer: 16 * 1024 * 1024 }).toString("utf8");
     const entries = raw.split("\0").filter(Boolean);
-    if (!entries.length) return null;
-    const diff = execFileSync("git", ["-C", cwd, "diff", "HEAD", "--no-ext-diff", "--binary"], { encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+    const diff = execFileSync("git", ["-C", cwd, "diff", base, "--no-ext-diff", "--binary"], { encoding: "buffer", maxBuffer: 256 * 1024 * 1024 });
+    if (!entries.length && !diff.length) return null;
     const untracked: string[] = [];
     for (let i = 0; i < entries.length; i++) {
       const e = entries[i]!, code = e.slice(0, 2), file = e.slice(3);
@@ -71,11 +78,15 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
   input.session_id ||= input.conversation_id;
   const cwd = input.cwd || input.workspace_roots?.[0] || process.cwd();
   const block = (reason: string) => JSON.stringify(cursor ? { decision: "block", reason, followup_message: reason } : { decision: "block", reason });
-  const fp = changeFingerprint(cwd);
-  if (!fp) return 0; // nothing changed (or not a git repository): nothing to verify
   const state = path.join(stateDir(), "hook", (input.session_id || "session").replace(/[^\w.-]/g, "_").slice(0, 120) + ".json");
-  let st: { fp?: string; verdict?: string; message?: string; blocks?: number } = {};
+  let st: { fp?: string; verdict?: string; message?: string; blocks?: number; head?: string } = {};
   try { const raw = readRegularFile(state); if (raw) st = JSON.parse(raw); } catch { /* first run */ }
+  // What to compare with: APEX_BASE when set, else the commit this session was first seen on, so work the agent commits during the session is still verified.
+  const head = headOf(cwd);
+  if (!st.head && head) st.head = head;
+  const base = env.APEX_BASE || (st.head && /^[0-9a-f]{40}$/.test(st.head) ? st.head : "HEAD");
+  const fp = changeFingerprint(cwd, base);
+  if (!fp) { if (head && st.head === head && !st.fp) { try { writePrivateFile(state, JSON.stringify(st)); } catch { /* best effort */ } } return 0; } // nothing changed (or not a git repository): nothing to verify
   const maxBlocks = Number(env.APEX_HOOK_MAX_BLOCKS ?? 3);
   const warnOnly = env.APEX_MODE === "warn";
   const save = () => { try { writePrivateFile(state, JSON.stringify(st)); } catch { /* best effort */ } };
@@ -88,12 +99,12 @@ export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.en
   const task = (input.transcript_path && fs.existsSync(input.transcript_path) ? lastUserPrompt(fs.readFileSync(input.transcript_path, "utf8")) : "") || (typeof input.prompt === "string" ? input.prompt.trim() : "") || env.APEX_TASK || "";
   if (!task) return 0;
   try {
-    const a = parseVerifyArgs(["--task", task, "--dir", cwd, "--quiet", ...(env.APEX_NO_MODEL === "1" ? ["--no-model"] : []), ...(env.APEX_BASE ? ["--base", env.APEX_BASE] : [])], env);
+    const a = parseVerifyArgs(["--task", task, "--dir", cwd, "--quiet", ...(env.APEX_NO_MODEL === "1" ? ["--no-model"] : []), ...(base !== "HEAD" ? ["--base", base] : [])], env);
     const { checker, secondChecker } = checkersFrom(a);
     const report = await verify({ dir: a.dir, task: a.task, base: a.base, checker, secondChecker, freshInputs: a.freshInputs, timeoutSec: a.timeoutSec });
     const text = renderText(report);
     const message = `Apex verify says this change is ${report.verdict === "not_ready" ? "NOT READY" : report.verdict.toUpperCase()}. Do not stop yet.\n\n${text}`;
-    st = { fp, verdict: report.verdict, message, blocks: st.blocks ?? 0 }; // the counter belongs to the session, not to one version of the change
+    st = { fp, verdict: report.verdict, message, blocks: st.blocks ?? 0, head: st.head }; // the counter belongs to the session, not to one version of the change
     if (report.verdict === "not_ready" && !warnOnly && (st.blocks ?? 0) < maxBlocks) { st.blocks = (st.blocks ?? 0) + 1; save(); out(block(message)); return 0; }
     save();
     out(JSON.stringify({ systemMessage: report.verdict === "ready" ? `Apex verify: READY (${report.checks.passed} checks, ${report.tests.after?.passed ?? 0} tests pass)` : `Apex verify: ${report.verdict === "not_ready" ? "NOT READY (not blocking: " + (warnOnly ? "warn mode" : "block limit reached") + ")" : "UNKNOWN"}: ${report.reasons[0]?.summary ?? report.warnings[0] ?? ""}` }));

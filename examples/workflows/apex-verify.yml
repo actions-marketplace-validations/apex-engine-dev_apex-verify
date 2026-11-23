@@ -1,0 +1,20 @@
+# Copy to .github/workflows/apex-verify.yml in your repository, and add a GEMINI_API_KEY secret
+# (Settings > Secrets and variables > Actions). Without the secret, and on pull requests from forks,
+# it still runs your tests and the cheating scan; the verdict is then at most "unknown".
+name: Apex verify
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  apex-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0            # the base commit is needed to compare with
+      - uses: apex-engine-dev/apex-verify@v1
+        with:
+          api-key: ${{ secrets.GEMINI_API_KEY }}
+          # fail-on: not_ready      # default: fail on "not ready" and when the run itself errors; "unknown" is stricter, "never" only reports
+          # test-command: npm test  # when your test command is not detected

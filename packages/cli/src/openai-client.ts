@@ -12,7 +12,13 @@ export interface OpenAiClientOptions {
 function modelSignal(own?: AbortSignal): AbortSignal {
   const sec = Number(process.env.APEX_MODEL_TIMEOUT_SEC ?? 300);
   const t = AbortSignal.timeout((Number.isFinite(sec) && sec > 0 ? sec : 300) * 1000);
-  return own ? AbortSignal.any([own, t]) : t;
+  if (!own) return t;
+  if (typeof (AbortSignal as any).any === "function") return AbortSignal.any([own, t]);
+  // Node 20.0 to 20.2 have no AbortSignal.any: join the two by hand.
+  const ac = new AbortController();
+  const stop = () => ac.abort();
+  if (own.aborted || t.aborted) ac.abort(); else { own.addEventListener("abort", stop, { once: true }); t.addEventListener("abort", stop, { once: true }); }
+  return ac.signal;
 }
 
 export function openAiClient(o: OpenAiClientOptions): ModelClient {

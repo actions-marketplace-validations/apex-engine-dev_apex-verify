@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.3 (2026-11-23)
+A second review round, on the fixes of 0.2.1 themselves, plus a first-run polish. Every finding was reproduced first; each fix has a test.
+- **`--diff` could still write outside the scratch copy** through formats the first fix did not read (`Index:` lines and context diffs, which the system `patch` follows) and into the real `node_modules` through the copy's link. Diffs are now applied with `git apply` only, non-unified formats and `node_modules`/`.git` paths are refused, and the link is taken away while a diff is applied.
+- **A change could rewrite Apex verify's copy of the original code** while its tests ran, so a regression looked like "already failing". The copy is fingerprinted and a change that touches it is `not ready`.
+- **Regressions that were missed**: a test that newly breaks inside a suite that already failed; a test command that now runs no tests at all (and scripts that swallow failure with `|| echo`, `; true`, `| cat` or `--passWithNoTests`); a type check that passed before and fails now, whatever it prints.
+- **Cheating scan**: the comment stripping added in 0.2.2 removed Rust `#[test]`/`#[ignore]` and treated `/*` inside strings as a comment; it is now a small scanner that respects strings and languages.
+- **GitHub Action**: a pull request whose title is a flag such as `--version` could pass the job without any verification; a missing report now fails the job.
+- **Stop hook**: work the agent commits during the session is still verified (compared with the session's first commit, or `APEX_BASE`).
+- Redaction no longer mangles code (`token = parseToken(x)`) and catches more secret shapes (URL passwords, `Bearer`, `aws_secret_access_key`, GitLab and npm tokens). Sparse checkouts and submodules are no longer reported as deletions or additions. Symlinks inside a project are copied as they are, so they cannot point back at the real files.
+- **First run**: `--help` is grouped and readable, the verdict is coloured at a terminal (not when piped, and `NO_COLOR` is honoured), the demo prints a command that works, the `--no-model` hint says what to do, and the README has a complete workflow file (also in `examples/workflows/`).
+- **Smaller repository**: engine code that `apex verify` never reaches is no longer published (about 7,200 lines down to about 3,000). Behaviour is unchanged; the bundle users install was already free of it.
+- CI: macOS runs in its own workflow, because GitHub's macOS runners are often unavailable and that turned every run red.
+
 ## 0.2.2 (2026-11-23)
 - The Action's Marketplace name is now "Apex verify: AI change checker" (the plain name is taken) and its description is shorter, so it can be listed on the GitHub Marketplace. No code changes.
 

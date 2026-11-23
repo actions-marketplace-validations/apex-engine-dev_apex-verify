@@ -109,6 +109,8 @@ runs:
         node "$GITHUB_ACTION_PATH/dist/apex.mjs" "${ARGS[@]}" | tee "$OUT/report.txt"
         CODE=${PIPESTATUS[0]}
         VERDICT=$(node -e 'try{console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).verdict)}catch{console.log("error")}' "$OUT/report.json")
+        # No report means no verification happened (a crash, or arguments that never reached verify): that is an error, whatever the exit code said.
+        if [ "$VERDICT" = "error" ] && [ "$CODE" -ne 2 ]; then CODE=2; fi
         echo "verdict=$VERDICT" >> "$GITHUB_OUTPUT"; echo "report=$OUT/report.json" >> "$GITHUB_OUTPUT"
         [ -f "$OUT/report.md" ] && cat "$OUT/report.md" >> "$GITHUB_STEP_SUMMARY"
         if [ "$INPUT_COMMENT" = "true" ] && [ -n "${PR_NUMBER:-}" ] && [ -f "$OUT/report.md" ]; then

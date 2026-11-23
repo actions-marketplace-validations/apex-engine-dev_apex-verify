@@ -76,3 +76,13 @@ test("commenting a test out counts as removing it", () => {
   const url = 'import { test } from "node:test";\ntest("a", () => { fetch("http://x.test/a"); });\n';
   assert.deepEqual(detectCheats([{ path: "test/y.test.js", before: url, after: url }], "x"), []);
 });
+
+test("round 2: Rust attributes survive comment stripping, and comment markers inside strings are not comments", () => {
+  const rs = { path: "tests/a_test.rs", before: "#[test]\nfn a() {}\n#[test]\nfn b() {}\n", after: "#[test]\nfn a() {}\n#[test]\n#[ignore]\nfn b() {}\n" };
+  assert.ok(detectCheats([rs], "x").some((c) => c.kind === "tests_skipped"), JSON.stringify(detectCheats([rs], "x")));
+  const before = 'import { test } from "node:test";\ntest("a", () => { glob("**/x.js"); });\n';
+  const after = 'import { test } from "node:test";\ntest("new", () => { glob("src/*.js"); });\ntest("a", () => { glob("**/x.js"); });\n';
+  assert.deepEqual(detectCheats([{ path: "test/g.test.js", before, after }], "x").filter((c) => c.severity === "high"), []);
+  const py = { path: "tests/test_a.py", before: "def test_a():\n    assert 1\ndef test_b():\n    assert 1\n", after: "def test_a():\n    assert 1\n# def test_b():\n#     assert 1\n" };
+  assert.ok(detectCheats([py], "x").some((c) => c.kind === "tests_removed"));
+});

@@ -127,10 +127,14 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
       const diff = path.resolve(o.diffFile);
       assertSafeDiff(await fs.readFile(diff, "utf8"));
       let applied = false;
-      for (const p of ["-p1", "-p0"]) {
-        try { execFileSync("patch", [p, "--quiet", "--no-backup-if-mismatch", "-i", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try git apply (no `patch` on Windows), then the other strip level */ }
-        try { execFileSync("git", ["apply", p, "--whitespace=nowarn", diff], { cwd: next, stdio: "pipe" }); applied = true; break; } catch { /* try the other strip level */ }
-      }
+      // git apply only: it refuses paths that leave the folder and never writes through a symlink. The copy's link to the real node_modules is taken away while the diff is applied.
+      const nm = path.join(next, "node_modules"); let nmTarget: string | null = null;
+      try { if ((await fs.lstat(nm)).isSymbolicLink()) { nmTarget = await fs.readlink(nm); await fs.unlink(nm); } } catch { /* no link */ }
+      try {
+        for (const p of ["-p1", "-p0"]) {
+          try { execFileSync("git", ["apply", p, "--whitespace=nowarn", diff], { cwd: next, stdio: "pipe", env: { ...process.env, GIT_CEILING_DIRECTORIES: path.dirname(next), GIT_DIR: path.join(scratch, "no-git") } }); applied = true; break; } catch { /* try the other strip level */ }
+        }
+      } finally { if (nmTarget) { try { await fs.symlink(nmTarget, nm, "dir"); } catch { /* a real folder is there now */ } } }
       if (!applied) throw new Error(`could not apply ${o.diffFile} to ${o.dir} (tried -p1 and -p0)`);
     } else {
       let inside = false;
@@ -162,10 +166,17 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
     // Files git ignores (a .env, local config, caches) are in the working copy but are not part of the change, and must never be shown to a model as one.
     const ignored = new Set<string>();
     if (mode === "git") { try { for (const f of git(o.dir, ["ls-files", "-z", "--others", "--ignored", "--exclude-standard"]).split("\0").filter(Boolean)) ignored.add(f.replace(/\\/g, "/")); } catch { /* none */ } }
-    const prefixDir = mode === "git" ? git(o.dir, ["rev-parse", "--show-prefix"]).trim() : "";
+    // Not part of the change either: files a sparse checkout left out (in the base, absent here on purpose) and submodules (their files are another repository's).
+    const sparse = new Set<string>(); const submodules: string[] = [];
+    if (mode === "git") {
+      const pre = git(o.dir, ["rev-parse", "--show-prefix"]).trim();
+      const rel = (f: string) => (pre && f.startsWith(pre) ? f.slice(pre.length) : f);
+      try { for (const l of git(o.dir, ["ls-files", "-z", "-t", "--full-name"]).split("\0")) if (l.startsWith("S ")) sparse.add(rel(l.slice(2))); } catch { /* none */ }
+      try { for (const l of git(o.dir, ["ls-files", "-z", "-s", "--full-name"]).split("\0")) { const m = /^160000 \S+ \d\t(.+)$/.exec(l); if (m) submodules.push(rel(m[1]!) + "/"); } } catch { /* none */ }
+    }
     for (const p of new Set([...a.keys(), ...b.keys()])) {
       if (ignored.has(p) && !a.has(p)) continue;
-      void prefixDir;
+      if ((sparse.has(p) && !b.has(p)) || submodules.some((d) => p.startsWith(d))) continue;
       const x = a.get(p) ?? null, y = b.get(p) ?? null;
       // A file that differs only in line endings is not a change (Windows checkouts with autocrlf are CRLF, git archive is LF).
       if (x !== y && (x === null || y === null || x.replace(/\r\n/g, "\n") !== y.replace(/\r\n/g, "\n"))) changes.push({ path: p, before: x, after: y });
@@ -176,6 +187,24 @@ export async function collectChange(o: { dir: string; base?: string; diffFile?: 
 }
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
+
+/** A digest of every file in a folder (bytes, not only text), without following links: to notice code under test rewriting the baseline copy. */
+export async function digestTree(root: string): Promise<string> {
+  const h = createHash("sha256");
+  async function walk(dir: string): Promise<void> {
+    let ents: import("node:fs").Dirent[] = [];
+    try { ents = await fs.readdir(dir, { withFileTypes: true }); } catch { return; }
+    for (const e of ents.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))) {
+      const f = path.join(dir, e.name), rel = path.relative(root, f);
+      if (isJunkPath(rel.split(path.sep)) || e.name === ".apex-tmp") continue;
+      if (e.isSymbolicLink()) { h.update(`L:${rel}\n`); continue; }
+      if (e.isDirectory()) await walk(f);
+      else if (e.isFile()) { h.update(`F:${rel}:`); try { h.update(await fs.readFile(f)); } catch { h.update("?"); } h.update("\n"); }
+    }
+  }
+  await walk(root);
+  return h.digest("hex");
+}
 
 type Draft = NonNullable<Awaited<ReturnType<typeof draftAcceptance>>>;
 const cacheDir = () => path.join(process.env.APEX_CACHE_DIR || path.join(stateDir(), "cache"), "checks");
@@ -263,6 +292,17 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       else warnings.push(`${ch.file}: ${ch.detail}`);
     }
 
+    // The baseline copy must stay what it was: the new code's tests run first, in a sandbox that can write to the temp folder both copies live in.
+    const baselineDigest = await digestTree(c.orig);
+    let tampered = false;
+    const baselineIntact = async () => {
+      if (tampered) return false;
+      if ((await digestTree(c.orig)) === baselineDigest) return true;
+      tampered = true;
+      reasons.push({ kind: "cheat", summary: "code in this change modified Apex verify's copy of the original project while it ran, so nothing can be compared against it", hint: "Tests and code under test must not write outside their own project folder." });
+      return false;
+    };
+
     // 2. the project's own tests, before and after
     const runner: TestRunner | null = await detectTestRunner(c.next, o.testCommand?.join(" ")).catch(() => null);
     if (runner) {
@@ -272,14 +312,17 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       const aOut = readTestOutput(after.output, after.exitCode !== 0);
       report.tests.after = { passed: after.passed, failed: after.failed };
       if (after.passed + after.failed === 0 && after.exitCode === 0) warnings.push(`the project's test command (${report.tests.command}) ran no tests, so only the checks written from the task say anything about this change`);
-      if (after.failed > 0 || (after.exitCode !== 0 && after.passed === 0)) {
+      // Tests failing, or no test ran at all: look at the original code too (a change whose test command now runs nothing is a regression when the original ran tests).
+      if ((after.failed > 0 || (after.exitCode !== 0 && after.passed === 0) || after.passed + after.failed === 0) && (await baselineIntact())) {
         const before = await runTests(c.orig, runner.command, o.signal, Math.max(timeout, runner.timeoutSec ?? 0));
         const bOut = readTestOutput(before.output, before.exitCode !== 0);
         report.tests.before = { passed: before.passed, failed: before.failed };
-        const was = new Set(bOut.failedNames);
-        const fresh = aOut.failedNames.filter((n) => !was.has(n));
+        // Names of every failing test, nested ones too: a suite that failed before and fails now can hide a test that newly broke inside it.
+        const failing = (out: string, top: string[]) => new Set([...top, ...parseTestOutcomes(out).filter((t) => !t.ok && !t.skipped).map((t) => t.name)]);
+        const was = failing(before.output, bOut.failedNames);
+        const fresh = [...failing(after.output, aOut.failedNames)].filter((n) => !was.has(n));
         report.tests.newlyFailing = fresh;
-        const couldNotRun = after.passed + after.failed === 0 && before.passed > 0;
+        const couldNotRun = after.passed + after.failed === 0 && before.passed + before.failed > 0;
         // The original code's tests did not run (nothing passed, something failed: a missing build or dependency): then there is no baseline to call a failure new.
         const baselineBroken = before.passed === 0 && before.failed > 0;
         if (baselineBroken && !couldNotRun) warnings.push(`the project's tests could not run on the original code (0 passed, ${before.failed} failed), so a regression cannot be told from a failure that was already there; run the tests on a clean checkout to check`);
@@ -298,12 +341,15 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     const tc = await typecheckCommand(c.next);
     if (tc) {
       const after = await typecheckRun(tc, c.next, timeout, o.signal);
-      if (after && after.exitCode !== 0 && !after.timedOut) {
+      if (!after || after.timedOut) warnings.push(`${tc.label} did not finish${after?.timedOut ? ` within ${timeout}s` : ""}, so type errors were not checked`);
+      else if (after.exitCode !== 0 && (await baselineIntact())) {
         const before = await typecheckRun(tc, c.orig, timeout, o.signal);
-        const lines = (r: { stdout: string; stderr: string }) => (r.stdout + r.stderr).split("\n").filter((l) => /error/i.test(l));
+        const lines = (r: { stdout: string; stderr: string }) => (r.stdout + r.stderr).split("\n").filter((l) => /error|TS\d{3,}/i.test(l));
         const was = new Set(before ? lines(before).map((l) => l.replace(/\(\d+,\d+\)|:\d+:\d+/g, "")) : []);
         const fresh = lines(after).filter((l) => !was.has(l.replace(/\(\d+,\d+\)|:\d+:\d+/g, "")));
-        if (fresh.length) reasons.push({ kind: "regression", summary: `${tc.label} reports ${fresh.length} new error${fresh.length === 1 ? "" : "s"} the change introduced`, evidence: trim(fresh.slice(0, 8).join("\n"), 1500), hint: "Fix the type or import errors; they would break the build even though the tests pass." });
+        // It passed on the original code and fails now: a regression, whatever words the tool printed.
+        const passedBefore = !!before && !before.timedOut && before.exitCode === 0;
+        if (fresh.length || passedBefore) reasons.push({ kind: "regression", summary: fresh.length ? `${tc.label} reports ${fresh.length} new error${fresh.length === 1 ? "" : "s"} the change introduced` : `${tc.label} passed before the change and fails now`, evidence: trim((fresh.length ? fresh.slice(0, 8).join("\n") : (after.stdout + after.stderr)), 1500), hint: "Fix the type or import errors; they would break the build even though the tests pass." });
       }
     }
 
@@ -382,7 +428,7 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     const blocking = reasons.some((r) => r.kind === "cheat" || r.kind === "regression" || r.kind === "check_failed");
     if (blocking) return finish("not_ready", checksCode);
     if (report.checks.written && !reasons.length) return finish("ready", checksCode);
-    if (!report.checks.written && !o.checker) reasons.push({ kind: "no_checks", summary: "no independent checks were written (no checker model given): only the project's tests and the cheating scan ran", hint: "Pass --model to have an independent model write checks from the task." });
+    if (!report.checks.written && !o.checker) reasons.push({ kind: "no_checks", summary: "no independent checks were written (no checker model given): only the project's tests and the cheating scan ran", hint: "Set GEMINI_API_KEY (or --provider / --model with that provider's key) and drop --no-model, so an independent model writes checks from the task." });
     else if (!report.checks.written) reasons.push({ kind: "no_checks", summary: "no usable checks could be written, so the change is not independently checked" });
     if (runner && !report.tests.after) reasons.push({ kind: "no_tests", summary: "the tests did not run" });
     return finish("unknown", checksCode);

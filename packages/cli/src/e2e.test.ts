@@ -217,3 +217,12 @@ test("the stop hook sees a change to an untracked file with a space or accent in
   assert.equal(outs.filter((o) => o && JSON.parse(o).decision === "block").length, 3, outs.join("\n"));
   void run;
 });
+
+test("the stop hook still sees work the agent committed during the session", async () => {
+  const { changeFingerprint, headOf } = await import("./hook.js");
+  const d = repo("good");
+  const start = headOf(d)!;
+  execFileSync("git", ["-C", d, "add", "-A"]); execFileSync("git", ["-C", d, "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "agent commit"]);
+  assert.equal(changeFingerprint(d), null, "against HEAD nothing is left");
+  assert.ok(changeFingerprint(d, start), "against the session's first commit the work is still there");
+});

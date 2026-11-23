@@ -4,6 +4,7 @@
 <p align="center">
   <a href="https://github.com/apex-engine-dev/apex-verify/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/apex-engine-dev/apex-verify/actions/workflows/ci.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
+  <a href="https://github.com/apex-engine-dev/apex-verify/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/apex-engine-dev/apex-verify"></a>
   <img alt="Node 20+" src="https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg">
   <a href="https://github.com/apex-engine-dev/apex-verify/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/apex-engine-dev/apex-verify?style=social"></a>
 </p>
@@ -42,12 +43,12 @@ apex verify: NOT READY
 You need Node 20+, git, and an API key for the model that writes the checks (use a different, ideally stronger model than your agent's).
 
 ```sh
-export GEMINI_API_KEY=...        # or OPENAI_API_KEY with --provider openai --model <id>
+export GEMINI_API_KEY=...        # default checker; see the note on other providers below
 cd your-project                  # a git repo where an AI just made a change
 npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify "what you asked the AI to do"
 ```
 
-It downloads a about 60 KB file (about 2 seconds), changes nothing in your project, and prints a verdict. Exit code `0` is ready, `1` not ready, `3` unknown. No key? Add `--no-model`: only your tests and the cheating scan run, and the verdict is at most `unknown`.
+It downloads a about 60 KB file (about 2 seconds), changes nothing in your project, and prints a verdict. Exit code `0` is ready, `1` not ready, `3` unknown. Other providers: `--provider openai|anthropic|openrouter --model <id>`, or `--base-url` for any OpenAI-compatible endpoint. **Only Gemini has been run live by the maintainer**; if another works or fails for you, please say so in an issue. No key? Add `--no-model`: only your tests and the cheating scan run, and the verdict is at most `unknown`.
 
 ## Put it where the change happens
 
@@ -60,9 +61,21 @@ Run in a real Claude Code session: Claude said done on a wrong change, the Stop 
 
 **GitHub pull requests** (any agent, Copilot, Cursor cloud, or a person): a verdict comment and a required check. Listed on the [GitHub Marketplace](https://github.com/marketplace/actions/apex-verify-ai-change-checker).
 ```yaml
-- uses: apex-engine-dev/apex-verify@v1
-  with: { api-key: "${{ secrets.GEMINI_API_KEY }}" }
+# .github/workflows/apex-verify.yml
+name: Apex verify
+on: pull_request
+permissions: { contents: read, pull-requests: write }
+jobs:
+  apex-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: apex-engine-dev/apex-verify@v1
+        with:
+          api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
+The task is the pull request's title and description. It posts one comment that it keeps up to date, and fails the job on `not ready` (or when it could not run). Make it a required check to gate merges.
 
 **Gemini CLI**: an `AfterAgent` hook (run in a real session). **Any MCP client**: the `verify_change` tool. **Codex CLI and Cursor**: stop hooks written to their documented formats and tested with synthetic input, **not yet run inside those apps**. Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). What is and is not tested, per use case: [docs/USE-CASES.md](docs/USE-CASES.md).
 
