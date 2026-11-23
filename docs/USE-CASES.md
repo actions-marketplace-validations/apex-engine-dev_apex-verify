@@ -21,7 +21,7 @@ Every use case the README claims, how it is tested, and its honest status. If a 
 | Languages: your tests run for what is detected (npm/node, pytest, go, cargo, make) or `--test "<cmd>"` | Node, Python, Rust and Go **tested**; others **detected but not tested by us** | `engine/src/runner-detect.test.ts`, `test-runner.test.ts` |
 | Checks *written* by the model | **node:test, pytest, Jest, Vitest (TypeScript too) and Rust (`cargo test`)**; and Go (`go test`; real module in `go.test.ts`, and a real model on a Go project: wrong change `NOT READY` with expected/actual, right change `READY`); other stacks give `unknown`, never a wrong `ready` | `frameworks.test.ts` (real npm projects; the `frameworks` CI job) and `rust.test.ts` |
 | A "checked by Apex verify" badge | **Tested in CI** | `--badge-out`, the Action's `badge: true` input |
-| Sandbox: macOS Seatbelt | **Tested in CI** (macOS job) | `engine` tests |
+| Sandbox: macOS Seatbelt | **Tested** on macOS: the `macOS` workflow (separate from CI, because GitHub's macOS runners are often unavailable) and the maintainer's machine | `engine` tests |
 | Sandbox: Linux bubblewrap | **Tested in CI** (the `linux-sandbox` job must pass, it is not skipped) | `sandbox-linux.test.ts`: write outside the copy denied, external network denied, localhost allowed |
 | Sandbox: container recipe | **Tested in CI** | the `container` job |
 | Windows | **Tested in CI** on a real Windows runner: the unit and end-to-end tests, and the **AppContainer sandbox** (writes outside the copy denied, user profile unreadable, no network, keys scrubbed; the `windows` job requires it) | `sandbox-windows.test.ts`; limits in `docs/SANDBOX.md` |

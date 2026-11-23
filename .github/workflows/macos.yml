@@ -1,0 +1,21 @@
+name: macOS
+# The same tests on macOS, where the sandbox is Seatbelt and paths and tools differ. It is its own workflow because GitHub
+# often cannot allocate a macOS runner at all ("the job was not acquired"), and that cancellation would turn the main CI
+# run red for a reason that has nothing to do with the code.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm test
