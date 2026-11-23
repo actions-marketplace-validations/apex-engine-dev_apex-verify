@@ -1,5 +1,5 @@
-name: Apex verify
-description: Is this AI-written change really done? An independent model writes checks from the task, proves they can fail, and gates the pull request with a ready / not ready verdict.
+name: Apex verify: AI change checker
+description: Catch AI code changes that pass your tests but are wrong. An independent model writes the missing checks.
 author: Apex verify
 branding:
   icon: check-circle

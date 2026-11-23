@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.2 (2026-11-23)
+- The Action's Marketplace name is now "Apex verify: AI change checker" (the plain name is taken) and its description is shorter, so it can be listed on the GitHub Marketplace. No code changes.
+
 ## 0.2.1 (2026-11-23)
 Security and robustness fixes from a full code review (four independent reviewers; every finding reproduced before it was fixed, each fix has a test).
 - **A malicious `--diff` could write outside the scratch copy** (for example into `~/.zshrc`) before any sandbox ran. Diff paths are now checked (no `..`, absolute paths, drive letters or symlink creation) and `--unsafe-paths` is gone.
