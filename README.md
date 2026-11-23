@@ -99,9 +99,9 @@ Honest list of what is not done yet, each with an issue you can pick up:
 
 | Not done yet | Issue |
 |---|---|
-| Run the **Codex and Cursor** hooks inside the real apps (Gemini CLI and Claude Code are done) | [#8](https://github.com/apex-engine-dev/apex-verify/issues/8) (good first issue) |
-| Measure on **even more real projects**, and cut the false alarms seen there | [#13](https://github.com/apex-engine-dev/apex-verify/issues/13) |
-| Locked tests and **signed evidence** (so an agent cannot tamper with its own verdict) | [#7](https://github.com/apex-engine-dev/apex-verify/issues/7) |
+| **Cut the false alarms on real libraries** (11% of right changes wrongly blocked there, against 3% on small projects) | [#20](https://github.com/apex-engine-dev/apex-verify/issues/20) (help wanted) |
+| Run the **Codex and Cursor** stop hooks inside the real apps (the format is implemented and tested with synthetic input only; Gemini CLI and Claude Code were run for real) | no issue open: a pull request or issue with what you saw is welcome |
+| Signed evidence is **signed by a key you keep**; keyless signing in CI (so no key file exists at all) | not started: open an issue if you need it |
 
 ## Questions you will have
 
