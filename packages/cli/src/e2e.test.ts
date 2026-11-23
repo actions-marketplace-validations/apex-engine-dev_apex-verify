@@ -108,6 +108,16 @@ test("--badge-out writes a shields.io endpoint badge with the verdict", async ()
   assert.deepEqual(JSON.parse(fs.readFileSync(f, "utf8")), { schemaVersion: 1, label: "apex verify", message: "ready", color: "brightgreen" });
 });
 
+test("--badge-out x.svg writes a static SVG badge with the verdict", async () => {
+  const d = repo("good"); const f = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "apex-e2e-bs-")), "badge.svg");
+  const r = await cli([TASK, "--badge-out", f], d);
+  assert.equal(r.code, 0, r.out + r.err);
+  const svg = fs.readFileSync(f, "utf8");
+  assert.match(svg, /^<svg xmlns=/);
+  assert.match(svg, /apex verify: ready/);
+  assert.match(svg, /#4c1/);
+});
+
 test("a diff file is judged without a git repository, on a copy", async () => {
   const d = repo(); const diff = path.join(d, "..", `apex-e2e-${process.pid}.diff`);
   fs.writeFileSync(diff, "--- a/src/slug.js\n+++ b/src/slug.js\n@@ -1 +1 @@\n-export function slugify(s) { return String(s).toLowerCase(); }\n+export function slugify(s) { return String(s).toLowerCase().trim().replace(/\\s+/g, \"-\"); }\n");

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { openAiClient } from "./openai-client.js";
 import { PRESETS } from "./providers.js";
-import { exitCode, renderBadge, renderMarkdown, renderSarif, renderText } from "./report.js";
+import { exitCode, renderBadge, renderBadgeSvg, renderMarkdown, renderSarif, renderText } from "./report.js";
 import { signReport } from "./sign.js";
 import { verify, type VerifyReport } from "./verify.js";
 import type { ModelClient } from "apex-verify-engine";
@@ -18,7 +18,7 @@ export const VERIFY_USAGE = `apex verify "<what the change should do>" [--dir <p
   --demo           a 30-second demonstration on a built-in project: no key, nothing sent anywhere
   --lock-tests     run your tests with the base versions of any test files the change edited or deleted (an agent cannot edit its way to green)
   --sign-key <file>   sign the report (Ed25519; make a key with --gen-key <file>); check one with --check-report <file> [--pub-key <base64>]
-  --badge-out <file>   write a shields.io endpoint badge (JSON) with the verdict
+  --badge-out <file>   write a badge with the verdict: shields.io endpoint JSON, or a static SVG when the file ends in .svg
   --no-model   only the deterministic parts: the project's tests and the cheating scan (needs no key)
   --markdown-out / --sarif-out / --json-out <file>   also write those formats to a file (one run)
   --format     text (default), json (full report), markdown (for a pull request comment), sarif (code scanning)
@@ -108,7 +108,7 @@ export async function runVerify(a: VerifyCliArgs, out: (s: string) => void = con
   if (a.signKey) report.signature = signReport(report, a.signKey);
   if (a.markdownOut) fs.writeFileSync(a.markdownOut, renderMarkdown(report) + "\n");
   if (a.sarifOut) fs.writeFileSync(a.sarifOut, renderSarif(report) + "\n");
-  if (a.badgeOut) fs.writeFileSync(a.badgeOut, renderBadge(report) + "\n");
+  if (a.badgeOut) fs.writeFileSync(a.badgeOut, (a.badgeOut.toLowerCase().endsWith(".svg") ? renderBadgeSvg(report) : renderBadge(report)) + "\n");
   if (a.jsonOut) fs.writeFileSync(a.jsonOut, JSON.stringify(report, null, 2) + "\n");
   const text = renderFormat(report, a.format);
   if (a.out) fs.writeFileSync(a.out, text + "\n");

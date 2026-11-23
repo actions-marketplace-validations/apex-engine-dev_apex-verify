@@ -51,8 +51,22 @@ Without a checker the gate cannot say `ready` on these projects (the visible tes
 ## What to read from this
 
 - The checker catches most wrong changes on real libraries (80%), against none for tests alone.
-- **It wrongly blocks more right changes here than on the small projects: about 11 in 100, not 3.** The wrong blocks cluster in a few tasks (`cookie-rfc6265`, `windows-basename`, `contentdisp-attrchar`, `statuses-proto`, `cookie-domain-dot`), where the checker wrote checks stricter than the task statement. That is the weakness to fix, and why we publish this.
+- By the hidden-test label it wrongly blocks 11 in 100 right changes, more than on the small projects; **after the audit above, about 4 in 100 are checker mistakes** (the rest are changes that really miss something the task text says).
 - It missed 14 wrong changes (called them READY).
+
+## Audit of the 10 wrongly blocked right changes (done after seeing the results)
+
+We looked at each one by hand and, where the task text makes a claim, ran that claim against the change (`audit.json` has the evidence per change). Result:
+
+| What it was | Count |
+|---|---|
+| **The change passes the upstream hidden test but does not do what the task text says**: the gate was right, the label (the hidden test) was too narrow | 6 |
+| **A real checker error**: a generated check contradicted the task, or had a harness mistake | 2 |
+| **Checker noise**: READY on a rerun of the same change | 2 |
+
+So by the benchmark's own label (hidden tests) the gate wrongly blocks **10 of 93 (11%)**, but **only 4 of 93 (4%) are mistakes of the checker**; the other 6 are changes that really do not satisfy the stated task. Read the 4% with care: one reviewer (the maintainers' tooling, not an independent person) did the audit after the numbers were known, and the checks are rewritten on every run, so three of the ten flipped on a rerun. We keep the original labels in `results.json` and report both numbers.
+
+A second check on the same question: the gate was run on each task's own **upstream reference fix** (the real maintainers' fix). It said READY for 18 of 23, `unknown` for 4, and NOT READY for 1 (`real-negotiator-params`), so a correct fix usually passes.
 
 ## Limits, plainly
 

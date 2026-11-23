@@ -68,5 +68,20 @@ export function renderBadge(r: VerifyReport): string {
   return JSON.stringify({ schemaVersion: 1, label: "apex verify", message, color });
 }
 
+/** The same badge as a static SVG (no shields.io needed): `--badge-out badge.svg`. Idea from the first outside pull request (#17). */
+export function renderBadgeSvg(r: VerifyReport): string {
+  const message = r.verdict === "ready" ? "ready" : r.verdict === "not_ready" ? "not ready" : "unknown";
+  const color = r.verdict === "ready" ? "#4c1" : r.verdict === "not_ready" ? "#e05d44" : "#9f9f9f";
+  const label = "apex verify";
+  const w = (t: string) => Math.round(t.length * 6.6 + 12);
+  const lw = w(label), mw = w(message), total = lw + mw;
+  const esc = (t: string) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="20" role="img" aria-label="${esc(label)}: ${esc(message)}"><title>${esc(label)}: ${esc(message)}</title>` +
+    `<linearGradient id="s" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient>` +
+    `<clipPath id="r"><rect width="${total}" height="20" rx="3" fill="#fff"/></clipPath>` +
+    `<g clip-path="url(#r)"><rect width="${lw}" height="20" fill="#555"/><rect x="${lw}" width="${mw}" height="20" fill="${color}"/><rect width="${total}" height="20" fill="url(#s)"/></g>` +
+    `<g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11"><text x="${lw / 2}" y="14">${esc(label)}</text><text x="${lw + mw / 2}" y="14">${esc(message)}</text></g></svg>`;
+}
+
 /** The exit codes: 0 ready, 1 not ready, 3 unknown (2 is a usage or setup error). */
 export const exitCode = (v: VerifyReport["verdict"]) => (v === "ready" ? 0 : v === "not_ready" ? 1 : 3);

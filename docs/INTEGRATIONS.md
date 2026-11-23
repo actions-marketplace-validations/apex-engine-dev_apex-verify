@@ -45,7 +45,7 @@ Manual hook instead of the plugin (`.claude/settings.json`):
 
 ## Codex CLI
 
-Codex documents the same Stop hook contract (`decision: block` plus `reason`; `stop_hook_active` is honoured). **Status: not yet run inside Codex** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)); hooks you add there must be trusted once with `/hooks`. In `~/.codex/hooks.json` (or `.codex/hooks.json` in a trusted project):
+Codex documents the same Stop hook contract (`decision: block` plus `reason`; `stop_hook_active` is honoured). **Status: not yet run inside Codex** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)); hooks you add there must be trusted once with `/hooks`. What the test suite covers, and what it does not: [docs/integration-evidence/codex-hook-2026-11-23.md](integration-evidence/codex-hook-2026-11-23.md). In `~/.codex/hooks.json` (or `.codex/hooks.json` in a trusted project):
 
 ```json
 { "hooks": { "Stop": [ { "hooks": [ { "type": "command", "command": "npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --hook", "timeout": 300 } ] } ] } }
@@ -128,7 +128,7 @@ On each push to `main` it writes `apex-verify-badge.json` to the `apex-badge` br
 [![Apex verify](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/apex-engine-dev/apex-verify/apex-badge/apex-verify-badge.json)](https://github.com/apex-engine-dev/apex-verify)
 ```
 
-It shows `ready`, `not ready` or `unknown` for the latest push. Without a model key it is at most `unknown`. In any other CI, `apex verify "<task>" --badge-out badge.json` writes the same file.
+It shows `ready`, `not ready` or `unknown` for the latest push. Without a model key it is at most `unknown`. In any other CI, `apex verify "<task>" --badge-out badge.json` writes the same file, and `--badge-out badge.svg` writes a static SVG you can embed without shields.io (idea and first implementation attempt: PR #17 by DeviousCardi).
 
 ## Locked tests and signed reports
 

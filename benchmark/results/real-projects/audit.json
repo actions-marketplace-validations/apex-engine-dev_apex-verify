@@ -1,0 +1,62 @@
+[
+ {
+  "task": "real-windows-basename",
+  "change": "e827cf02c5",
+  "class": "label too narrow",
+  "evidence": "with windows:false a backslash is still treated as a separator (isMatch('a\\\\b\\\\c.js','*.js',{basename:true,windows:false}) is true); the task says it must not be"
+ },
+ {
+  "task": "real-windows-basename",
+  "change": "e4ece52129",
+  "class": "label too narrow",
+  "evidence": "same as above"
+ },
+ {
+  "task": "real-contentdisp-attrchar",
+  "change": "eace99eaaf",
+  "class": "label too narrow",
+  "evidence": "the comma stays unescaped in filename*; the task lists ',' among the characters that must be escaped"
+ },
+ {
+  "task": "real-cookie-rfc6265",
+  "change": "b3b7ff627e",
+  "class": "label too narrow",
+  "evidence": "';' is accepted in domain and path (the task asks for the same strictness there) and a double-quoted value still throws (the task says quotes are allowed)"
+ },
+ {
+  "task": "real-cookie-rfc6265",
+  "change": "7657567f53",
+  "class": "label too narrow",
+  "evidence": "a double-quoted value still throws; the task says values may be wrapped in double quotes"
+ },
+ {
+  "task": "real-cookie-rfc6265",
+  "change": "56d116938f",
+  "class": "label too narrow",
+  "evidence": "';' accepted in domain and path; a double-quoted value throws"
+ },
+ {
+  "task": "real-cookie-domain-dot",
+  "change": "28fc3faada",
+  "class": "checker error",
+  "evidence": "the change is correct ('.example.com' accepted, 'a..com' rejected); the generated check asserted that '.example.com' throws, contradicting the task"
+ },
+ {
+  "task": "real-contentdisp-attrchar",
+  "change": "880df392b8",
+  "class": "checker error",
+  "evidence": "the change escapes the comma correctly; the generated check failed on a harness mistake (expected true, got ~)"
+ },
+ {
+  "task": "real-negotiator-params",
+  "change": "c5b9c53aa2",
+  "class": "checker noise",
+  "evidence": "READY on rerun; the first run's checks failed it"
+ },
+ {
+  "task": "real-statuses-proto",
+  "change": "0ebd0a3044",
+  "class": "checker noise",
+  "evidence": "READY on rerun; the first run's checks failed it"
+ }
+]

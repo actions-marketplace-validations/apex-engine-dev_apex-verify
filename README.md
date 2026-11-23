@@ -8,23 +8,38 @@
   <a href="https://github.com/apex-engine-dev/apex-verify/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/apex-engine-dev/apex-verify?style=social"></a>
 </p>
 
-AI coding agents say "done" when the tests pass. But the tests only check what somebody wrote down. **Apex verify** takes the change an AI made and the task you gave it, has a *different* AI write the missing checks, and tells you `ready`, `not ready` or `unknown`, **with proof**, on a copy of your code, before you merge. Free, Apache-2.0, works with Claude Code, Codex, Cursor, Aider, Copilot or a person.
-
 <p align="center"><img src="docs/assets/demo.gif" alt="Terminal: the project's own test passes, then apex verify says NOT READY and names the failing checks with expected and actual values" width="760"></p>
 
-<p align="center"><b>The tests were green. Apex verify found what they missed.</b></p>
+AI coding agents say "done" when the tests pass. But the tests only check what somebody wrote down. **Apex verify** takes the change an AI made and the task you gave it, has a *different* AI write the missing checks, proves those checks can fail, runs them next to your own tests, and answers `ready`, `not ready` or `unknown`, **with the evidence**. It works on a copy of your code, so your project is never touched.
 
-## Try it in 30 seconds
+It checks any change: the working tree an agent just edited, a branch, or a diff from any tool or person. It can also stand in the agent's way (a Claude Code and Gemini CLI hook that blocks "done") and gate pull requests (a GitHub Action).
 
-**No key, no project, nothing to install first.** See it catch a wrong change in 5 seconds:
+## Try it in 5 seconds
+
+No key, no project, nothing to install:
 
 ```sh
 npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify --demo
 ```
 
-Then try it on your own project:
+A pretend agent "fixes" a slug function and says done; its project's own tests pass. Apex verify catches what they missed:
 
-You need Node 20+, git, and an API key for the model that writes the checks (use a different, ideally stronger model than your agent).
+```text
+apex verify: NOT READY
+
+  - 1 check written from the task fails on the new code
+      check: drops punctuation, not just commas
+        expected: hello-world
+        actual:   hello-world!
+      fix: Make the change satisfy the behaviour in the task; the failing check output shows what is expected.
+
+  tests: 2 passed, 0 failed
+  checks: 2 passed, 1 failed; written from the task; they fail on the old code
+```
+
+## Use it on your own project
+
+You need Node 20+, git, and an API key for the model that writes the checks (use a different, ideally stronger model than your agent's).
 
 ```sh
 export GEMINI_API_KEY=...        # or OPENAI_API_KEY with --provider openai --model <id>
@@ -32,95 +47,77 @@ cd your-project                  # a git repo where an AI just made a change
 npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify "what you asked the AI to do"
 ```
 
-It downloads a 48 KB file (about 2 seconds), changes nothing in your project, and prints a verdict. No key? Add `--no-model` to run only your tests and the cheating scan (the verdict is then at most `unknown`).
+It downloads a 48 KB file (about 2 seconds), changes nothing in your project, and prints a verdict. Exit code `0` is ready, `1` not ready, `3` unknown. No key? Add `--no-model`: only your tests and the cheating scan run, and the verdict is at most `unknown`.
 
-**More to play with:** the example in this repo, where an AI "fixed" a function and its own test passes:
+## Put it where the change happens
 
-```sh
-git clone https://github.com/apex-engine-dev/apex-verify && cd apex-verify/examples/said-done
-npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify "$(cat task.txt)" --dir project --diff agent-change.diff
+**Claude Code**: block "done" until the change is ready.
+```text
+/plugin marketplace add apex-engine-dev/apex-verify
+/plugin install apex-verify@apex
+```
+Run in a real Claude Code session: Claude said done on a wrong change, the Stop hook blocked it with the failing checks, and it kept being stopped (at most 3 times, so a wrong check can never trap it).
+
+**GitHub pull requests** (any agent, Copilot, Cursor cloud, or a person): a verdict comment and a required check.
+```yaml
+- uses: apex-engine-dev/apex-verify@v1
+  with: { api-key: "${{ secrets.GEMINI_API_KEY }}" }
 ```
 
-## Why you might want it
-
-- **"The tests passed" is not "it works".** Agents skip, delete or never write the test that mattered. Apex verify writes the missing checks from your task and shows each one can fail on the old code, so a check that proves nothing is thrown away.
-- **It stops the agent, not just you.** A Claude Code plugin blocks the agent from saying "done" until the change is ready, and a GitHub Action gives every pull request a verdict (handy against AI-generated pull requests).
-- **It says "I don't know" instead of guessing.** `unknown` is a real answer. You never get a silent pass.
-
-## Does it actually work? (in plain words)
-
-We collected AI-written changes to small projects and knew for sure which ones were wrong, because we wrote secret tests that Apex verify never saw. A "wrong" change is one that looks fine and may pass the visible tests but does not do what the task asked.
-
-<p align="center"><img src="docs/assets/results.svg" alt="Out of 100 wrong AI changes, tests plus a cheating scan stop 8, Apex verify stops 52 on the public projects and 65 across all 17 projects" width="720"></p>
-
-- **Your own tests (plus a scan for deleted or skipped tests) stop about 8 of every 100 wrong changes.**
-- **Apex verify stops about 65** across all 17 projects (28 of 43 wrong changes), and **52** on the 12 public projects that you can rerun yourself (16 of 31).
-- **It wrongly stops about 3 of every 100 good changes** (2 of 65; 1 of 48 on the public projects).
-- **On real libraries it is rougher.** On 200 AI-written changes to 23 real open-source libraries (each task a real historical bug fix) it stopped 80 of every 100 wrong changes (tests plus the scan: none) but also wrongly stopped 11 of every 100 good ones, with the false alarms concentrated in a few tasks ([details and limits](benchmark/results/real-projects/README.md)). Fixing that is the next job.
-- **It still misses about a third** of the wrong changes on the small projects. It is not a proof of correctness.
-- **A checker from another company works about as well**: Claude as the checker stopped 55 of every 100 wrong changes (Gemini 63 on the same changes) with 2 or fewer in 100 false alarms ([details](benchmark/results/cross-vendor-full-set)).
-- **Two checkers that must both object did not help** (43%), and neither did two checkers from the same company or telling the checker to avoid the task's own examples ([docs/EXPERIMENTS.md](docs/EXPERIMENTS.md)). An earlier 60% figure for two checkers came from a smaller test and was wrong for the full pipeline. Blocking when *either* objects caught 75% at the same false-alarm rate in one test; that is not a mode yet.
-
-Honest limits: these are small projects, the changes were written by Gemini models, the numbers come from one run each, and the exact percentages could move a lot with more data. Rerun it yourself with `node benchmark/run-gate.mjs`; the data, the method and the caveats are in [benchmark/](benchmark). **Please try to break it**: a `ready` that is wrong, or a `not ready` that is right, is the most useful bug report we can get.
-
-## Use it where you work
-
-| You use | Add Apex verify as | It stops "done"? | Status |
-|---|---|---|---|
-| **A terminal** | `apex verify "<task>"` | You read the verdict | **Tested in CI** |
-| **Pull requests (any agent, or people)** | the GitHub Action: `uses: apex-engine-dev/apex-verify@v1` | **Yes**, as a required check | **Tested on real PRs**; runs on this repo's own PRs |
-| **Claude Code** | `/plugin marketplace add apex-engine-dev/apex-verify` then `/plugin install apex-verify@apex` | **Yes**: the Stop hook hands the failing check back and Claude keeps working | **Run in a real Claude Code session** (v2.1): Claude said done on a wrong change, the hook blocked it with the failing checks, and Claude kept being stopped; plugin validated |
-| **Any MCP client** | the `verify_change` tool | The agent asks | Protocol tested in CI; not with a real client |
-| **Gemini CLI** | an `AfterAgent` hook | **Yes**: it blocked a wrong change, the agent fixed it | **Run in a real Gemini CLI session** (v0.32) |
-| **Codex CLI, Cursor** | a Stop hook and/or the MCP tool | Yes / partly | **Written to their documented hook formats; tested with their input shapes, not run inside the apps** ([#8](https://github.com/apex-engine-dev/apex-verify/issues/8)) |
-
-Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). Exactly what is and is not tested: [docs/USE-CASES.md](docs/USE-CASES.md).
+**Gemini CLI**: an `AfterAgent` hook (run in a real session). **Any MCP client**: the `verify_change` tool. **Codex CLI and Cursor**: stop hooks written to their documented formats and tested with synthetic input, **not yet run inside those apps**. Copy-paste configs: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md). What is and is not tested, per use case: [docs/USE-CASES.md](docs/USE-CASES.md).
 
 ## How it decides
 
-1. **Builds the change on a copy** (your git working copy, a branch, or a diff file). Your project is never touched.
-2. **Scans for cheating**: tests deleted, skipped, focused with `.only`, a test script that cannot fail, edits to the agent's own configuration.
+1. **Builds the change on a copy** (your working tree, a branch, or a diff file).
+2. **Scans for cheating**: tests deleted, skipped, focused with `.only`, a test script that cannot fail, edits to the agent's own configuration. (`--lock-tests` restores the original tests before they run.)
 3. **Runs your tests** before and after: a test that passed before and fails now is a regression. A type check counts too if you have one.
-4. **A different model writes checks from your task**, never from the agent's own tests.
-5. **Proves each check can fail**: it runs on the old code first. A check that passes on the old code too proves nothing.
-6. **Runs the checks on the new code** and answers `ready`, `not ready` (the failing check, expected vs actual, and a fix hint an agent can read) or `unknown` (not enough to say). **Never a silent pass.**
+4. **A different model writes checks from your task**, never from the agent's own tests. Checks are written for node:test, pytest, Jest, Vitest, Rust (`cargo test`) and Go (`go test`); other stacks still get your tests and the scan.
+5. **Proves each check can fail** by running it on the old code first. A check that passes there proves nothing and is thrown away.
+6. **Runs the checks on the new code** and answers `ready`, `not ready` (the failing check, expected vs actual, and a hint an agent can act on) or `unknown`. **Never a silent pass.**
 
-## What Apex verify will not do
+Generated checks and your tests run in a sandbox where the platform allows: macOS Seatbelt, Linux bubblewrap, Windows AppContainer (all tested in CI; [limits](docs/SANDBOX.md)). Reports can be signed (`--sign-key`), and `--badge-out` writes a README badge.
 
-- **It is not a proof of correctness.** It raises the bar. A check can be wrong in both directions; the numbers above are the honest rates.
-- **It does not replace review or CI.** It runs next to them and gives a short, evidence-backed verdict.
-- **It sends your task and the relevant source files** (about 24 KB at most) to the checker model you configure, and nothing else. No telemetry.
-- **It runs checks and tests on your machine**, sandboxed where we can: macOS Seatbelt (best effort), Linux bubblewrap and Windows AppContainer, all tested in CI, with no network (localhost allowed on macOS and Linux). **Windows** uses an AppContainer (no network, writes only in the scratch copy, tested on a real Windows runner in CI), at about 30 seconds of startup per test run; see [docs/SANDBOX.md](docs/SANDBOX.md) for the limits.
-- **It writes checks for node:test, pytest, Jest, Vitest and Rust (`cargo test`), and Go (`go test`).** For other stacks it still runs your tests and the cheating scan and says `unknown` rather than guessing.
+## Does it work? The honest numbers
 
-## What's left
+We collected AI-written changes and knew which were wrong, using hidden tests Apex verify never saw. A "wrong" change looks fine and may pass the visible tests but does not do what the task asked.
 
-Honest list of what is not done yet, each with an issue you can pick up:
+<p align="center"><img src="docs/assets/results.svg" alt="Out of 100 wrong AI changes, tests plus a cheating scan stop 8, Apex verify stops 52 on the public projects and 65 across all 17 projects" width="720"></p>
 
-| Not done yet | Issue |
-|---|---|
-| **Cut the false alarms on real libraries** (11% of right changes wrongly blocked there, against 3% on small projects) | [#20](https://github.com/apex-engine-dev/apex-verify/issues/20) (help wanted) |
-| Run the **Codex and Cursor** stop hooks inside the real apps (the format is implemented and tested with synthetic input only; Gemini CLI and Claude Code were run for real) | no issue open: a pull request or issue with what you saw is welcome |
-| Signed evidence is **signed by a key you keep**; keyless signing in CI (so no key file exists at all) | not started: open an issue if you need it |
+| | Wrong changes stopped | Good changes wrongly stopped |
+|---|---|---|
+| Your tests + the cheating scan | about **8 in 100** (none on the real libraries below) | not separately measured |
+| **Apex verify**, 17 small projects (108 changes) | about **65 in 100** (52 on the 12 public projects you can rerun) | about **3 in 100** |
+| **Apex verify**, 23 real open-source libraries (200 changes, each task a real historical bug fix) | about **80 in 100** | **11 in 100** by the hidden-test label; **about 4 in 100 after a hand audit** ([why](benchmark/results/real-projects/README.md)) |
 
-## Questions you will have
+- **It still misses a lot**: about a third of wrong changes on the small projects, and 14 of 107 wrong changes on the real libraries were called `ready`. It is not a proof of correctness.
+- **The "11 vs 4" is the honest part.** We checked the 10 good-by-label changes it stopped: for 6, the change really did not do what the task text said (the upstream test was narrower than the task). Four were checker mistakes. One reviewer did that audit after seeing the numbers, so treat 4 as an estimate.
+- **A checker from another company works about as well** (Claude 55 in 100 vs Gemini 63 on the same changes), and **two checkers that must agree did not help** ([experiments, including what failed](docs/EXPERIMENTS.md)).
+- Limits: Gemini models wrote every change, one run each, the real-library set is lopsided. Everything is rerunnable: `node benchmark/run-gate.mjs`. **Please try to break it**: a wrong `ready`, or a `not ready` on a good change, is the most useful bug report we can get.
 
-**Isn't this just CI?** CI runs the tests that exist. The pain is the change nobody wrote a test for, or the test the agent deleted or never ran. Apex verify writes the missing checks, proves they can fail, and flags tampering. Run it *in* CI with the Action.
+## What it will not do
+
+- **Prove correctness.** It raises the bar; a check can be wrong in both directions.
+- **Replace review or CI.** It runs next to them. Run it *in* CI with the Action.
+- **Send your code anywhere but the checker you choose**: your task and the relevant source files (about 24 KB at most) go to the model you configure. No telemetry.
+
+## Questions
+
+**Isn't this just CI?** CI runs the tests that exist. The pain is the change nobody wrote a test for, or the test the agent deleted or skipped. Apex verify writes the missing checks, proves they can fail, and flags tampering.
 
 **What does it cost?** One model call per task to write the checks (reused while an agent retries the same task), plus a short second look when a check fails. Seconds and cents. Your tests run locally.
 
-**What if the checker is wrong?** Then you get `not ready` on a good change or `ready` on a wrong one. We measure both and show them above. The second look turns a suspect check into `unknown`, the agent hook never blocks more than 3 times, and `APEX_MODE=warn` never blocks.
+**What if the checker is wrong?** You get `not ready` on a good change or `ready` on a wrong one; the table above shows how often. A suspect check is turned into `unknown` by a second look, the hook never blocks more than 3 times, and `APEX_MODE=warn` never blocks.
 
 **Why a different model?** A model grading its own work shares its blind spots: in our runs a weak model writing checks for its own change blocked over half of the good changes.
 
-## Help it spread
+## Contribute
 
-If Apex verify catches something for you, a ⭐ helps other developers find it, and telling one teammate who uses Claude Code, Codex or Cursor does more than any ad. If it gets something wrong, [tell us](https://github.com/apex-engine-dev/apex-verify/issues/new/choose): we will add your case to the benchmark and credit you.
+If it catches something for you, a ⭐ helps others find it. If it gets something wrong, [open an issue](https://github.com/apex-engine-dev/apex-verify/issues/new/choose): we add your case to the benchmark and credit you.
 
 | You can | Where |
 |---|---|
-| **Break it**: find a wrong change it calls `ready`, or a good one it blocks | [new issue](https://github.com/apex-engine-dev/apex-verify/issues/new/choose) |
-| **Try it on your real project** and tell us if it worked in five minutes | [issue #3](https://github.com/apex-engine-dev/apex-verify/issues/3) |
+| **Cut the false alarms on real libraries** | [issue #20](https://github.com/apex-engine-dev/apex-verify/issues/20) |
+| **Run the Codex or Cursor hook** inside the real app and tell us what you saw | a pull request or issue |
 | **Add a language or test runner** | issues labelled `good first issue` |
 | **Be a second maintainer** | [GOVERNANCE.md](GOVERNANCE.md) |
 
@@ -130,10 +127,10 @@ There is currently **one maintainer**; expect replies in days, not hours.
 <summary><b>What is in this repository</b></summary>
 
 - **[`packages/cli`](packages/cli)**: `apex verify`, the stop hook, the MCP server, the output formats.
-- **[`packages/engine`](packages/engine)**: the verification engine it uses (writes and runs the checks, runs your tests, the sandbox). It is shared with a separate commercial product, so it contains more than `verify` uses; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-- **[`benchmark/`](benchmark)**: labelled AI-written changes, the 12 public projects, results, and the script that re-measures the gate.
+- **[`packages/engine`](packages/engine)**: the verification engine (writes and runs the checks, runs your tests, the sandboxes). It contains more than `verify` uses; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+- **[`benchmark/`](benchmark)**: labelled AI-written changes, the 12 public projects and 23 real-library tasks, results, and the script that re-measures the gate.
 - **`action.yml`, [`integrations/`](integrations), [`.claude-plugin/`](.claude-plugin), [`docker/`](docker)**: the GitHub Action, the Claude Code plugin, the container recipe.
-- **[`docs/`](docs)**: [integrations](docs/INTEGRATIONS.md), [what works and how we know](docs/USE-CASES.md), [sandbox](docs/SANDBOX.md), [related work](docs/RELATED-WORK.md), [experiments including failures](docs/EXPERIMENTS.md), and an earlier [research track on weaker models](docs/research/WEAK-MODELS.md).
+- **[`docs/`](docs)**: [integrations](docs/INTEGRATIONS.md), [what works and how we know](docs/USE-CASES.md), [sandbox](docs/SANDBOX.md), [related work](docs/RELATED-WORK.md), [experiments including failures](docs/EXPERIMENTS.md).
 
 [Contributing](CONTRIBUTING.md) · [Roadmap](ROADMAP.md) · [Security](SECURITY.md) · [Status](docs/STATUS.md) · [Changelog](CHANGELOG.md)
 
@@ -141,4 +138,4 @@ There is currently **one maintainer**; expect replies in days, not hours.
 
 ## Licence
 
-**Apache-2.0**: use it, modify it, ship it, at work or in your own products. The Apex verify name and logo are trademarks, not part of that grant ([TRADEMARKS.md](TRADEMARKS.md)): you can fork the code, but not present your fork as Apex verify. Contributions use a DCO sign-off (`git commit -s`) and you keep your copyright. We plan a paid hosted tier later; this repository (the CLI, the gate, the hooks, the Action) stays open.
+**Apache-2.0**: use it, modify it, ship it, at work or in your own products. The Apex verify name and logo are trademarks, not part of that grant ([TRADEMARKS.md](TRADEMARKS.md)): you can fork the code, but not present your fork as Apex verify. Contributions use a DCO sign-off (`git commit -s`) and you keep your copyright.
