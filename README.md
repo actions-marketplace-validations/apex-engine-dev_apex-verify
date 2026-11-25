@@ -1,3 +1,4 @@
+<p align="center"><img src="docs/assets/logo.svg" alt="Apex logo" width="96" height="96"></p>
 <h1 align="center">Apex verify</h1>
 <p align="center"><b>Your AI said it's done. Is it really done?</b></p>
 <p align="center">Catch the AI code changes that pass your tests and are still wrong.</p>
