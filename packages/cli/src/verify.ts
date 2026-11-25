@@ -1,3 +1,5 @@
+import { keptBehaviour } from "./kept.js";
+import { outdatedTests } from "./outdated.js";
 import { existsSync, promises as fs } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
@@ -37,7 +39,7 @@ async function typecheckRun(tc: { file: string; args: string[] }, dir: string, t
   return runCommand(file, args, { cwd: dir, timeoutMs: timeoutSec * 1000, signal, env: { ...runEnv(), CI: "1", FORCE_COLOR: "0" } }).catch(() => null);
 }
 
-export interface Reason { kind: "regression" | "cheat" | "check_failed" | "checks_suspect" | "checkers_disagree" | "no_checks" | "checks_unproven" | "no_change" | "no_tests"; summary: string; evidence?: string; hint?: string }
+export interface Reason { kind: "regression" | "cheat" | "check_failed" | "checks_suspect" | "checkers_disagree" | "no_checks" | "checks_unproven" | "no_change" | "no_tests" | "tests_outdated"; summary: string; evidence?: string; hint?: string }
 
 export interface VerifyReport {
   schema: 1;
@@ -376,6 +378,16 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
             evidence: trim(after.output.split("\n").filter((l) => /not ok|fail|error|assert/i.test(l)).slice(0, 12).join("\n"), 1500),
             hint: "The change broke behaviour that worked before. Fix the change; do not edit the tests.",
           });
+          // A failing test may assert exactly the old behaviour the task asks to change: a second look, which must quote the task.
+          if (o.checker && fresh.length && !couldNotRun && process.env.APEX_OUTDATED !== "0") {
+            const reg = reasons[reasons.length - 1]!;
+            const j = await outdatedTests({ client: o.checker.client, model: o.checker.model, task: o.task, origDir: c.orig, failingNames: fresh, failureOutput: reg.evidence ?? "", signal: o.signal }).catch(() => null);
+            report.usage.modelCalls++;
+            if (j?.outdated) reasons[reasons.length - 1] = { kind: "tests_outdated", summary: `${fresh.length} test${fresh.length === 1 ? "" : "s"} that passed before now fail${fresh.length === 1 ? "s" : ""}, but ${fresh.length === 1 ? "it asserts" : "they assert"} the old behaviour the task asks to change: ${fresh.slice(0, 3).join(", ")}`, evidence: trim(`task: "${j.quote}"
+${j.why}
+
+${reg.evidence ?? ""}`, 1500), hint: "If that is right, update the test to the new behaviour in the same change; until then the change is not proven ready." };
+          }
         } else warnings.push(`${after.failed} test${after.failed === 1 ? "" : "s"} failed before the change too (not counted against it)`);
       }
     } else {
@@ -404,7 +416,9 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     // 3. independent checks written from the task, proven on the old code, run on the new (once per checker)
     type Checker = { client: ModelClient; model: string; cacheSecret?: string };
     type ChecksRec = VerifyReport["checks"];
-    const checkWith = async (ck: Checker, T: ChecksRec, push: (r: Reason) => void): Promise<string> => {
+    // variant 1 is an independent second draft (experiment APEX_EXP_DRAFTS=2): other inputs than the first, its own cache entry.
+    const checkWith = async (ck: Checker, T: ChecksRec, push: (r: Reason) => void, variant = 0): Promise<string> => {
+      const fresh = (o.freshInputs === true) !== (variant === 1);
       let code = "";
       const cr: TestRunner | null = runner ?? (await checksOnlyRunner(c.next).catch(() => null));
       if (!cr) warnings.push("the project has no language Apex verify can write checks for (node:test and pytest are supported)");
@@ -414,10 +428,10 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
         // The engine turns a failed model call into "no answer"; keep the checker's own error so the report can say why.
         let checkerError = "";
         const seen: ModelClient = { async *stream(req) { for await (const ev of ck.client.stream(req)) { if (ev.type === "error") checkerError = ev.message; yield ev; } } };
-        const key = sha(JSON.stringify([o.task, ck.model, o.standardCases === true, o.freshInputs === true, [...(await readTree(c.orig)).entries()].map(([p, t]) => [p, sha(t)])]));
+        const key = sha(JSON.stringify([o.task, ck.model, o.standardCases === true, fresh, ...(variant ? [variant] : []), [...(await readTree(c.orig)).entries()].map(([p, t]) => [p, sha(t)])]));
         if (o.cache !== false) { draft = await readDraft(key, cr.command, ck.cacheSecret); if (draft) say("checks: reused from an earlier run on the same task and code"); }
         for (let i = 0; i < (o.attempts ?? 2) && !draft; i++) {
-          draft = await draftAcceptance({ hidden: looksSecret, gateway: seen, model: ck.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true, freshInputs: o.freshInputs === true }).catch(() => null);
+          draft = await draftAcceptance({ hidden: looksSecret, gateway: seen, model: ck.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true, freshInputs: fresh }).catch(() => null);
           report.usage.modelCalls += draft?.calls ?? 1;
           if (draft && o.cache !== false) await writeDraft(key, draft, ck.cacheSecret);
         }
@@ -453,6 +467,21 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     const firstReasons: Reason[] = [], secondReasons: Reason[] = [];
     let checksCode = "";
     if (o.checker) checksCode = await checkWith(o.checker, report.checks, (r) => firstReasons.push(r));
+    // Experiment (APEX_EXP_DRAFTS=2): when the first set of checks finds nothing, write a second, independent set and
+    // block if either finds a problem. Costs one more draft only on changes the first set passed.
+    if (o.checker && !o.secondChecker && process.env.APEX_EXP_DRAFTS === "2" && report.checks.written && !firstReasons.some((r) => r.kind === "check_failed")) {
+      const T2 = blank(o.checker.model), r2: Reason[] = [];
+      const code2 = await checkWith(o.checker, T2, (r) => r2.push(r), 1);
+      if (T2.written && r2.some((r) => r.kind === "check_failed")) {
+        Object.assign(report.checks, T2); firstReasons.length = 0; firstReasons.push(...r2); checksCode = code2;
+        warnings.push("the first set of checks passed; a second, independent set written from the task found this");
+      }
+    }
+    // Experiment (APEX_EXP_KEEP=1): did the change keep the behaviour the task did not ask to change?
+    if (o.checker && process.env.APEX_EXP_KEEP === "1") {
+      const kept = await keptBehaviour({ client: o.checker.client, model: o.checker.model, task: o.task, oldDir: c.orig, newDir: c.next, changes: c.changes, signal: o.signal, timeoutSec: timeout }).catch((e) => { warnings.push(`kept-behaviour probe failed: ${String(e?.message ?? e).slice(0, 200)}`); return null; });
+      if (kept) { report.usage.modelCalls += kept.calls; if (kept.reason) firstReasons.push(kept.reason); }
+    }
     if (o.checker && o.secondChecker) {
       report.secondChecks = blank(o.secondChecker.model);
       await checkWith(o.secondChecker, report.secondChecks, (r) => secondReasons.push(r));

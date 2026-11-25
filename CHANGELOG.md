@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 (2026-11-25)
+- **Fewer false alarms from out-of-date tests.** When a test that passed before fails now, the checker takes a second look: does the test assert exactly the old behaviour the task asks to change? It must quote the sentence of the task that says so (the quote is checked against the task). Then the verdict is `unknown` with "update the test", not `not ready`. On the 200 real-library changes: false alarms 23 to 16 of 93, wrong changes caught unchanged (106 of 107). `APEX_OUTDATED=0` turns it off.
+- Benchmark: the no-key checker on real libraries (106 of 107 wrong changes caught) and two experiments that did not make it (a second draft of the checks, and a probe of behaviour the task did not ask to change: both helped on small projects, both only added false alarms on real libraries). `benchmark/results/real-libraries-experiments`, `benchmark/results/exp-two-drafts`.
+
 ## 0.3.0 (2026-11-25)
 - **No API key needed:** `--provider claude-cli` and `--provider gemini-cli` write the checks with an AI CLI you are already signed in to. With no provider and no key, one is picked automatically (Gemini CLI if signed in with Google, else Claude Code). The CLI runs in a new empty folder with tools, settings, MCP servers and extensions off, and a hook never runs inside the checker's own call. Tested live with both CLIs on a right and a wrong change (`READY` and `NOT READY`).
 - When the checker fails (for example a CLI that is not signed in), the report now says why instead of only "no usable checks".
