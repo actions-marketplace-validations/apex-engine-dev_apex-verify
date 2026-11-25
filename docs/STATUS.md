@@ -14,6 +14,7 @@ Honest state of the project. Updated with every release.
 | Engine (`apex-verify-engine`) | The verification engine `apex verify` uses, extracted from a larger project; the code `verify` cannot reach is removed before publishing. Tests green on Node 20 and 22. |
 | Languages | Checks are written for node:test, pytest, Jest, Vitest, `cargo test` and `go test`; your own `--test` command for anything else. |
 | Sandbox | macOS Seatbelt, Linux bubblewrap and Windows AppContainer, all tested in CI on real runners (best effort, not a security boundary); a container recipe tested in CI. |
+| Checker without a key | Claude Code and Gemini CLI as the checker, through the CLI the person is signed in to. Run live by the maintainer on a small project (right change READY, wrong change NOT READY with both); not yet measured on the benchmark. |
 | Install | A about 60 KB file attached to every release (`npx --yes https://github.com/apex-engine-dev/apex-verify/releases/latest/download/apex-verify.tgz verify ...`), or clone and build. Not published to npm, and does not need to be. |
 | Licence | Apache-2.0; trademark policy in TRADEMARKS.md. |
 | Maintainers | One. A second is the most useful contribution of all. |

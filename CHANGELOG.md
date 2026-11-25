@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0 (2026-11-25)
+- **No API key needed:** `--provider claude-cli` and `--provider gemini-cli` write the checks with an AI CLI you are already signed in to. With no provider and no key, one is picked automatically (Gemini CLI if signed in with Google, else Claude Code). The CLI runs in a new empty folder with tools, settings, MCP servers and extensions off, and a hook never runs inside the checker's own call. Tested live with both CLIs on a right and a wrong change (`READY` and `NOT READY`).
+- When the checker fails (for example a CLI that is not signed in), the report now says why instead of only "no usable checks".
+
 ## 0.2.9 (2026-11-25)
 - **GitHub Action: a re-run no longer changes the verdict.** Two runs of the same code can draft different checks (25 of 200 verdicts differed in the benchmark), so "Re-run job" could flip a required check. The Action now keeps the drafted checks for a commit and reuses them on a re-run; a new commit gets a fresh draft. Raised by Gordon Chase.
 - Cached checks are signed with the checker's API key, and an entry without a valid signature is ignored, so the cache cannot be used to plant checks.

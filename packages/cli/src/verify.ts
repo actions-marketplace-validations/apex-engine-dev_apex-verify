@@ -411,14 +411,17 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
       else {
         say(`checks: ${ck.model} writes them from the task (never from the agent's own tests)`);
         let draft: Awaited<ReturnType<typeof draftAcceptance>> = null;
+        // The engine turns a failed model call into "no answer"; keep the checker's own error so the report can say why.
+        let checkerError = "";
+        const seen: ModelClient = { async *stream(req) { for await (const ev of ck.client.stream(req)) { if (ev.type === "error") checkerError = ev.message; yield ev; } } };
         const key = sha(JSON.stringify([o.task, ck.model, o.standardCases === true, o.freshInputs === true, [...(await readTree(c.orig)).entries()].map(([p, t]) => [p, sha(t)])]));
         if (o.cache !== false) { draft = await readDraft(key, cr.command, ck.cacheSecret); if (draft) say("checks: reused from an earlier run on the same task and code"); }
         for (let i = 0; i < (o.attempts ?? 2) && !draft; i++) {
-          draft = await draftAcceptance({ hidden: looksSecret, gateway: ck.client, model: ck.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true, freshInputs: o.freshInputs === true }).catch(() => null);
+          draft = await draftAcceptance({ hidden: looksSecret, gateway: seen, model: ck.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true, freshInputs: o.freshInputs === true }).catch(() => null);
           report.usage.modelCalls += draft?.calls ?? 1;
           if (draft && o.cache !== false) await writeDraft(key, draft, ck.cacheSecret);
         }
-        if (!draft) warnings.push("no usable checks could be written for this task");
+        if (!draft) warnings.push(checkerError ? `the checker failed: ${checkerError.split("\n")[0]!.slice(0, 240)}` : "no usable checks could be written for this task");
         else {
           T.written = true;
           code = draft.code;

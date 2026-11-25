@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { openAiClient } from "./openai-client.js";
 import { PRESETS } from "./providers.js";
+import { cliClient, pickCli, type CliKind } from "./cli-client.js";
 import { exitCode, renderBadge, renderBadgeSvg, renderMarkdown, renderSarif, renderText } from "./report.js";
 import { signReport } from "./sign.js";
 import { verify, type VerifyReport } from "./verify.js";
@@ -23,7 +24,7 @@ What to check
   --timeout <seconds>  time limit for each test run (default 90)
 
 The checker (the model that writes checks from your task; use a different one than your agent's)
-  --provider <name>    gemini (default), openai, anthropic, openrouter; or --base-url <url> for any OpenAI-compatible endpoint
+  --provider <name>    gemini (default), openai, anthropic, openrouter; claude-cli or gemini-cli use that CLI you are signed in to (no key; picked automatically when no key is set); or --base-url <url> for any OpenAI-compatible endpoint
   --model <id>         the checker model
   --no-model           no model: only your tests and the cheating scan (needs no key; the verdict is at most unknown)
 
@@ -53,10 +54,12 @@ Exit codes: 0 ready, 1 not ready, 3 unknown (not enough to say), 2 usage or setu
 Keys: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY / OPENROUTER_API_KEY (or --api-key-env NAME). Environment equivalents of the flags, for hooks and CI: APEX_CHECKER_MODEL, APEX_PROVIDER, APEX_BASE_URL, APEX_API_KEY_ENV.
 Docs: https://github.com/apex-engine-dev/apex-verify`;
 
+const isCli = (p: string): p is CliKind => p === "claude-cli" || p === "gemini-cli";
+
 export interface VerifyCliArgs {
-  task: string; dir: string; base?: string; diffFile?: string; model?: string; baseUrl: string; apiKey?: string; noModel: boolean;
+  task: string; dir: string; base?: string; diffFile?: string; model?: string; baseUrl: string; apiKey?: string; noModel: boolean; cli?: CliKind;
   format: "text" | "json" | "markdown" | "sarif"; out?: string; markdownOut?: string; sarifOut?: string; jsonOut?: string; testCommand?: string[]; timeoutSec: number; quiet: boolean; standardCases: boolean; freshInputs: boolean; badgeOut?: string; lockTests: boolean; signKey?: string;
-  secondModel?: string; secondBaseUrl?: string; secondApiKey?: string;
+  secondModel?: string; secondBaseUrl?: string; secondApiKey?: string; secondCli?: CliKind;
 }
 
 const BOOL_FLAGS = new Set(["no-model", "quiet", "json", "standard-cases", "fresh-inputs", "lock-tests", "demo", "hook", "mcp", "help", "version", "any-key"]);
@@ -133,14 +136,21 @@ export function parseVerifyArgs(rawArgv: string[], env: NodeJS.ProcessEnv = proc
   if (!task) throw new Error('say what the change should do: apex verify "<task>"');
   const noModel = flags.get("no-model") === true;
   const envBase = env.APEX_BASE_URL?.trim();
-  const provider = String(flags.get("provider") || env.APEX_PROVIDER || (flags.get("base-url") || envBase ? "" : "gemini"));
+  const chosen = String(flags.get("provider") || env.APEX_PROVIDER || "");
+  let provider = chosen || (flags.get("base-url") || envBase ? "" : "gemini");
+  // No provider chosen and no Gemini key: use an AI CLI the person is already signed in to, so no key is needed.
+  if (!noModel && !chosen && provider === "gemini" && !env.GEMINI_API_KEY && !flags.get("api-key-env") && !env.APEX_API_KEY_ENV) {
+    const found = pickCli(env);
+    if (found) provider = found;
+  }
+  const cli = isCli(provider) ? provider : undefined;
   const preset = PRESETS[provider];
-  if (provider && !preset) throw new Error(`unknown provider ${provider}`);
+  if (provider && !preset && !cli) throw new Error(`unknown provider ${provider}`);
   const baseUrl = String(flags.get("base-url") || envBase || preset?.baseUrl || "");
   const keyEnv = String(flags.get("api-key-env") || env.APEX_API_KEY_ENV || preset?.keyEnv || "");
   const apiKey = keyEnv ? env[keyEnv] : undefined;
-  const model = String(flags.get("model") || env.APEX_CHECKER_MODEL || (provider === "gemini" ? "gemini-3.1-pro-preview" : "")) || undefined;
-  if (!noModel) {
+  const model = String(flags.get("model") || env.APEX_CHECKER_MODEL || (provider === "gemini" ? "gemini-3.1-pro-preview" : cli ?? "")) || undefined;
+  if (!noModel && !cli) {
     if (!baseUrl) throw new Error("give --provider or --base-url (or --no-model)");
     if (keyEnv && !apiKey) throw new Error(`set ${keyEnv} (the key of the model that writes the checks), or use --no-model`);
     if (!model) throw new Error("--model is required: the model that writes the checks");
@@ -150,7 +160,8 @@ export function parseVerifyArgs(rawArgv: string[], env: NodeJS.ProcessEnv = proc
   let secondBaseUrl = baseUrl, secondApiKey = apiKey;
   const sp = String(flags.get("second-provider") || env.APEX_SECOND_PROVIDER || "");
   if (secondModel && !noModel) {
-    if (sp) {
+    if (isCli(sp)) secondBaseUrl = "";
+    else if (sp) {
       const p2 = PRESETS[sp]; if (!p2) throw new Error(`unknown provider ${sp}`);
       secondBaseUrl = p2.baseUrl; secondApiKey = p2.keyEnv ? env[p2.keyEnv] : undefined;
       if (p2.keyEnv && !secondApiKey) throw new Error(`set ${p2.keyEnv} (the key of the second checker), or drop --second-model`);
@@ -160,7 +171,7 @@ export function parseVerifyArgs(rawArgv: string[], env: NodeJS.ProcessEnv = proc
   if (!["text", "json", "markdown", "sarif"].includes(fmt)) throw new Error(`unknown --format ${fmt}`);
   const test = flags.get("test");
   return {
-    task, noModel, baseUrl, apiKey, model, format: fmt as VerifyCliArgs["format"],
+    task, noModel, baseUrl, apiKey, model, ...(cli && !noModel ? { cli } : {}), ...(isCli(sp) && secondModel && !noModel ? { secondCli: sp } : {}), format: fmt as VerifyCliArgs["format"],
     dir: path.resolve(String(flags.get("dir") || process.cwd())),
     ...(flags.get("base") ? { base: String(flags.get("base")) } : {}),
     ...(flags.get("diff") ? { diffFile: String(flags.get("diff")) } : {}),
@@ -195,8 +206,8 @@ export const renderFormat = (r: VerifyReport, f: VerifyCliArgs["format"]) => (f 
 export function checkersFrom(a: VerifyCliArgs, client?: ModelClient): { checker: { client: ModelClient; model: string; cacheSecret?: string } | null; secondChecker: { client: ModelClient; model: string; cacheSecret?: string } | null } {
   if (a.noModel) return { checker: null, secondChecker: null };
   return {
-    checker: { client: client ?? openAiClient({ baseUrl: a.baseUrl, apiKey: a.apiKey }), model: a.model!, cacheSecret: a.apiKey || undefined },
-    secondChecker: a.secondModel && !client ? { client: openAiClient({ baseUrl: a.secondBaseUrl ?? a.baseUrl, apiKey: a.secondApiKey ?? a.apiKey }), model: a.secondModel, cacheSecret: (a.secondApiKey ?? a.apiKey) || undefined } : null,
+    checker: { client: client ?? (a.cli ? cliClient({ kind: a.cli }) : openAiClient({ baseUrl: a.baseUrl, apiKey: a.apiKey })), model: a.model!, cacheSecret: a.apiKey || undefined },
+    secondChecker: a.secondModel && !client ? { client: a.secondCli ? cliClient({ kind: a.secondCli }) : openAiClient({ baseUrl: a.secondBaseUrl ?? a.baseUrl, apiKey: a.secondApiKey ?? a.apiKey }), model: a.secondModel, cacheSecret: (a.secondApiKey ?? a.apiKey) || undefined } : null,
   };
 }
 

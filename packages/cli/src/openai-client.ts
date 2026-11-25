@@ -9,7 +9,7 @@ export interface OpenAiClientOptions {
 
 /** A ModelClient over any OpenAI-compatible chat-completions endpoint (OpenAI, Gemini, ...). */
 /** A model call never waits forever: the caller's signal, and a time limit (APEX_MODEL_TIMEOUT_SEC, default 300 s) for the whole call. */
-function modelSignal(own?: AbortSignal): AbortSignal {
+export function modelSignal(own?: AbortSignal): AbortSignal {
   const sec = Number(process.env.APEX_MODEL_TIMEOUT_SEC ?? 300);
   const t = AbortSignal.timeout((Number.isFinite(sec) && sec > 0 ? sec : 300) * 1000);
   if (!own) return t;

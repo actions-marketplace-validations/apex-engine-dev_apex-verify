@@ -70,6 +70,8 @@ export function changeFingerprint(cwd: string, base = "HEAD"): string | null {
 }
 
 export async function runHook(stdin: string, env: NodeJS.ProcessEnv = process.env, out: (s: string) => void = console.log): Promise<number> {
+  // A CLI checker (claude -p / gemini -p) may load the person's hooks: never verify the checker's own run, or it would loop.
+  if (env.APEX_IN_CHECKER === "1") return 0;
   let input: HookInput = {};
   try { input = JSON.parse(stdin || "{}"); } catch { /* no input */ }
   // Cursor sends workspace_roots instead of cwd, and wants {followup_message} to keep the agent going (decision/reason is also sent).
