@@ -2,6 +2,7 @@
 // Re-measure the gate: run `apex verify` on every labelled AI-written change in benchmark/changes and report how many wrong
 // changes it blocks and how many right ones it wrongly blocks.
 //
+//   node benchmark/run-gate.mjs --items benchmark/results/verify-gate-round1/results.json -- --provider claude-cli   # same 108 changes, a signed-in CLI as checker
 //   node benchmark/run-gate.mjs --no-model                                   # tests + cheating scan only (free, no key)
 //   GEMINI_API_KEY=... node benchmark/run-gate.mjs --model gemini-3.1-pro-preview [--limit 40] [--task slugify] [--concurrency 3]
 //
@@ -29,6 +30,9 @@ const verifyArgs = noModel ? ["--no-model"] : model ? ["--model", model] : [];
 
 let items = JSON.parse(fs.readFileSync(path.join(HERE, "changes", "manifest.json"), "utf8"));
 if (onlyTask) items = items.filter((m) => m.task === onlyTask);
+// --items <results.json or list>: only the (task, change) pairs in an earlier run, to compare checkers on exactly the same changes.
+const itemsFile = flag("items", "");
+if (itemsFile) { let j = JSON.parse(fs.readFileSync(itemsFile, "utf8")); if (!Array.isArray(j)) j = Object.values(j)[0]; const want = new Set(j.map((r) => `${r.task}/${r.change}`)); items = items.filter((m) => want.has(`${m.task}/${m.change}`)); }
 if (limit) { // balanced: half right, half wrong
   const right = items.filter((m) => m.correct), wrong = items.filter((m) => !m.correct), h = Math.ceil(limit / 2);
   items = [...right.slice(0, h), ...wrong.slice(0, h)];
