@@ -192,11 +192,11 @@ export function colorize(text: string): string {
 export const renderFormat = (r: VerifyReport, f: VerifyCliArgs["format"]) => (f === "json" ? JSON.stringify(r, null, 2) : f === "markdown" ? renderMarkdown(r) : f === "sarif" ? renderSarif(r) : renderText(r));
 
 /** The checker(s) the arguments describe. */
-export function checkersFrom(a: VerifyCliArgs, client?: ModelClient): { checker: { client: ModelClient; model: string } | null; secondChecker: { client: ModelClient; model: string } | null } {
+export function checkersFrom(a: VerifyCliArgs, client?: ModelClient): { checker: { client: ModelClient; model: string; cacheSecret?: string } | null; secondChecker: { client: ModelClient; model: string; cacheSecret?: string } | null } {
   if (a.noModel) return { checker: null, secondChecker: null };
   return {
-    checker: { client: client ?? openAiClient({ baseUrl: a.baseUrl, apiKey: a.apiKey }), model: a.model! },
-    secondChecker: a.secondModel && !client ? { client: openAiClient({ baseUrl: a.secondBaseUrl ?? a.baseUrl, apiKey: a.secondApiKey ?? a.apiKey }), model: a.secondModel } : null,
+    checker: { client: client ?? openAiClient({ baseUrl: a.baseUrl, apiKey: a.apiKey }), model: a.model!, cacheSecret: a.apiKey || undefined },
+    secondChecker: a.secondModel && !client ? { client: openAiClient({ baseUrl: a.secondBaseUrl ?? a.baseUrl, apiKey: a.secondApiKey ?? a.apiKey }), model: a.secondModel, cacheSecret: (a.secondApiKey ?? a.apiKey) || undefined } : null,
   };
 }
 

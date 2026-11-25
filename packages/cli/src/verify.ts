@@ -1,6 +1,6 @@
 import { existsSync, promises as fs } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import os from "node:os";
 import path from "node:path";
 import { isJunkPath, testSandboxAvailable, testSandboxProfile, inTestSandbox, runEnv, checkCommand, frameworkCheckCommand, checksOnlyRunner, copyProject, parseTestOutcomes, runCommand, detectTestRunner, draftAcceptance, judgeFailingChecks, readTestOutput, runAcceptance, runTests, type ModelClient, type TestRunner } from "apex-verify-engine";
@@ -71,9 +71,10 @@ export interface VerifyOptions {
   /** Or: a unified diff to apply on a copy of `dir`. */
   diffFile?: string;
   /** The independent model that writes the checks. Without it only the deterministic parts run. */
-  checker?: { client: ModelClient; model: string } | null;
+  /** `cacheSecret` (the checker's API key) authenticates cached checks, so the cache may live where others can write (see readDraft). */
+  checker?: { client: ModelClient; model: string; cacheSecret?: string } | null;
   /** A second, independent checker. A change is NOT READY only when both checkers object; if only one does the verdict is UNKNOWN (they disagree). */
-  secondChecker?: { client: ModelClient; model: string } | null;
+  secondChecker?: { client: ModelClient; model: string; cacheSecret?: string } | null;
   /** Ask the checker to use inputs other than the task's own examples (default false). */
   freshInputs?: boolean;
   testCommand?: string[];
@@ -237,12 +238,22 @@ export function shapeOk(d: unknown): d is Draft {
   const o = x.original;
   return !!o && typeof o.passed === "number" && typeof o.failed === "number" && (o.loadError === null || typeof o.loadError === "string");
 }
-/** The same task on the same starting code with the same model gets the same checks: stable while an agent retries, and one model call, not one per attempt. */
-async function readDraft(key: string, testCommand: string[]): Promise<Draft | null> {
+/**
+ * The same task on the same starting code with the same model gets the same checks: stable while an agent retries, and one model call, not one per attempt.
+ * With a secret (the checker's API key), every entry carries a MAC and one without a valid MAC is ignored. That is what lets
+ * the cache live somewhere other people can write, such as a CI cache that survives a re-run: a pull request from a fork has
+ * no access to the key, so it cannot plant checks of its own.
+ */
+const draftMac = (secret: string, key: string, body: string) => createHmac("sha256", createHash("sha256").update("apex-verify-cache-v1\0" + secret).digest()).update(key + "\0" + body).digest("hex");
+async function readDraft(key: string, testCommand: string[], secret?: string): Promise<Draft | null> {
   const text = readRegularFile(path.join(cacheDir(), key + ".json"));
   if (!text) return null;
   try {
-    const d = JSON.parse(text) as unknown;
+    let d = JSON.parse(text) as any;
+    if (d && typeof d.body === "string") {
+      if (secret) { const want = Buffer.from(draftMac(secret, key, d.body)), got = Buffer.from(String(d.mac ?? "")); if (want.length !== got.length || !timingSafeEqual(want, got)) return null; }
+      d = JSON.parse(d.body);
+    } else if (secret) return null; // an entry without a MAC is not trusted once a secret is in use
     if (!shapeOk(d)) return null;
     const fw = (d as any).framework;
     if (fw !== undefined && !["vitest", "jest", "cargo", "go"].includes(fw)) return null;
@@ -251,8 +262,9 @@ async function readDraft(key: string, testCommand: string[]): Promise<Draft | nu
     return { ...d, run: cmd.run, py: cmd.py } as Draft;
   } catch { return null; }
 }
-async function writeDraft(key: string, d: Draft): Promise<void> {
-  try { writePrivateFile(path.join(cacheDir(), key + ".json"), JSON.stringify(d)); } catch { /* best effort */ }
+async function writeDraft(key: string, d: Draft, secret?: string): Promise<void> {
+  const body = JSON.stringify(d);
+  try { writePrivateFile(path.join(cacheDir(), key + ".json"), JSON.stringify(secret ? { body, mac: draftMac(secret, key, body) } : { body })); } catch { /* best effort */ }
 }
 const trim = (s: string, n: number) => (s.length > n ? s.slice(0, n) + "…" : s);
 
@@ -390,7 +402,7 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
     }
 
     // 3. independent checks written from the task, proven on the old code, run on the new (once per checker)
-    type Checker = { client: ModelClient; model: string };
+    type Checker = { client: ModelClient; model: string; cacheSecret?: string };
     type ChecksRec = VerifyReport["checks"];
     const checkWith = async (ck: Checker, T: ChecksRec, push: (r: Reason) => void): Promise<string> => {
       let code = "";
@@ -400,11 +412,11 @@ export async function verify(o: VerifyOptions): Promise<VerifyReport> {
         say(`checks: ${ck.model} writes them from the task (never from the agent's own tests)`);
         let draft: Awaited<ReturnType<typeof draftAcceptance>> = null;
         const key = sha(JSON.stringify([o.task, ck.model, o.standardCases === true, o.freshInputs === true, [...(await readTree(c.orig)).entries()].map(([p, t]) => [p, sha(t)])]));
-        if (o.cache !== false) { draft = await readDraft(key, cr.command); if (draft) say("checks: reused from an earlier run on the same task and code"); }
+        if (o.cache !== false) { draft = await readDraft(key, cr.command, ck.cacheSecret); if (draft) say("checks: reused from an earlier run on the same task and code"); }
         for (let i = 0; i < (o.attempts ?? 2) && !draft; i++) {
           draft = await draftAcceptance({ hidden: looksSecret, gateway: ck.client, model: ck.model, root: c.orig, task: o.task, testCommand: cr.command, timeoutSec: timeout, signal: o.signal, standardCases: o.standardCases === true, freshInputs: o.freshInputs === true }).catch(() => null);
           report.usage.modelCalls += draft?.calls ?? 1;
-          if (draft && o.cache !== false) await writeDraft(key, draft);
+          if (draft && o.cache !== false) await writeDraft(key, draft, ck.cacheSecret);
         }
         if (!draft) warnings.push("no usable checks could be written for this task");
         else {

@@ -86,6 +86,16 @@ runs:
           BIN="$GITHUB_ACTION_PATH/dist/apex.mjs"
         fi
         echo "bin=$BIN" >> "$GITHUB_OUTPUT"
+    # "Re-run job" on the same commit reuses the checks drafted the first time, so the verdict does not change between runs.
+    # A new commit gets a fresh draft (the key is the commit). Entries carry a MAC made with the API key and are ignored
+    # without a valid one, so a pull request cannot plant checks here. The folder is the tool's own (~/.apex-verify), which the
+    # test sandbox cannot write. Skipped when there is no key (nothing is drafted).
+    - name: Keep the drafted checks for a re-run
+      if: inputs.api-key != ''
+      uses: actions/cache@v4
+      with:
+        path: ~/.apex-verify/cache
+        key: apex-verify-checks-v1-${{ runner.os }}-${{ github.event.pull_request.head.sha || github.sha }}
     - name: Verify
       id: run
       shell: bash

@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.2.9 (2026-11-25)
+- **GitHub Action: a re-run no longer changes the verdict.** Two runs of the same code can draft different checks (25 of 200 verdicts differed in the benchmark), so "Re-run job" could flip a required check. The Action now keeps the drafted checks for a commit and reuses them on a re-run; a new commit gets a fresh draft. Raised by Gordon Chase.
+- Cached checks are signed with the checker's API key, and an entry without a valid signature is ignored, so the cache cannot be used to plant checks.
 - Benchmark: `run-gate.mjs` refuses to print totals for a run where every row has the same verdict, or (with a checker) most rows are `unknown` or errors. It says "NOT A RESULT" and exits 3. This is the guard against the mistake behind the withdrawn headline; suggested by Heinrich Neb.
 
 ## 0.2.8 (2026-11-23)
