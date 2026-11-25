@@ -1,0 +1,15 @@
+[71/79] merge-config:0abe95679b correct=false -> not_ready
+[72/79] slugify:b0e842783b correct=true -> ready
+[73/79] retry:764b12fd99 correct=false -> not_ready
+[74/79] slugify:75876e5617 correct=true -> ready
+[75/79] slugify:00705abdc7 correct=false -> not_ready
+[76/79] slugify:dd603bbc6d correct=true -> ready
+[77/79] todo-persist:b4bcb0bbb8 correct=true -> ready
+[78/79] todo-persist:ce0e4618bf correct=true -> ready
+[79/79] todo-persist:d856c4e70d correct=true -> ready
+
+79 changes judged (48 right, 31 wrong), 0 errors
+wrong changes blocked:         19/31 = 61%  (95% CI 44-76%)
+right changes wrongly blocked: 0/48 = 0%  (95% CI 0-7%)
+READY verdicts that were right: 48/60
+unknown: wrong 0, right 0

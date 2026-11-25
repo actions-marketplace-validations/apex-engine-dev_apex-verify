@@ -2,6 +2,7 @@
 // Re-measure the gate: run `apex verify` on every labelled AI-written change in benchmark/changes and report how many wrong
 // changes it blocks and how many right ones it wrongly blocks.
 //
+//   node benchmark/run-gate.mjs --items benchmark/results/verify-gate-round1/results.json -- --provider claude-cli   # same 108 changes, a signed-in CLI as checker
 //   node benchmark/run-gate.mjs --no-model                                   # tests + cheating scan only (free, no key)
 //   GEMINI_API_KEY=... node benchmark/run-gate.mjs --model gemini-3.1-pro-preview [--limit 40] [--task slugify] [--concurrency 3]
 //
@@ -29,6 +30,9 @@ const verifyArgs = noModel ? ["--no-model"] : model ? ["--model", model] : [];
 
 let items = JSON.parse(fs.readFileSync(path.join(HERE, "changes", "manifest.json"), "utf8"));
 if (onlyTask) items = items.filter((m) => m.task === onlyTask);
+// --items <results.json or list>: only the (task, change) pairs in an earlier run, to compare checkers on exactly the same changes.
+const itemsFile = flag("items", "");
+if (itemsFile) { let j = JSON.parse(fs.readFileSync(itemsFile, "utf8")); if (!Array.isArray(j)) j = Object.values(j)[0]; const want = new Set(j.map((r) => `${r.task}/${r.change}`)); items = items.filter((m) => want.has(`${m.task}/${m.change}`)); }
 if (limit) { // balanced: half right, half wrong
   const right = items.filter((m) => m.correct), wrong = items.filter((m) => !m.correct), h = Math.ceil(limit / 2);
   items = [...right.slice(0, h), ...wrong.slice(0, h)];
@@ -58,10 +62,20 @@ const ok = results.filter((r) => r.verdict !== "error");
 const wrong = ok.filter((r) => !r.correct), right = ok.filter((r) => r.correct);
 const count = (xs, v) => xs.filter((r) => r.verdict === v).length;
 const caught = count(wrong, "not_ready"), alarms = count(right, "not_ready"), ready = ok.filter((r) => r.verdict === "ready");
+const out = flag("out", "");
+if (out) fs.writeFileSync(out, JSON.stringify(results, null, 1));
+// A run where most rows have no verdict, or every row has the same one, is a broken measurement, not a result (this is how a
+// wrong headline was once published from an arm that said "unknown" for every change). No totals are printed for it.
+const unknowns = count(ok, "unknown"), errors = results.length - ok.length, kinds = new Set(results.map((r) => r.verdict));
+// Without a model `unknown` is the expected answer for every change the tests do not fail, so only the same-everywhere rule applies there.
+const broken = results.length >= 10 && (kinds.size === 1 || errors > results.length / 2 || (!noModel && unknowns + errors > results.length / 2));
+if (broken && !own.includes("--allow-degenerate")) {
+  console.log(`\nNOT A RESULT: ${results.length} changes, ${unknowns} unknown, ${errors} errors, verdicts seen: ${[...kinds].join(", ")}.`);
+  console.log(`Most rows have no verdict, or all rows have the same one. Check by hand that the tests and the checker really ran${out ? ` (rows saved to ${out})` : ""}; no totals are reported. --allow-degenerate prints them anyway.`);
+  process.exit(3);
+}
 console.log(`\n${ok.length} changes judged (${right.length} right, ${wrong.length} wrong), ${results.length - ok.length} errors`);
 console.log(`wrong changes blocked:         ${caught}/${wrong.length} = ${Math.round(100 * caught / Math.max(wrong.length, 1))}%  (95% CI ${wilson(caught, wrong.length).join("-")}%)`);
 console.log(`right changes wrongly blocked: ${alarms}/${right.length} = ${Math.round(100 * alarms / Math.max(right.length, 1))}%  (95% CI ${wilson(alarms, right.length).join("-")}%)`);
 if (ready.length) console.log(`READY verdicts that were right: ${ready.filter((r) => r.correct).length}/${ready.length}`);
 console.log(`unknown: wrong ${count(wrong, "unknown")}, right ${count(right, "unknown")}`);
-const out = flag("out", "");
-if (out) fs.writeFileSync(out, JSON.stringify(results, null, 1));

@@ -60,6 +60,32 @@ test("the same task on the same code reuses its checks instead of asking the mod
   } finally { process.env.APEX_CACHE_DIR = TEST_CACHE; }
 });
 
+test("with a secret, cached checks are reused only when their MAC is valid: a planted or edited entry is ignored and the model is asked again", async () => {
+  const cache = fs.mkdtempSync(path.join(os.tmpdir(), "apex-vt-mac-"));
+  process.env.APEX_CACHE_DIR = cache;
+  try {
+    const d = repo();
+    write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().trim().replace(/\\s+/g, \"-\"); }\n");
+    const boom: ModelClient = { async *stream(): AsyncIterable<ModelEvent> { throw new Error("the model must not be called"); } };
+    const first = await verify({ dir: d, task: TASK, checker: { client: fake(), model: "m", cacheSecret: "k1" } });
+    assert.equal(first.verdict, "ready", JSON.stringify({ reasons: first.reasons, warnings: first.warnings, tests: first.tests }).slice(0, 1500));
+    const again = await verify({ dir: d, task: TASK, checker: { client: boom, model: "m", cacheSecret: "k1" } });
+    assert.equal(again.verdict, "ready"); assert.equal(again.usage.modelCalls, 0, "a re-run reuses the checks");
+    const file = path.join(cache, "checks", fs.readdirSync(path.join(cache, "checks"))[0]!);
+    const entry = JSON.parse(fs.readFileSync(file, "utf8"));
+    assert.equal(typeof entry.mac, "string");
+    // someone without the key replaces the checks with one that any change passes
+    const body = JSON.parse(entry.body); body.code = "import { test } from \"node:test\";\ntest(\"always\", () => {});\n";
+    fs.writeFileSync(file, JSON.stringify({ body: JSON.stringify(body), mac: entry.mac }));
+    const forged = await verify({ dir: d, task: TASK, checker: { client: fake(), model: "m", cacheSecret: "k1" } });
+    assert.ok(forged.usage.modelCalls >= 1, "the edited entry was not used");
+    // an entry with no MAC at all, and one written under another key, are not trusted either
+    fs.writeFileSync(file, JSON.stringify({ body: JSON.stringify(body) }));
+    assert.ok((await verify({ dir: d, task: TASK, checker: { client: fake(), model: "m", cacheSecret: "k1" } })).usage.modelCalls >= 1);
+    assert.ok((await verify({ dir: d, task: TASK, checker: { client: fake(), model: "m", cacheSecret: "k2" } })).usage.modelCalls >= 1, "another key's entry is not reused");
+  } finally { process.env.APEX_CACHE_DIR = TEST_CACHE; }
+});
+
 test("a wrong change is NOT READY and names the failing check", async () => {
   const d = repo();
   write(d, "src/slug.js", "export function slugify(s) { return String(s).toLowerCase().replace(/ /g, \"_\"); }\n");

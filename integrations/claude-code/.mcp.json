@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "--yes",
-        "https://github.com/apex-engine-dev/apex-verify/releases/download/v0.2.8/apex-verify.tgz",
+        "https://github.com/apex-engine-dev/apex-verify/releases/download/v0.3.0/apex-verify.tgz",
         "verify",
         "--mcp"
       ]
