@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Benchmark: `run-gate.mjs` refuses to print totals for a run where every row has the same verdict, or (with a checker) most rows are `unknown` or errors. It says "NOT A RESULT" and exits 3. This is the guard against the mistake behind the withdrawn headline; suggested by Heinrich Neb.
+
 ## 0.2.8 (2026-11-23)
 - **Stop hook with Gemini CLI: a retry after a block was not checked.** Gemini CLI calls the hook again with an empty prompt, so the hook had no task and stayed silent once the agent changed anything. It now keeps the session's task. Found by the experiment below.
 - **New measurement** (`benchmark/results/false-alarms-real-libraries`): three attempts to cut the generated checks' false alarms on real libraries; none beat the unchanged tool, so none ships. Of the blocks counted as false alarms, about 7 in 10 are changes that really miss the task text. Two runs of the same code disagree on 25 of 200 verdicts.
