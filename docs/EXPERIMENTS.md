@@ -5,6 +5,9 @@
 **Token savings are not the headline.** Against Claude Code, cached reads dominate the bill, so a context tool's savings did not carry over; the measured savings (77-88% fewer tokens than the plain engine on Flash) are for this engine's own edit loop. Never quote them for other agents without a with/without run.
 
 
+## No key on real libraries, two drafts, a kept-behaviour probe, out-of-date tests (2026-11-25)
+With Claude Code as the checker and no key, 0.3.0 caught 106 of 107 wrong changes on the 23 real libraries and stopped 23 of 93 right ones. A second draft of the checks (`APEX_EXP_DRAFTS=2`) and a probe of behaviour the task did not ask to change (`APEX_EXP_KEEP=1`) each caught 2 to 3 more wrong changes on the small projects, but on real libraries caught nothing extra and added false alarms (28 and 26 of 93): **tried, not adopted** (the switches stay for further experiments). Reading all 23 false alarms showed 8 were old tests asserting exactly the behaviour the task asks to change; a second look that must quote the task cut false alarms to 16 of 93 with catches unchanged: **adopted in 0.3.1**. [Details](../benchmark/results/real-libraries-experiments).
+
 ## Gate round 1 (2026-11-22): does `apex verify` catch wrong AI changes?
 199 labelled AI-written changes, three conditions (tests + cheating scan only; plus an independent checker; plus a prompt for unstated standard-practice cases). The independent checker moved the share of wrong changes blocked from 8% to 65% at a 3% false-alarm rate; the unstated-cases prompt did not help (60%, 5%). Method, numbers and limits: [`benchmark/results/verify-gate-round1`](../benchmark/results/verify-gate-round1/README.md).
 
