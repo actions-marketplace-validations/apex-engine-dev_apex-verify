@@ -14,6 +14,8 @@
 
 <p align="center">A real run, no API key: the agent's own test passes, and 8 checks written from the task say otherwise.</p>
 
+<p align="center"><b>On 200 AI-written changes to 23 real open-source libraries, with no API key: 106 of 107 wrong changes caught</b> (<a href="#does-it-work-the-honest-numbers">numbers and limits</a>).<br>Found a change it got wrong? <a href="https://github.com/apex-engine-dev/apex-verify/issues/new/choose">Send us the case</a>: we rerun every one and add the good ones to the benchmark. If it saved you a bad merge, a ⭐ helps others find it.</p>
+
 ## Try it now
 
 **See it catch a wrong change** (5 seconds, no key, no project):
