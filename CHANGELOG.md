@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.2 (2026-11-26)
+- **Flaky checks no longer block.** When a check written from the task fails, it is run once more; if it then passes, it is reported as flaky and not counted. `APEX_RERUN=0` turns this off. (No check was flaky in the benchmark runs below, so this is a safeguard, not a measured gain.)
+- **Opt-in: agreement before blocking** (`APEX_VOTE=1`). When the checks find a problem, two more independent sets are written from the task, and the change is blocked only if most of them fail. On the 200 real-library changes all three sets agreed on 101 of 107 blocks; the vote overturned two blocks, one of them a false alarm, and let no wrong change through. That is too small a gain for two extra model calls on every blocked change, so it is off by default. Write-up: `benchmark/results/real-libraries-experiments`.
+- Research behind both: a review of published work on AI-written tests (blind tests, fail-before/pass-after, agreement voting, flaky reruns, test tampering). Apex verify already did the strongest of these; the remaining false alarms come from checks that every independent draft writes the same way, because the task text is broader than the library's own tests.
+
 ## 0.3.1 (2026-11-25)
 - **Fewer false alarms from out-of-date tests.** When a test that passed before fails now, the checker takes a second look: does the test assert exactly the old behaviour the task asks to change? It must quote the sentence of the task that says so (the quote is checked against the task). Then the verdict is `unknown` with "update the test", not `not ready`. On the 200 real-library changes: false alarms 23 to 16 of 93, wrong changes caught unchanged (106 of 107). `APEX_OUTDATED=0` turns it off.
 - Benchmark: the no-key checker on real libraries (106 of 107 wrong changes caught) and two experiments that did not make it (a second draft of the checks, and a probe of behaviour the task did not ask to change: both helped on small projects, both only added false alarms on real libraries). `benchmark/results/real-libraries-experiments`, `benchmark/results/exp-two-drafts`.

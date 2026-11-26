@@ -51,7 +51,7 @@ export interface VerifyReport {
   tests: { command: string | null; before: { passed: number; failed: number } | null; after: { passed: number; failed: number } | null; newlyFailing: string[] };
   /** The second checker's own result, when two checkers were used. */
   secondChecks?: { writtenBy: string | null; written: boolean; passed: number; failed: number; failedOnOldCode: boolean; failures: string; failedChecks: Array<{ name: string; expected?: string; actual?: string; message?: string }> };
-  checks: { writtenBy: string | null; written: boolean; passed: number; failed: number; failedOnOldCode: boolean; failures: string; failedChecks: Array<{ name: string; expected?: string; actual?: string; message?: string }> };
+  checks: { writtenBy: string | null; written: boolean; passed: number; failed: number; failedOnOldCode: boolean; failures: string; failedChecks: Array<{ name: string; expected?: string; actual?: string; message?: string }>; /** When the first set objected: how many independent sets were written and how many failed. */ agreement?: { sets: number; failing: number } };
   cheats: Cheat[];
   /** What isolated the tests and generated checks on this machine. */
   sandbox: string;
@@ -440,7 +440,13 @@ ${reg.evidence ?? ""}`, 1500), hint: "If that is right, update the test to the n
           T.written = true;
           code = draft.code;
           T.failedOnOldCode = draft.original.failed > 0 || !!draft.original.loadError;
-          const run = await runAcceptance(c.next, { path: draft.path, code: draft.code, run: draft.run, py: draft.py, ...(draft.framework ? { framework: draft.framework } : {}) }, o.signal, timeout);
+          const spec = { path: draft.path, code: draft.code, run: draft.run, py: draft.py, ...(draft.framework ? { framework: draft.framework } : {}) };
+          let run = await runAcceptance(c.next, spec, o.signal, timeout);
+          // A check that fails once and passes on a rerun is flaky: it is not evidence either way (APEX_RERUN=0 turns this off).
+          if (run.failed > 0 && process.env.APEX_RERUN !== "0") {
+            const again = await runAcceptance(c.next, spec, o.signal, timeout);
+            if (again.failed === 0 && !again.loadError && again.passed > 0) { warnings.push(`${run.failed} check${run.failed === 1 ? "" : "s"} failed once and passed on a rerun (flaky), so ${run.failed === 1 ? "it was" : "they were"} not counted`); run = again; }
+          }
           T.passed = run.passed;
           T.failed = run.failed + (run.loadError && run.passed + run.failed === 0 ? 1 : 0);
           T.failedChecks = parseTestOutcomes(run.output ?? "").filter((x) => !x.ok && !x.skipped && x.top !== false).slice(0, 8).map((x) => ({ name: x.name.replace(/^\[c\d+\]\s*/, "").replace(/^task:\s*/i, ""), ...(x.failure?.expected ? { expected: trim(String(x.failure.expected), 160) } : {}), ...(x.failure?.actual !== undefined ? { actual: trim(String(x.failure.actual), 160) } : {}), ...(x.failure?.message && !x.failure.expected ? { message: trim(x.failure.message.split("\n").find((l) => l.trim()) ?? "", 200) } : {}) }));
@@ -476,6 +482,26 @@ ${reg.evidence ?? ""}`, 1500), hint: "If that is right, update the test to the n
         Object.assign(report.checks, T2); firstReasons.length = 0; firstReasons.push(...r2); checksCode = code2;
         warnings.push("the first set of checks passed; a second, independent set written from the task found this");
       }
+    }
+    // Agreement before blocking (opt-in, APEX_VOTE=1; on the benchmark it saved 1 false alarm in 93 at two drafts per blocked change): when the checks find a problem, two more
+    // independent sets are written from the task and the change is blocked only when most of the sets that could be
+    // written fail on it. One over-reaching draft then no longer blocks a right change. Costs two drafts, only on changes
+    // the first set objects to; changes it passes are untouched, so this can only lower false alarms, never add one.
+    if (o.checker && !o.secondChecker && process.env.APEX_VOTE === "1" && process.env.APEX_EXP_DRAFTS !== "2" && report.checks.written && firstReasons.some((r) => r.kind === "check_failed")) {
+      let sets = 1, failing = 1;
+      for (const v of [1, 2]) {
+        const Tv = blank(o.checker.model), rv: Reason[] = [];
+        await checkWith(o.checker, Tv, (r) => rv.push(r), v);
+        if (!Tv.written) continue;
+        sets++;
+        if (rv.some((r) => r.kind === "check_failed")) failing++;
+      }
+      report.checks.agreement = { sets, failing };
+      if (sets >= 2 && failing * 2 <= sets) {
+        const i = firstReasons.findIndex((r) => r.kind === "check_failed");
+        const f = firstReasons[i]!;
+        firstReasons[i] = { kind: "checks_suspect", summary: `only ${failing} of ${sets} independent sets of checks written from the task find a problem, so the failing check may over-reach`, evidence: f.evidence, hint: "Review the failing check by hand: most independent checks pass on this change. If the change is right, this is a false alarm." };
+      } else if (sets >= 2) warnings.push(`${failing} of ${sets} independent sets of checks written from the task find a problem`);
     }
     // Experiment (APEX_EXP_KEEP=1): did the change keep the behaviour the task did not ask to change?
     if (o.checker && process.env.APEX_EXP_KEEP === "1") {
