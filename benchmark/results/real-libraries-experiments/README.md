@@ -9,6 +9,7 @@
 | Two drafts, block if either fails (`two-drafts`, `APEX_EXP_DRAFTS=2`) | 106 of 107 | 28 of 93 (30%) |
 | Kept-behaviour probe (`kept`, `APEX_EXP_KEEP=1`) | 106 of 107 | 26 of 93 (28%) |
 | **0.3.1: second look at out-of-date tests** (`outdated`) | **106 of 107 (99%)** | **16 of 93 (17%)** |
+| 0.3.2 with the vote on (`vote`, `APEX_VOTE=1`) plus flaky reruns | 105 of 107 | 16 of 93 (17%) |
 
 **Two drafts and the probe** helped on the small projects ([`../exp-two-drafts`](../exp-two-drafts)) but not here: on real libraries the checks already catch almost every wrong change, so a second draft or a probe can only add false alarms. Neither is turned on.
 
@@ -21,3 +22,5 @@
 **Result.** It fired on 8 changes, all right ones, all on the cookie-domain task, and on no wrong change: false alarms 23 to 16, catches unchanged at 106 of 107. 7 of the 8 became `unknown`; one is still `not ready` because a generated check also failed.
 
 **Limits.** One run each. All 8 excused changes come from one task, so this shows the mechanism works, not how often it applies. The small projects were not rerun for this change: their good changes did not fail their own tests, so the second look never runs there. Gemini models wrote every change.
+
+**0.3.2: agreement before blocking (`vote`).** When the first set of checks finds a problem, two more independent sets are written and the change is blocked only if most fail. The vote ran on 107 changes: all three sets agreed on 101, two of three on 4, and it overturned 2 blocks (one right change, now `unknown`; one wrong change that stayed blocked for another reason). It let no wrong change through. The two wrong changes called `ready` and the other verdict changes against 0.3.1 are on changes where the first set passed, where the vote never runs: run-to-run variation. No check was flaky. Result: 1 false alarm saved in 93 for two extra model calls per blocked change, so the vote ships off by default and the flaky rerun ships on. The false alarms that remain are written the same way by every independent draft: the task text is broader than the library's own tests. Small projects with the vote: 18 of 31 caught, 0 of 48 false alarms (0.3.0: 19 and 0); the vote changed no verdict there.
