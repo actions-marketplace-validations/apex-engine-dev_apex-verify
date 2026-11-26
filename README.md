@@ -8,6 +8,7 @@
   <a href="https://github.com/marketplace/actions/apex-verify-ai-change-checker"><img alt="GitHub Marketplace" src="https://img.shields.io/badge/marketplace-apex--verify-blue?logo=github"></a>
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue.svg"></a>
   <a href="https://github.com/apex-engine-dev/apex-verify/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/apex-engine-dev/apex-verify?style=social"></a>
+  <a href="https://glama.ai/mcp/servers/apex-engine-dev/apex-verify"><img alt="apex-verify MCP server on Glama" src="https://glama.ai/mcp/servers/apex-engine-dev/apex-verify/badges/score.svg"></a>
 </p>
 
 <p align="center"><img src="docs/assets/demo.gif" alt="Terminal: the agent says done and npm test passes; apex verify, with no API key, uses the signed-in Claude Code to write checks and answers NOT READY: a run of spaces should become one dash, expected hello-world, actual hello----world" width="800"></p>
@@ -130,6 +131,13 @@ The task is the pull request's title and description. It fails the job on `not r
 - **Prove correctness.** It raises the bar; a check can be wrong in both directions.
 - **Replace review or CI.** It runs next to them (and *in* CI with the Action).
 - **Send your code anywhere but the checker you choose**: your task and the relevant source files (about 24 KB at most) go to that model. No telemetry.
+
+## Where to find it
+
+- [GitHub Marketplace](https://github.com/marketplace/actions/apex-verify-ai-change-checker) (the Action)
+- [Glama MCP directory](https://glama.ai/mcp/servers/apex-engine-dev/apex-verify) (the `verify_change` MCP tool)
+- [Awesome Testing](https://github.com/TheJambo/awesome-testing#ai--llm-testing), AI & LLM Testing
+- Write-up: [Are AI-written tests really tests?](https://dev.to/amit_spitzer/are-ai-written-tests-really-tests-what-the-research-says-and-what-happened-when-we-tested-it-4ph5)
 
 ## Questions
 
